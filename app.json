@@ -28,17 +28,25 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#4D2A7C",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "@react-native-vector-icons/ionicons"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "20cb1332-d79d-4059-99b4-307ce98c0bf6"
+      }
+    },
+    "owner": "ebiscloud"
   }
 }
