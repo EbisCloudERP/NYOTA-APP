@@ -1,14 +1,20 @@
 import { router, Stack } from "expo-router";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../../services/AuthContext";
 
 function HeaderRight() {
+  const { signOut } = useAuth();
+
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log out",
         style: "destructive",
-        onPress: () => router.replace("/login"),
+        onPress: async () => {
+          await signOut();
+          router.replace("/login");
+        },
       },
     ]);
   };

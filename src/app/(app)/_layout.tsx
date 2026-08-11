@@ -1,30 +1,45 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, Tabs } from "expo-router";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
 
 function HeaderLeft() {
+  const { user } = useAuth();
+  const firstName = (user?.full_name as string)?.split(" ")[0] || "User";
+  const initials = (user?.full_name as string)
+    ?.split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
+
   return (
     <View style={styles.headerLeft}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>JO</Text>
+        <Text style={styles.avatarText}>{initials}</Text>
       </View>
       <View>
         <Text style={styles.headerGreeting}>Welcome back</Text>
-        <Text style={styles.headerName}>Rogony 👋</Text>
+        <Text style={styles.headerName}>{firstName}</Text>
       </View>
     </View>
   );
 }
 
 function HeaderRight() {
+  const { signOut } = useAuth();
+
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log out",
         style: "destructive",
-        onPress: () => router.replace("/login"),
+        onPress: async () => {
+          await signOut();
+          router.replace("/login");
+        },
       },
     ]);
   };
