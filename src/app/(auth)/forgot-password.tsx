@@ -1,44 +1,55 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { Colors } from "../../theme/colors";
 
+const FORGOT_PW_IMAGE = require("../../../assets/images/nyotapic_girl.jpeg");
+
 export default function ForgotPasswordScreen() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleVerify = () => {
     router.push("/otp-reset-pass");
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Title */}
-        <LanguageSelector />
-        <Text style={styles.title}>Forgot password</Text>
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Enter your email address or phone number and we will send you a
-          password reset link
-        </Text>
-        {/* Form */}
-        <View style={styles.form}>
+    <View style={styles.container}>
+      {/* Full-screen background image */}
+      <Image
+        source={FORGOT_PW_IMAGE}
+        style={styles.bgImage}
+        contentFit="cover"
+        contentPosition="top center"
+      />
+
+      {/* Spacer */}
+      <View style={[styles.spacer, isFocused && styles.spacerCollapsed]} />
+
+      {/* Bottom card */}
+      <View style={[styles.bottomCard, isFocused && styles.bottomCardExpanded]}>
+        <ScrollView
+          contentContainerStyle={styles.bottomContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <LanguageSelector />
+          <Text style={styles.title}>Forgot password</Text>
+
+          <Text style={styles.subtitle}>
+            Enter your email address or phone number and we will send you a
+            password reset link
+          </Text>
+
           {/* Email/Phone Field */}
           <Text style={styles.label}>Email address or phone number</Text>
           <TextInput
@@ -50,6 +61,8 @@ export default function ForgotPasswordScreen() {
             autoCorrect={false}
             value={emailOrPhone}
             onChangeText={setEmailOrPhone}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
 
           {/* Info text */}
@@ -69,11 +82,12 @@ export default function ForgotPasswordScreen() {
               <Text style={styles.loginLink}>Log in</Text>
             </TouchableOpacity>
           </View>
-        </View>
-        {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          {/* Footer */}
+          <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
@@ -82,30 +96,52 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  scrollContent: {
-    flexGrow: 1,
+  bgImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  spacer: {
+    flex: 5,
+  },
+  spacerCollapsed: {
+    flex: 2,
+  },
+  bottomCard: {
+    flex: 5,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  bottomCardExpanded: {
+    flex: 8,
+  },
+  bottomContent: {
     paddingHorizontal: 24,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 20,
+    paddingBottom: 20,
     alignItems: "center",
   },
   title: {
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6B7280",
     textAlign: "center",
-    marginBottom: 40,
-    lineHeight: 22,
-  },
-  form: {
-    width: "100%",
-    maxWidth: 400,
+    marginBottom: 20,
+    lineHeight: 20,
   },
   label: {
     fontSize: 14,
@@ -115,7 +151,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    height: 50,
+    height: 48,
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 12,
@@ -127,17 +163,17 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 13,
     color: "#9CA3AF",
-    marginTop: 8,
-    marginBottom: 24,
+    marginTop: 6,
+    marginBottom: 16,
   },
   verifyButton: {
     width: "100%",
-    height: 50,
+    height: 48,
     backgroundColor: Colors.brand,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 16,
   },
   verifyButtonText: {
     fontSize: 16,
@@ -148,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 14,
   },
   loginText: {
     fontSize: 14,
