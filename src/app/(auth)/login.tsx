@@ -2,6 +2,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -12,16 +14,36 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { login } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 const NYOTA_IMAGE = require("../../../assets/images/NYOTA.jpg");
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
+  const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    router.push("/otp-login");
+  const handleLogin = async () => {
+    const trimmedContact = contact.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedContact || !trimmedPassword) {
+      Alert.alert("Error", "Please enter your email/phone and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login(trimmedContact, trimmedPassword);
+      router.push("/otp-login");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Login failed. Please try again.";
+      Alert.alert("Login Failed", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +55,6 @@ export default function LoginScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
             source={NYOTA_IMAGE}
@@ -41,33 +62,27 @@ export default function LoginScreen() {
             contentFit="contain"
           />
         </View>
-        
 
-        {/* Title */}
         <LanguageSelector />
         <Text style={styles.title}>Log into your account</Text>
 
-        {/* Subtitle */}
         <Text style={styles.subtitle}>
           Welcome back! Enter your details to continue
         </Text>
 
-        {/* Form */}
         <View style={styles.form}>
-          {/* Email Field */}
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>Email or Phone</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email"
+            placeholder="Enter your email or phone number"
             placeholderTextColor="#9CA3AF"
-            keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            value={email}
-            onChangeText={setEmail}
+            value={contact}
+            onChangeText={setContact}
+            editable={!loading}
           />
 
-          {/* Password Field */}
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
@@ -76,39 +91,48 @@ export default function LoginScreen() {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
           />
 
-          {/* Forgot Password */}
           <TouchableOpacity
             style={styles.forgotPasswordContainer}
             onPress={() => router.push("/forgot-password")}
+            disabled={loading}
           >
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
-          {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
             <Text style={styles.signUpText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/create-account")}>
+            <TouchableOpacity
+              onPress={() => router.push("/create-account")}
+              disabled={loading}
+            >
               <Text style={styles.signUpLink}>Create one</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Onboard test link */}
           <TouchableOpacity
             style={styles.onboardTestContainer}
             onPress={() => router.push("/getstarted")}
+            disabled={loading}
           >
             <Text style={styles.onboardTestText}>Onboard test</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
         <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -187,6 +211,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   loginButtonText: {
     fontSize: 16,
