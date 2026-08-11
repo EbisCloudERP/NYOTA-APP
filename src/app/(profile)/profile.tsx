@@ -43,7 +43,7 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <Text style={styles.title}>Profile</Text>
+      {/* <Text style={styles.title}>Profile</Text> */}
       <Text style={styles.subtitle}>
         Update your personal information and account settings
       </Text>
