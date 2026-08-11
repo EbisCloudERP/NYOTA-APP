@@ -2,102 +2,123 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { Colors } from "../../theme/colors";
 
-const NYOTA_IMAGE = require("../../../assets/images/NYOTA.jpg");
+const NYOTA_IMAGE = require("../../../assets/images/nyotapic_teens.jpeg");
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const handleLogin = () => {
+  const isFormValid = email.trim().length > 0 && password.trim().length > 0;
+  const isLoginDisabled = showForm && !isFormValid;
+
+  const handleLoginPress = () => {
+    if (!showForm) {
+      setShowForm(true);
+      return;
+    }
     router.push("/otp-login");
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <View style={styles.container}>
+      {/* Full-screen background image */}
+      <Image
+        source={NYOTA_IMAGE}
+        style={styles.bgImage}
+        contentFit="cover"
+        // contentPosition="top center"
+      />
+
+      {/* Bottom card — slides up over the image */}
+      <View
+        style={[
+          styles.bottomCard,
+          isFocused
+            ? styles.bottomCardFocused
+            : showForm && styles.bottomCardExpanded,
+        ]}
       >
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={NYOTA_IMAGE}
-            style={styles.logo}
-            contentFit="contain"
-          />
-        </View>
-        
+        <ScrollView
+          contentContainerStyle={styles.bottomScrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <LanguageSelector />
+          <Text style={styles.title}>Log into your account</Text>
 
-        {/* Title */}
-        <LanguageSelector />
-        <Text style={styles.title}>Log into your account</Text>
+          <Text style={styles.subtitle}>
+            Welcome back! Enter your details to continue
+          </Text>
 
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Welcome back! Enter your details to continue
-        </Text>
+          {/* Hidden fields — revealed on first Login tap */}
+          {showForm && (
+            <View style={styles.form}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={email}
+                onChangeText={setEmail}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+              />
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Email Field */}
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={email}
-            onChangeText={setEmail}
-          />
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#9CA3AF"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+              />
 
-          {/* Password Field */}
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#9CA3AF"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          {/* Forgot Password */}
-          <TouchableOpacity
-            style={styles.forgotPasswordContainer}
-            onPress={() => router.push("/forgot-password")}
-          >
-            <Text style={styles.forgotPassword}>Forgot Password?</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.forgotPasswordContainer}
+                onPress={() => router.push("/forgot-password")}
+              >
+                <Text style={styles.forgotPassword}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Login Button */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <TouchableOpacity
+            style={[
+              styles.loginButton,
+              isLoginDisabled && styles.loginButtonDisabled,
+            ]}
+            onPress={handleLoginPress}
+            disabled={isLoginDisabled}
+          >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
 
-          {/* Sign Up Link */}
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/create-account")}>
-              <Text style={styles.signUpLink}>Create one</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Sign Up Button (outline) */}
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={() => router.push("/create-account")}
+          >
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
 
           {/* Onboard test link */}
           <TouchableOpacity
@@ -106,12 +127,12 @@ export default function LoginScreen() {
           >
             <Text style={styles.onboardTestText}>Onboard test</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Footer */}
+          <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
@@ -120,33 +141,58 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  scrollContent: {
-    flexGrow: 1,
+  // ── Full-screen background image ──
+  bgImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 160,
+  },
+  // ── Bottom: Card (overlaps image) ──
+  bottomCard: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: "60%",
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  bottomCardExpanded: {
+    top: "30%",
+  },
+  bottomCardFocused: {
+    top: "20%",
+  },
+  bottomScrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 24,
     paddingBottom: 40,
     alignItems: "center",
   },
-  logoContainer: {
-    marginBottom: 24,
-  },
-  logo: {
-    width: 200,
-    height: 200,
-  },
+  // ── Text ──
   title: {
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
     marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#6B7280",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 24,
     lineHeight: 22,
   },
+  // ── Form ──
   form: {
     width: "100%",
     maxWidth: 400,
@@ -157,6 +203,7 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 6,
     marginTop: 16,
+    alignSelf: "flex-start",
   },
   input: {
     width: "100%",
@@ -179,6 +226,7 @@ const styles = StyleSheet.create({
     color: Colors.brand,
     fontWeight: "500",
   },
+  // ── Buttons ──
   loginButton: {
     width: "100%",
     height: 50,
@@ -186,31 +234,36 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 12,
+  },
+  loginButtonDisabled: {
+    opacity: 0.5,
   },
   loginButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  signUpContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+  signUpButton: {
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
     alignItems: "center",
-    marginBottom: 40,
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: Colors.brand,
+    backgroundColor: "transparent",
+    marginBottom: 32,
   },
-  signUpText: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  signUpLink: {
-    fontSize: 14,
-    color: Colors.brand,
+  signUpButtonText: {
+    fontSize: 16,
     fontWeight: "600",
+    color: Colors.brand,
   },
+  // ── Bottom extras ──
   onboardTestContainer: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 12,
   },
   onboardTestText: {
     fontSize: 12,

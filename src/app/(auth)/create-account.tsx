@@ -1,22 +1,30 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
+  const [companyName, setCompanyName] = useState("");
+  const [companyNumber, setCompanyNumber] = useState("");
   const [email, setEmail] = useState("");
 
+  const isFormValid =
+    companyName.trim() !== "" &&
+    companyNumber.trim() !== "" &&
+    email.trim() !== "";
+
   const handleVerify = () => {
+    if (!isFormValid) return;
     router.push("/otp-create-account");
   };
 
@@ -35,13 +43,36 @@ export default function CreateAccountScreen() {
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>
-          Join thousands of youth building their future
+          Join thousands of businesses building their future
         </Text>
 
         {/* Form */}
         <View style={styles.form}>
+          {/* Company/Business Name */}
+          <Text style={styles.label}>Company/Business Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter company or business name"
+            placeholderTextColor="#9CA3AF"
+            autoCapitalize="words"
+            value={companyName}
+            onChangeText={setCompanyName}
+          />
+
+          {/* Company/Business Number */}
+          <Text style={[styles.label, { marginTop: 20 }]}>
+            Company/Business Number
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter company or business number"
+            placeholderTextColor="#9CA3AF"
+            value={companyNumber}
+            onChangeText={setCompanyNumber}
+          />
+
           {/* Email Field */}
-          <Text style={styles.label}>Email</Text>
+          <Text style={[styles.label, { marginTop: 20 }]}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
@@ -59,7 +90,15 @@ export default function CreateAccountScreen() {
           </Text>
 
           {/* Verify Button */}
-          <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
+          <TouchableOpacity
+            style={[
+              styles.verifyButton,
+              !isFormValid && styles.verifyButtonDisabled,
+            ]}
+            onPress={handleVerify}
+            disabled={!isFormValid}
+            activeOpacity={isFormValid ? 0.7 : 1}
+          >
             <Text style={styles.verifyButtonText}>Verify</Text>
           </TouchableOpacity>
 
@@ -140,6 +179,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
+  },
+  verifyButtonDisabled: {
+    backgroundColor: "#B0A0C8",
   },
   verifyButtonText: {
     fontSize: 16,

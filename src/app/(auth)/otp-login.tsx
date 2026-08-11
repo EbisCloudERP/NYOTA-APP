@@ -1,14 +1,13 @@
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { Colors } from "../../theme/colors";
@@ -16,10 +15,17 @@ import { Colors } from "../../theme/colors";
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
 
+const KEYPAD_KEYS = [
+  ["1", "2", "3"],
+  ["4", "5", "6"],
+  ["7", "8", "9"],
+  ["", "0", "⌫"],
+];
+
 export default function OtpLoginScreen() {
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
-  const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState(0);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -29,33 +35,43 @@ export default function OtpLoginScreen() {
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  const handleCodeChange = (text: string, index: number) => {
-    const newCode = [...code];
-    newCode[index] = text.slice(-1);
-    setCode(newCode);
-
-    if (text && index < CODE_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
+  const handleKeypadPress = (key: string) => {
+    if (key === "⌫") {
+      // Find the last filled digit and clear it
+      const lastFilled = code.findLastIndex((d) => d !== "");
+      if (lastFilled >= 0) {
+        const newCode = [...code];
+        newCode[lastFilled] = "";
+        setCode(newCode);
+        setFocusedIndex(lastFilled);
+      }
+      return;
     }
 
-    if (text && index === CODE_LENGTH - 1) {
-      const fullCode = newCode.join("");
-      if (fullCode.length === CODE_LENGTH) {
+    if (key === "") return; // empty spacer
+
+    // Find the first empty slot
+    const firstEmpty = code.findIndex((d) => d === "");
+    if (firstEmpty >= 0) {
+      const newCode = [...code];
+      newCode[firstEmpty] = key;
+      setCode(newCode);
+      setFocusedIndex(Math.min(firstEmpty + 1, CODE_LENGTH - 1));
+
+      // Auto-verify when all digits filled
+      if (firstEmpty === CODE_LENGTH - 1) {
+        const fullCode = newCode.join("");
         handleVerify(fullCode);
       }
-    }
-  };
-
-  const handleKeyPress = (key: string, index: number) => {
-    if (key === "Backspace" && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerify = (fullCode: string) => {
     // TODO: verify login OTP
     console.log("Verify login code", { code: fullCode });
-    router.replace("/home");
+    setTimeout(() => {
+      router.replace("/home");
+    }, 250);
   };
 
   const handleResend = () => {
@@ -86,20 +102,15 @@ export default function OtpLoginScreen() {
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
-            <TextInput
+            <View
               key={index}
-              ref={(ref) => {
-                inputRefs.current[index] = ref;
-              }}
-              style={styles.codeInput}
-              keyboardType="number-pad"
-              maxLength={1}
-              value={digit}
-              onChangeText={(text) => handleCodeChange(text, index)}
-              onKeyPress={({ nativeEvent }) =>
-                handleKeyPress(nativeEvent.key, index)
-              }
-            />
+              style={[
+                styles.codeInput,
+                focusedIndex === index && styles.codeInputFocused,
+              ]}
+            >
+              <Text style={styles.codeDigit}>{digit}</Text>
+            </View>
           ))}
         </View>
 
@@ -127,6 +138,36 @@ export default function OtpLoginScreen() {
           <Text style={styles.goBackText}>Wrong details? Go back</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Custom Keypad */}
+      <View style={styles.keypadContainer}>
+        {KEYPAD_KEYS.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.keypadRow}>
+            {row.map((key, colIndex) => (
+              <TouchableOpacity
+                key={colIndex}
+                style={[
+                  styles.keypadButton,
+                  key === "" && styles.keypadButtonEmpty,
+                  key === "⌫" && styles.keypadButtonBackspace,
+                ]}
+                onPress={() => handleKeypadPress(key)}
+                disabled={key === ""}
+                activeOpacity={0.6}
+              >
+                <Text
+                  style={[
+                    styles.keypadText,
+                    key === "⌫" && styles.keypadTextBackspace,
+                  ]}
+                >
+                  {key}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -137,7 +178,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 80,
-    paddingBottom: 40,
+    paddingBottom: 24,
     alignItems: "center",
   },
   title: {
@@ -165,11 +206,18 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#D1D5DB",
     borderRadius: 12,
-    textAlign: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  codeInputFocused: {
+    borderColor: Colors.brand,
+    backgroundColor: "#F5F0FF",
+  },
+  codeDigit: {
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
-    backgroundColor: "#F9FAFB",
   },
   timerContainer: {
     flexDirection: "row",
@@ -183,14 +231,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: 16,
   },
   resendLink: {
     fontSize: 14,
     color: Colors.brand,
     fontWeight: "600",
-    marginBottom: 32,
+    marginBottom: 16,
   },
-  goBackContainer: { marginTop: 16 },
+  goBackContainer: { marginTop: 8 },
   goBackText: { fontSize: 14, color: Colors.brand, fontWeight: "500" },
+  // Keypad styles
+  keypadContainer: {
+    backgroundColor: "#F9FAFB",
+    paddingTop: 16,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  keypadRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    marginBottom: 12,
+  },
+  keypadButton: {
+    width: 72,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  keypadButtonEmpty: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+  },
+  keypadButtonBackspace: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
+  },
+  keypadText: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  keypadTextBackspace: {
+    fontSize: 20,
+    color: "#4B5563",
+  },
 });
