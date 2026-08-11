@@ -14,7 +14,7 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { login, sendSms } from "../../services/api";
+import { login, sendEmailOtp } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 const NYOTA_IMAGE = require("../../../assets/images/NYOTA.jpg");
@@ -37,17 +37,13 @@ export default function LoginScreen() {
     try {
       const response = await login(trimmedContact, trimmedPassword);
       const otp = response.data.otp;
-      const isPhone = !trimmedContact.includes("@");
-
-      if (isPhone) {
-        try {
-          await sendSms(trimmedContact, `Your NYOTA verification code is: ${otp}`);
-        } catch {
-          // SMS sending failure shouldn't block login flow
-        }
-      }
+      const isEmail = trimmedContact.includes("@");
 
       router.push("/otp-login");
+
+      if (isEmail) {
+        sendEmailOtp(trimmedContact, otp).catch(() => {});
+      }
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Login failed. Please try again.";

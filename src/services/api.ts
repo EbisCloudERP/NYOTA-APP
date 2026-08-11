@@ -87,6 +87,43 @@ export async function loginOtp(otp: string): Promise<ApiResponse<LoginOtpRespons
   });
 }
 
+const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";
+
+interface EmailParams {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  company_name: string;
+}
+
+export async function sendEmail(params: EmailParams): Promise<unknown> {
+  const response = await fetch(EMAIL_BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Email failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function sendEmailOtp(email: string, otp: string): Promise<void> {
+  await sendEmail({
+    name: email.split("@")[0],
+    email,
+    subject: "Your NYOTA Verification Code",
+    message: `Your verification code is: ${otp}`,
+    company_name: "NYOTA",
+  });
+}
+
 const SMS_BASE_URL = "https://sms.ebisclouderp.com/api/sms/sendsms";
 
 interface SmsResult {
