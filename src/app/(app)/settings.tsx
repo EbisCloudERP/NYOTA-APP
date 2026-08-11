@@ -49,7 +49,11 @@ export default function SettingsScreen() {
       <Text style={styles.heading}>Settings</Text>
 
       {/* ── Menu items ── */}
-      <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.menuItem}
+        activeOpacity={0.7}
+        onPress={() => router.push("/profile" as any)}
+      >
         <View style={styles.menuItemLeft}>
           <View style={styles.menuIcon}>
             <Ionicons name="person-outline" size={18} color={Colors.brand} />
@@ -138,34 +142,32 @@ export default function SettingsScreen() {
       </TouchableOpacity>
 
       {/* SMS */}
-      <TouchableOpacity
-        style={styles.notifItem}
-        activeOpacity={0.7}
-        onPress={() => toggleNotification("sms")}
-      >
+      <View style={[styles.notifItem, styles.notifItemDisabled]}>
         <View style={styles.notifLeft}>
-          <View style={styles.notifIcon}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={18}
-              color={Colors.brand}
-            />
+          <View style={[styles.notifIcon, styles.notifIconDisabled]}>
+            <Ionicons name="chatbubble-outline" size={18} color="#9CA3AF" />
           </View>
           <View style={styles.notifContent}>
-            <Text style={styles.notifTitle}>SMS Notifications</Text>
+            <Text style={[styles.notifTitle, styles.notifTitleDisabled]}>
+              SMS Notifications
+            </Text>
             <Text style={styles.notifSubtext}>
               Get important alerts and reminders via SMS
             </Text>
           </View>
         </View>
         <View
-          style={[styles.checkbox, notifications.sms && styles.checkboxChecked]}
+          style={[
+            styles.checkbox,
+            notifications.sms && styles.checkboxChecked,
+            styles.checkboxDisabled,
+          ]}
         >
           {notifications.sms && (
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Push */}
       <TouchableOpacity
@@ -377,6 +379,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     lineHeight: 16,
+  },
+  notifItemDisabled: {
+    opacity: 0.5,
+  },
+  notifIconDisabled: {
+    backgroundColor: "#F3F4F6",
+  },
+  notifTitleDisabled: {
+    color: "#9CA3AF",
   },
   checkbox: {
     width: 22,
