@@ -125,10 +125,10 @@ export default function RegisterScreen() {
           />
 
           {/* Sub-county */}
-          <Text style={styles.label}>Sub-county</Text>
+          <Text style={styles.label}>Constituency</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your sub-county"
+            placeholder="Enter your constituency"
             placeholderTextColor="#9CA3AF"
             value={subCounty}
             onChangeText={setSubCounty}
