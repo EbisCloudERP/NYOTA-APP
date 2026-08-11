@@ -56,10 +56,10 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <LanguageSelector />
-          <Text style={styles.title}>Log into your account</Text>
+          <Text style={styles.title}>Welcome back!</Text>
 
           <Text style={styles.subtitle}>
-            Welcome back! Enter your details to continue
+            Log into your account
           </Text>
 
           {/* Hidden fields — revealed on first Login tap */}
