@@ -41,6 +41,7 @@ export default function LoginScreen() {
             contentFit="contain"
           />
         </View>
+        
 
         {/* Title */}
         <LanguageSelector />
