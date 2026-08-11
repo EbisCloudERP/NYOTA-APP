@@ -1,7 +1,9 @@
 import LanguageSelector from "@/components/LanguageSelector";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -26,6 +28,9 @@ export default function OtpCreateAccountScreen() {
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const { otp: expectedOtp } = useLocalSearchParams<{ email: string; otp: string }>();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -63,12 +68,22 @@ export default function OtpCreateAccountScreen() {
     }
   };
 
-  const handleVerify = (fullCode: string) => {
-    // TODO: verify OTP and proceed with account creation
-    console.log("Verify code for create account", { code: fullCode });
-    setTimeout(() => {
-      router.push("/register");
-    }, 250);
+  const handleVerify = async (fullCode: string) => {
+    if (verified || loading) return;
+    setLoading(true);
+
+    // Simulate network delay for UX
+    await new Promise((r) => setTimeout(r, 500));
+
+    if (fullCode !== expectedOtp) {
+      setLoading(false);
+      Alert.alert("Invalid Code", "The verification code you entered is incorrect. Please try again.");
+      return;
+    }
+
+    setVerified(true);
+    setLoading(false);
+    router.replace("/register");
   };
 
   const handleResend = () => {
@@ -111,6 +126,13 @@ export default function OtpCreateAccountScreen() {
           ))}
         </View>
 
+        {loading && (
+          <ActivityIndicator
+            color={Colors.brand}
+            style={styles.loader}
+          />
+        )}
+
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
           <Text style={styles.timerText}>
@@ -123,14 +145,15 @@ export default function OtpCreateAccountScreen() {
             Didn't receive the code? Wait: {formatTime(timeLeft)} to resend
           </Text>
         ) : (
-          <TouchableOpacity onPress={handleResend}>
-            <Text style={styles.resendLink}>Resend code</Text>
+          <TouchableOpacity onPress={handleResend} disabled={loading}>
+            <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>Resend code</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
           style={styles.goBackContainer}
           onPress={() => router.back()}
+          disabled={loading}
         >
           <Text style={styles.goBackText}>Wrong details? Go back</Text>
         </TouchableOpacity>
@@ -215,6 +238,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
+  },
+  loader: {
+    marginBottom: 16,
   },
   timerContainer: {
     flexDirection: "row",

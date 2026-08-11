@@ -87,6 +87,42 @@ export async function loginOtp(otp: string): Promise<ApiResponse<LoginOtpRespons
   });
 }
 
+interface VerifyEmailResponse {
+  exists: boolean;
+  otp?: string;
+}
+
+export async function verifyEmail(
+  contact: string,
+  coName: string,
+  coNumber: string
+): Promise<ApiResponse<VerifyEmailResponse>> {
+  return request<VerifyEmailResponse>("/verify-email", {
+    method: "POST",
+    body: JSON.stringify({
+      type: "email",
+      contact,
+      co_name: coName,
+      co_number: coNumber,
+    }),
+  });
+}
+
+interface VerifyCreateAccountOtpResponse {
+  user: AuthUser;
+  token: string;
+}
+
+export async function verifyCreateAccountOtp(
+  email: string,
+  otp: string
+): Promise<ApiResponse<VerifyCreateAccountOtpResponse>> {
+  return request<VerifyCreateAccountOtpResponse>("/verify-email-otp", {
+    method: "POST",
+    body: JSON.stringify({ contact: email, otp }),
+  });
+}
+
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";
 
 interface EmailParams {

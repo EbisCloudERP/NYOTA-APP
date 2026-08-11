@@ -2,6 +2,8 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,18 +20,45 @@ const NYOTA_IMAGE = require("../../../assets/images/nyotapic_teens.jpeg");
 export default function LoginScreen() {
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  const isFormValid = email.trim().length > 0 && password.trim().length > 0;
+  const isFormValid = contact.trim().length > 0 && password.trim().length > 0;
   const isLoginDisabled = showForm && !isFormValid;
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
     if (!showForm) {
       setShowForm(true);
       return;
     }
-    router.push("/otp-login");
+
+    const trimmedContact = contact.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedContact || !trimmedPassword) {
+      Alert.alert("Error", "Please enter your email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await login(trimmedContact, trimmedPassword);
+      const otp = response.data.otp;
+      const isEmail = trimmedContact.includes("@");
+
+      router.push("/otp-login");
+
+      if (isEmail) {
+        sendEmailOtp(trimmedContact, otp).catch(() => {});
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Login failed. Please try again.";
+      Alert.alert("Login Failed", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,8 +103,8 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
+                value={contact}
+                onChangeText={setContact}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
               />
@@ -108,9 +137,13 @@ export default function LoginScreen() {
               isLoginDisabled && styles.loginButtonDisabled,
             ]}
             onPress={handleLoginPress}
-            disabled={isLoginDisabled}
+            disabled={isLoginDisabled || loading}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
           {/* Sign Up Button (outline) */}
