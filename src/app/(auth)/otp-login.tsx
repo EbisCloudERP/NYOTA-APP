@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -10,6 +12,8 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { loginOtp } from "../../services/api";
+import { useAuth, type UserData } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -26,6 +30,9 @@ export default function OtpLoginScreen() {
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const { signIn } = useAuth();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -66,17 +73,25 @@ export default function OtpLoginScreen() {
     }
   };
 
-  const handleVerify = (fullCode: string) => {
-    // TODO: verify login OTP
-    console.log("Verify login code", { code: fullCode });
-    setTimeout(() => {
+  const handleVerify = async (fullCode: string) => {
+    if (verified || loading) return;
+    setLoading(true);
+    try {
+      const response = await loginOtp(fullCode);
+      setVerified(true);
+      await signIn(response.data.token, response.data.user as unknown as UserData);
       router.replace("/home");
-    }, 250);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed. Please try again.";
+      Alert.alert("Verification Failed", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = () => {
     setTimeLeft(RESEND_COOLDOWN);
-    console.log("Resend code");
   };
 
   const formatTime = (seconds: number) => {
@@ -114,6 +129,13 @@ export default function OtpLoginScreen() {
           ))}
         </View>
 
+        {loading && (
+          <ActivityIndicator
+            color={Colors.brand}
+            style={styles.loader}
+          />
+        )}
+
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
           <Text style={styles.timerText}>
@@ -126,14 +148,17 @@ export default function OtpLoginScreen() {
             Didn't receive the code? Wait: {formatTime(timeLeft)} to resend
           </Text>
         ) : (
-          <TouchableOpacity onPress={handleResend}>
-            <Text style={styles.resendLink}>Resend code</Text>
+          <TouchableOpacity onPress={handleResend} disabled={loading}>
+            <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>
+              Resend code
+            </Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
           style={styles.goBackContainer}
           onPress={() => router.back()}
+          disabled={loading}
         >
           <Text style={styles.goBackText}>Wrong details? Go back</Text>
         </TouchableOpacity>
@@ -218,6 +243,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
+  },
+  loader: {
+    marginBottom: 16,
   },
   timerContainer: {
     flexDirection: "row",

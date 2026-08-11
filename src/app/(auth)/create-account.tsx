@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,21 +13,54 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { verifyEmail, sendEmailOtp } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
   const [companyName, setCompanyName] = useState("");
   const [companyNumber, setCompanyNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const isFormValid =
     companyName.trim() !== "" &&
     companyNumber.trim() !== "" &&
     email.trim() !== "";
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!isFormValid) return;
-    router.push("/otp-create-account");
+
+    setLoading(true);
+    try {
+      const response = await verifyEmail(
+        email.trim(),
+        companyName.trim(),
+        companyNumber.trim()
+      );
+
+      if (response.data.exists) {
+        Alert.alert(
+          "Account Exists",
+          "An account with this email already exists. Please log in instead.",
+          [{ text: "OK", onPress: () => router.replace("/login") }]
+        );
+        return;
+      }
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      router.push({
+        pathname: "/otp-create-account",
+        params: { email: email.trim(), otp },
+      });
+
+      sendEmailOtp(email.trim(), otp).catch(() => {});
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed. Please try again.";
+      Alert.alert("Verification Failed", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,13 +128,17 @@ export default function CreateAccountScreen() {
           <TouchableOpacity
             style={[
               styles.verifyButton,
-              !isFormValid && styles.verifyButtonDisabled,
+              (!isFormValid || loading) && styles.verifyButtonDisabled,
             ]}
             onPress={handleVerify}
-            disabled={!isFormValid}
-            activeOpacity={isFormValid ? 0.7 : 1}
+            disabled={!isFormValid || loading}
+            activeOpacity={isFormValid && !loading ? 0.7 : 1}
           >
-            <Text style={styles.verifyButtonText}>Verify</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.verifyButtonText}>Verify</Text>
+            )}
           </TouchableOpacity>
 
           {/* Login Link */}

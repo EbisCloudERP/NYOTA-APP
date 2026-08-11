@@ -2,17 +2,29 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
+import { useAuth } from "../services/AuthContext";
 
 const NYOTA_IMAGE = require("../../assets/images/NYOTA.jpg");
 
 export default function SplashScreen() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/login");
-    }, 2500);
+    if (isLoading) return;
+
+    const timer = setTimeout(
+      () => {
+        if (isAuthenticated) {
+          router.replace("/home");
+        } else {
+          router.replace("/login");
+        }
+      },
+      isAuthenticated ? 500 : 2500
+    );
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAuthenticated, isLoading]);
 
   return (
     <View style={styles.container}>
