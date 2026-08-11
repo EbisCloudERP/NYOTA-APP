@@ -123,6 +123,86 @@ export async function verifyCreateAccountOtp(
   });
 }
 
+export interface SubCounty {
+  id: number;
+  county_id: number;
+  constituency_name: string;
+  ward: string;
+  alias: string;
+}
+
+export interface County {
+  id: number;
+  county_name: string;
+  sub_counties: SubCounty[];
+}
+
+export async function getCounties(): Promise<ApiResponse<County[]>> {
+  return request<County[]>("/counties");
+}
+
+export interface EligibilityOption {
+  id: number;
+  question_id: number;
+  label: string;
+  value: string;
+  order: number;
+  metadata: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EligibilityQuestion {
+  id: number;
+  key: string;
+  question: string;
+  description: string;
+  type: string;
+  is_required: boolean;
+  order: number;
+  metadata: unknown;
+  options: EligibilityOption[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getEligibilityQuestions(): Promise<ApiResponse<EligibilityQuestion[]>> {
+  return request<EligibilityQuestion[]>("/onboarding/eligibility_questions");
+}
+
+export async function submitEligibilityAnswers(
+  uuid: string,
+  answers: Record<string, string | string[]>
+): Promise<ApiResponse<unknown>> {
+  return request("/onboarding/eligibility_answers", {
+    method: "POST",
+    body: JSON.stringify({ uuid, answers }),
+  });
+}
+
+interface RegisterRequest {
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  national_id: string;
+  type: string;
+  contact: string;
+  county: string;
+  sub_county: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export async function registerUser(
+  data: RegisterRequest
+): Promise<ApiResponse<unknown>> {
+  return request("/register_request", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";
 
 interface EmailParams {

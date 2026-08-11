@@ -1,7 +1,11 @@
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
+    FlatList,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -11,18 +15,115 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { getCounties, registerUser, login, loginOtp, type County } from "../../services/api";
+import { useAuth, type UserData } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
+
+const PICKER_ITEM_HEIGHT = 48;
+
+function PickerModal({
+  visible,
+  items,
+  onSelect,
+  onClose,
+  label,
+}: {
+  visible: boolean;
+  items: { label: string; value: string }[];
+  onSelect: (item: { label: string; value: string }) => void;
+  onClose: () => void;
+  label: string;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{label}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.modalClose}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.value}
+            getItemLayout={(_data, index) => ({
+              length: PICKER_ITEM_HEIGHT,
+              offset: PICKER_ITEM_HEIGHT * index,
+              index,
+            })}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  onSelect(item);
+                  onClose();
+                }}
+              >
+                <Text style={styles.modalItemText}>{item.label}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 export default function RegisterScreen() {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [nationalId, setNationalId] = useState("");
-  const [county, setCounty] = useState("");
-  const [subCounty, setSubCounty] = useState("");
-  const [ward, setWard] = useState("");
+  const [selectedCounty, setSelectedCounty] = useState<{ label: string; value: string } | null>(null);
+  const [selectedSubCounty, setSelectedSubCounty] = useState<{ label: string; value: string } | null>(null);
+  const [selectedWard, setSelectedWard] = useState<{ label: string; value: string } | null>(null);
+  const [counties, setCounties] = useState<County[]>([]);
+  const [loadingCounties, setLoadingCounties] = useState(true);
+  const [countyPickerVisible, setCountyPickerVisible] = useState(false);
+  const [subCountyPickerVisible, setSubCountyPickerVisible] = useState(false);
+  const [wardPickerVisible, setWardPickerVisible] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { email } = useLocalSearchParams<{ email: string }>();
+  const { signIn } = useAuth();
+
+  useEffect(() => {
+    getCounties()
+      .then((res) => setCounties(res.data))
+      .catch(() => {})
+      .finally(() => setLoadingCounties(false));
+  }, []);
+
+  const countyItems = useMemo(
+    () => counties.map((c) => ({ label: c.county_name, value: String(c.id) })),
+    [counties]
+  );
+
+  const subCountyItems = useMemo(() => {
+    if (!selectedCounty) return [];
+    const county = counties.find((c) => String(c.id) === selectedCounty.value);
+    if (!county) return [];
+    const seen = new Set<string>();
+    const unique: { label: string; value: string }[] = [];
+    for (const sc of county.sub_counties) {
+      if (!seen.has(sc.constituency_name)) {
+        seen.add(sc.constituency_name);
+        unique.push({ label: sc.constituency_name, value: sc.constituency_name });
+      }
+    }
+    return unique;
+  }, [selectedCounty, counties]);
+
+  const wardItems = useMemo(() => {
+    if (!selectedCounty || !selectedSubCounty) return [];
+    const county = counties.find((c) => String(c.id) === selectedCounty.value);
+    if (!county) return [];
+    return county.sub_counties
+      .filter((sc) => sc.constituency_name === selectedSubCounty.value)
+      .map((sc) => ({ label: sc.ward, value: sc.ward }));
+  }, [selectedCounty, selectedSubCounty, counties]);
 
   const passwordsMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
@@ -40,8 +141,54 @@ export default function RegisterScreen() {
   const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
   const strengthColors = ["#EF4444", "#F59E0B", "#208AEF", "#10B981"];
 
-  const handleRegister = () => {
-    router.push("/verify-phone");
+  const handleRegister = async () => {
+    if (!firstName.trim() || !lastName.trim() || !nationalId.trim()) {
+      Alert.alert("Missing Fields", "Please fill in all personal information fields.");
+      return;
+    }
+    if (!selectedCounty || !selectedSubCounty) {
+      Alert.alert("Missing Fields", "Please select your county and sub-county.");
+      return;
+    }
+    if (!password || password.length < 8) {
+      Alert.alert("Weak Password", "Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Password Mismatch", "Passwords do not match.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await registerUser({
+        first_name: firstName.trim(),
+        middle_name: middleName.trim(),
+        last_name: lastName.trim(),
+        national_id: nationalId.trim(),
+        type: "email",
+        contact: email,
+        county: selectedCounty.label,
+        sub_county: selectedSubCounty.value,
+        password,
+        password_confirmation: confirmPassword,
+      });
+
+      const loginRes = await login(email, password);
+      const otpResponse = await loginOtp(loginRes.data.otp);
+      await signIn(
+        otpResponse.data.token,
+        otpResponse.data.user as unknown as UserData
+      );
+
+      router.replace("/kyc");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Registration failed. Please try again.";
+      Alert.alert("Registration Failed", message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -116,33 +263,46 @@ export default function RegisterScreen() {
 
           {/* County */}
           <Text style={styles.label}>County</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your county"
-            placeholderTextColor="#9CA3AF"
-            value={county}
-            onChangeText={setCounty}
-          />
+          <TouchableOpacity
+            style={styles.pickerButton}
+            onPress={() => !loadingCounties && setCountyPickerVisible(true)}
+            disabled={loadingCounties}
+          >
+            {loadingCounties ? (
+              <ActivityIndicator size="small" color={Colors.brand} />
+            ) : (
+              <Text style={selectedCounty ? styles.pickerText : styles.pickerPlaceholder}>
+                {selectedCounty?.label ?? "Select your county"}
+              </Text>
+            )}
+            <Text style={styles.pickerChevron}>▼</Text>
+          </TouchableOpacity>
 
           {/* Sub-county */}
           <Text style={styles.label}>Sub-county</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your sub-county"
-            placeholderTextColor="#9CA3AF"
-            value={subCounty}
-            onChangeText={setSubCounty}
-          />
+          <TouchableOpacity
+            style={[styles.pickerButton, !selectedCounty && styles.pickerButtonDisabled]}
+            onPress={() => selectedCounty && setSubCountyPickerVisible(true)}
+            disabled={!selectedCounty}
+          >
+            <Text style={selectedSubCounty ? styles.pickerText : styles.pickerPlaceholder}>
+              {selectedSubCounty?.label ?? "Select your sub-county"}
+            </Text>
+            <Text style={styles.pickerChevron}>▼</Text>
+          </TouchableOpacity>
 
           {/* Ward */}
           <Text style={styles.label}>Ward</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your ward"
-            placeholderTextColor="#9CA3AF"
-            value={ward}
-            onChangeText={setWard}
-          />
+          <TouchableOpacity
+            style={[styles.pickerButton, !selectedSubCounty && styles.pickerButtonDisabled]}
+            onPress={() => selectedSubCounty && setWardPickerVisible(true)}
+            disabled={!selectedSubCounty}
+          >
+            <Text style={selectedWard ? styles.pickerText : styles.pickerPlaceholder}>
+              {selectedWard?.label ?? "Select your ward"}
+            </Text>
+            <Text style={styles.pickerChevron}>▼</Text>
+          </TouchableOpacity>
 
           {/* ── Password ── */}
           <Text style={styles.sectionHeader}>Password</Text>
@@ -207,10 +367,15 @@ export default function RegisterScreen() {
 
           {/* Register Button */}
           <TouchableOpacity
-            style={styles.registerButton}
+            style={[styles.registerButton, submitting && styles.registerButtonDisabled]}
             onPress={handleRegister}
+            disabled={submitting}
           >
-            <Text style={styles.registerButtonText}>Register</Text>
+            {submitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.registerButtonText}>Register</Text>
+            )}
           </TouchableOpacity>
 
           {/* Login Link */}
@@ -225,6 +390,37 @@ export default function RegisterScreen() {
         {/* Footer */}
         <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
       </ScrollView>
+
+      <PickerModal
+        visible={countyPickerVisible}
+        label="Select County"
+        items={countyItems}
+        onSelect={(item) => {
+          setSelectedCounty(item);
+          setSelectedSubCounty(null);
+          setSelectedWard(null);
+        }}
+        onClose={() => setCountyPickerVisible(false)}
+      />
+
+      <PickerModal
+        visible={subCountyPickerVisible}
+        label="Select Sub-county"
+        items={subCountyItems}
+        onSelect={(item) => {
+          setSelectedSubCounty(item);
+          setSelectedWard(null);
+        }}
+        onClose={() => setSubCountyPickerVisible(false)}
+      />
+
+      <PickerModal
+        visible={wardPickerVisible}
+        label="Select Ward"
+        items={wardItems}
+        onSelect={setSelectedWard}
+        onClose={() => setWardPickerVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -335,6 +531,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
   },
+  registerButtonDisabled: {
+    opacity: 0.7,
+  },
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -354,5 +553,81 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     textAlign: "center",
+  },
+  // ── Picker / Modal ──
+  pickerButton: {
+    width: "100%",
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: "#F9FAFB",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pickerButtonDisabled: {
+    opacity: 0.5,
+  },
+  pickerText: {
+    fontSize: 16,
+    color: "#1F2937",
+    flex: 1,
+  },
+  pickerPlaceholder: {
+    fontSize: 16,
+    color: "#9CA3AF",
+    flex: 1,
+  },
+  pickerChevron: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "60%",
+    paddingBottom: 34,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  modalClose: {
+    fontSize: 15,
+    color: Colors.brand,
+    fontWeight: "600",
+  },
+  modalItem: {
+    height: PICKER_ITEM_HEIGHT,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#F3F4F6",
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#1F2937",
+    textTransform: "capitalize",
   },
 });
