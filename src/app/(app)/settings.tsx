@@ -68,7 +68,11 @@ export default function SettingsScreen() {
         <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.menuItem}
+        activeOpacity={0.7}
+        onPress={() => router.push("/support")}
+      >
         <View style={styles.menuItemLeft}>
           <View style={styles.menuIcon}>
             <Ionicons name="headset-outline" size={18} color={Colors.brand} />

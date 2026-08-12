@@ -7,12 +7,13 @@ import { Colors } from "../../theme/colors";
 function HeaderLeft() {
   const { user } = useAuth();
   const firstName = (user?.full_name as string)?.split(" ")[0] || "User";
-  const initials = (user?.full_name as string)
-    ?.split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
+  const initials =
+    (user?.full_name as string)
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
 
   return (
     <View style={styles.headerLeft}>
@@ -46,11 +47,14 @@ function HeaderRight() {
 
   return (
     <View style={styles.headerRight}>
-      <TouchableOpacity style={styles.langButton}>
-        <Text style={styles.langText}>🌐 EN</Text>
+      <TouchableOpacity style={styles.iconButton}>
+        <Ionicons name="notifications-outline" size={20} color="#374151" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-        <Text style={styles.logoutIcon}>🚪</Text>
+      <TouchableOpacity style={styles.iconButton}>
+        <Ionicons name="globe-outline" size={20} color="#374151" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+        <Ionicons name="log-out-outline" size={20} color="#EF4444" />
       </TouchableOpacity>
     </View>
   );
@@ -161,27 +165,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingRight: 20,
   },
-  langButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
-  },
-  langText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  logoutButton: {
+  iconButton: {
     width: 34,
     height: 34,
     borderRadius: 10,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-  },
-  logoutIcon: {
-    fontSize: 18,
-    color: "#6B7280",
   },
 });

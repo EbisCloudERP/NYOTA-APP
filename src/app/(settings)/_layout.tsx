@@ -11,8 +11,7 @@ export default function SettingsGroupLayout() {
           headerBackTitle: "Settings",
           headerTintColor: "#4D2A7C",
           headerTitleStyle: {
-            fontSize: 17,
-            fontWeight: "600",
+            fontWeight: "700",
             color: "#111827",
           },
         }}
@@ -25,8 +24,7 @@ export default function SettingsGroupLayout() {
           headerBackTitle: "Settings",
           headerTintColor: "#4D2A7C",
           headerTitleStyle: {
-            fontSize: 17,
-            fontWeight: "600",
+            fontWeight: "700",
             color: "#111827",
           },
         }}

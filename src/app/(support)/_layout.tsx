@@ -1,14 +1,13 @@
 import { Stack } from "expo-router";
 
-export default function ProfileGroupLayout() {
+export default function SupportGroupLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="profile"
+        name="support"
         options={{
           headerShown: true,
-          headerTitle: "Profile",
-          headerBackTitle: "Settings",
+          headerTitle: "Support",
           headerTintColor: "#4D2A7C",
           headerTitleStyle: {
             fontWeight: "700",

@@ -1,5 +1,6 @@
+import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, Stack } from "expo-router";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../services/AuthContext";
 
 function HeaderRight() {
@@ -21,11 +22,14 @@ function HeaderRight() {
 
   return (
     <View style={styles.headerRight}>
-      <TouchableOpacity style={styles.langButton}>
-        <Text style={styles.langText}>🌐 EN</Text>
+      <TouchableOpacity style={styles.iconButton}>
+        <Ionicons name="notifications-outline" size={20} color="#374151" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-        <Text style={styles.logoutIcon}>🚪</Text>
+      <TouchableOpacity style={styles.iconButton}>
+        <Ionicons name="globe-outline" size={20} color="#374151" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+        <Ionicons name="log-out-outline" size={20} color="#EF4444" />
       </TouchableOpacity>
     </View>
   );
@@ -54,27 +58,12 @@ const styles = StyleSheet.create({
     gap: 10,
     marginRight: 4,
   },
-  langButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
-  },
-  langText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  logoutButton: {
-    width: 36,
-    height: 36,
+  iconButton: {
+    width: 34,
+    height: 34,
     borderRadius: 10,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-  },
-  logoutIcon: {
-    fontSize: 18,
-    color: "#6B7280",
   },
 });
