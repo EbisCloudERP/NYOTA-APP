@@ -52,6 +52,8 @@ function HeaderRight() {
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton}>
         <Ionicons name="globe-outline" size={20} color="#374151" />
+        <Text style={{ position: "absolute", top: -4, right: -4, fontSize: 8, color: Colors.white, backgroundColor: Colors.brand, borderRadius: 4, paddingHorizontal: 2 }}>EN
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
         <Ionicons name="log-out-outline" size={20} color="#EF4444" />

@@ -1,4 +1,5 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Image,
@@ -33,6 +34,14 @@ export default function OpportunitiesScreen() {
 
   const handleApplyNow = (type: "government" | "external") => {
     setApplyModalType(type);
+  };
+
+  const handleModalNavigate = (route: "lpo" | "assetFin" | "overdraft") => {
+    setApplyModalType(null);
+    // Small delay so the modal dismiss animation finishes before pushing
+    setTimeout(() => {
+      router.push(`/(financing)/${route}`);
+    }, 200);
   };
 
   return (
@@ -291,6 +300,7 @@ export default function OpportunitiesScreen() {
                 <TouchableOpacity
                   style={styles.modalApplyButton}
                   activeOpacity={0.7}
+                  onPress={() => handleModalNavigate("lpo")}
                 >
                   <Text style={styles.modalApplyButtonText}>Apply now</Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
@@ -320,6 +330,7 @@ export default function OpportunitiesScreen() {
                   <TouchableOpacity
                     style={styles.modalApplyButton}
                     activeOpacity={0.7}
+                    onPress={() => handleModalNavigate("overdraft")}
                   >
                     <Text style={styles.modalApplyButtonText}>Apply now</Text>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
@@ -350,6 +361,7 @@ export default function OpportunitiesScreen() {
                   <TouchableOpacity
                     style={styles.modalApplyButton}
                     activeOpacity={0.7}
+                    onPress={() => handleModalNavigate("assetFin")}
                   >
                     <Text style={styles.modalApplyButtonText}>Apply now</Text>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />

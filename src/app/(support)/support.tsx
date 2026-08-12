@@ -120,7 +120,7 @@ export default function SupportScreen() {
         {item.subject}
       </Text>
       <Text style={[styles.cell, styles.cellModule]}>{item.module}</Text>
-      <View style={[styles.cell, styles.cellBadge]}>
+      <View style={styles.cellBadge}>
         <View
           style={[
             styles.badge,
@@ -140,7 +140,7 @@ export default function SupportScreen() {
           </Text>
         </View>
       </View>
-      <View style={[styles.cell, styles.cellBadge]}>
+      <View style={styles.cellBadge}>
         <View
           style={[
             styles.badge,
@@ -541,6 +541,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
+    overflow: "visible",
   },
 
   // Cells
@@ -566,8 +567,9 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   cellBadge: {
-    flex: 1.2,
+    flex: 1.3,
     alignItems: "flex-start",
+    overflow: "visible",
   },
   cellDate: {
     width: 72,
