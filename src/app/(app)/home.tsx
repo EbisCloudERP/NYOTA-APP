@@ -1,11 +1,11 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../theme/colors";
 
@@ -38,12 +38,35 @@ export default function HomeScreen() {
       <Text style={styles.sectionTitle}>Quick Access</Text>
       <View style={styles.quickGrid}>
         {[
-          { label: "Certificates", icon: "ribbon-outline" },
-          { label: "Digital Tools", icon: "hardware-chip-outline" },
-          { label: "Profile", icon: "person-outline" },
-          { label: "Support", icon: "headset-outline" },
+          {
+            label: "Certificates",
+            icon: "ribbon-outline",
+            route: "/(certificates)/certificates",
+          },
+          {
+            label: "Digital Tools",
+            icon: "hardware-chip-outline",
+            route: null,
+          },
+          {
+            label: "Profile",
+            icon: "person-outline",
+            route: "/(profile)/profile",
+          },
+          {
+            label: "Support",
+            icon: "headset-outline",
+            route: "/(support)/support",
+          },
         ].map((item) => (
-          <TouchableOpacity key={item.label} style={styles.quickButton}>
+          <TouchableOpacity
+            key={item.label}
+            style={styles.quickButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              if (item.route) router.push(item.route as any);
+            }}
+          >
             <Ionicons name={item.icon as any} size={20} color={Colors.brand} />
             <Text style={styles.quickLabel}>{item.label}</Text>
           </TouchableOpacity>
