@@ -1,10 +1,30 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useAuth } from "../../services/AuthContext";
+import { Colors } from "../../theme/colors";
+
+type NotificationSettings = {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+};
 
 export default function SettingsScreen() {
   const { signOut } = useAuth();
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    email: true,
+    sms: false,
+    push: true,
+  });
 
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
