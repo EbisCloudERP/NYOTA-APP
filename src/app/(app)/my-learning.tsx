@@ -1,6 +1,8 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,11 +26,10 @@ interface Course {
   progress: number; // 0–100
   totalLessons: number;
   completedLessons: number;
-  duration: string;
   isRecommended: boolean;
 }
 
-const COURSES: Course[] = [
+const INITIAL_COURSES: Course[] = [
   {
     id: "1",
     title: "Introduction to Public Procurement",
@@ -40,7 +41,6 @@ const COURSES: Course[] = [
     progress: 75,
     totalLessons: 12,
     completedLessons: 9,
-    duration: "4h 30m",
     isRecommended: true,
   },
   {
@@ -54,7 +54,6 @@ const COURSES: Course[] = [
     progress: 40,
     totalLessons: 8,
     completedLessons: 3,
-    duration: "3h 15m",
     isRecommended: true,
   },
   {
@@ -68,7 +67,6 @@ const COURSES: Course[] = [
     progress: 0,
     totalLessons: 10,
     completedLessons: 0,
-    duration: "5h 00m",
     isRecommended: false,
   },
   {
@@ -82,7 +80,6 @@ const COURSES: Course[] = [
     progress: 100,
     totalLessons: 6,
     completedLessons: 6,
-    duration: "2h 45m",
     isRecommended: true,
   },
   {
@@ -96,7 +93,6 @@ const COURSES: Course[] = [
     progress: 20,
     totalLessons: 14,
     completedLessons: 3,
-    duration: "6h 00m",
     isRecommended: false,
   },
   {
@@ -110,16 +106,34 @@ const COURSES: Course[] = [
     progress: 0,
     totalLessons: 16,
     completedLessons: 0,
-    duration: "7h 30m",
     isRecommended: false,
   },
 ];
 
 export default function MyLearningScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+
+  const handleEnroll = (course: Course) => {
+    Alert.alert(
+      "Enroll in Course",
+      `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Enroll",
+          onPress: () => {
+            setCourses((prev) =>
+              prev.map((c) => (c.id === course.id ? { ...c, progress: 1 } : c)),
+            );
+          },
+        },
+      ],
+    );
+  };
 
   const filteredCourses =
-    activeTab === "all" ? COURSES : COURSES.filter((c) => c.isRecommended);
+    activeTab === "all" ? courses : courses.filter((c) => c.isRecommended);
 
   return (
     <ScrollView
@@ -176,9 +190,49 @@ export default function MyLearningScreen() {
               </View>
               <Text style={styles.cardCategory}>{course.category}</Text>
             </View>
-            <View style={styles.durationRow}>
-              <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-              <Text style={styles.duration}>{course.duration}</Text>
+            <View
+              style={[
+                styles.enrollmentBadge,
+                course.progress === 100
+                  ? styles.enrollmentBadgeCompleted
+                  : course.progress > 0
+                    ? styles.enrollmentBadgeEnrolled
+                    : styles.enrollmentBadgeNotEnrolled,
+              ]}
+            >
+              <Ionicons
+                name={
+                  course.progress === 100
+                    ? "checkmark-circle"
+                    : course.progress > 0
+                      ? "checkmark-circle"
+                      : "close-circle-outline"
+                }
+                size={12}
+                color={
+                  course.progress === 100
+                    ? Colors.brand
+                    : course.progress > 0
+                      ? "#16A34A"
+                      : "#9CA3AF"
+                }
+              />
+              <Text
+                style={[
+                  styles.enrollmentBadgeText,
+                  course.progress === 100
+                    ? styles.enrollmentBadgeTextCompleted
+                    : course.progress > 0
+                      ? styles.enrollmentBadgeTextEnrolled
+                      : styles.enrollmentBadgeTextNotEnrolled,
+                ]}
+              >
+                {course.progress === 100
+                  ? "Completed"
+                  : course.progress > 0
+                    ? "Enrolled"
+                    : "Not enrolled"}
+              </Text>
             </View>
           </View>
 
@@ -223,6 +277,13 @@ export default function MyLearningScreen() {
                 styles.cardButtonOutline,
             ]}
             activeOpacity={0.7}
+            onPress={() => {
+              if (course.progress === 0) {
+                handleEnroll(course);
+              } else if (course.progress < 100) {
+                router.push("/(lessons)/lessons");
+              }
+            }}
           >
             <Text
               style={[
@@ -356,13 +417,34 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.brand,
   },
-  durationRow: {
+  enrollmentBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  duration: {
-    fontSize: 12,
+  enrollmentBadgeCompleted: {
+    backgroundColor: "#F3EFFF",
+  },
+  enrollmentBadgeEnrolled: {
+    backgroundColor: "#F0FDF4",
+  },
+  enrollmentBadgeNotEnrolled: {
+    backgroundColor: "#F9FAFB",
+  },
+  enrollmentBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  enrollmentBadgeTextCompleted: {
+    color: Colors.brand,
+  },
+  enrollmentBadgeTextEnrolled: {
+    color: "#16A34A",
+  },
+  enrollmentBadgeTextNotEnrolled: {
     color: "#9CA3AF",
   },
   cardTitle: {
