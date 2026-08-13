@@ -46,7 +46,7 @@ export default function HomeScreen() {
           {
             label: "Digital Tools",
             icon: "hardware-chip-outline",
-            route: null,
+            route: "/(digital_tools)/digital-tools",
           },
           {
             label: "Profile",

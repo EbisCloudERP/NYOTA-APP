@@ -288,112 +288,117 @@ export default function MyApplicationsScreen() {
       {/* ── Application details sheet ── */}
       <Modal
         visible={selected !== null}
-        transparent
         animationType="slide"
+        presentationStyle="pageSheet"
         onRequestClose={() => setSelected(null)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            {selected && (
-              <>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Application details</Text>
-                  <TouchableOpacity
-                    onPress={() => setSelected(null)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="close" size={22} color="#9CA3AF" />
-                  </TouchableOpacity>
-                </View>
+        {selected && (
+          <View style={styles.modalContainer}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={() => setSelected(null)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={24} color="#111827" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Application details</Text>
+              <View style={styles.modalHeaderSpacer} />
+            </View>
 
-                <View style={styles.modalRefRow}>
-                  <Text style={styles.modalRef}>{selected.ref}</Text>
-                  <View
+            {/* Body */}
+            <ScrollView
+              style={styles.modalBody}
+              contentContainerStyle={styles.modalBodyContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.modalRefRow}>
+                <Text style={styles.modalRef}>{selected.ref}</Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: STATUS_STYLES[selected.status].bg },
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.statusBadge,
-                      { backgroundColor: STATUS_STYLES[selected.status].bg },
+                      styles.statusText,
+                      { color: STATUS_STYLES[selected.status].fg },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.statusText,
-                        { color: STATUS_STYLES[selected.status].fg },
-                      ]}
-                    >
-                      {selected.status}
+                    {selected.status}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.modalDetails}>
+                <View style={styles.modalDetailRow}>
+                  <Ionicons
+                    name="layers-outline"
+                    size={18}
+                    color={Colors.brand}
+                  />
+                  <View style={styles.modalDetailText}>
+                    <Text style={styles.modalDetailLabel}>Service</Text>
+                    <Text style={styles.modalDetailValue}>
+                      {selected.service}
                     </Text>
                   </View>
                 </View>
-
-                <View style={styles.modalDetails}>
-                  <View style={styles.modalDetailRow}>
-                    <Ionicons
-                      name="layers-outline"
-                      size={18}
-                      color={Colors.brand}
-                    />
-                    <View style={styles.modalDetailText}>
-                      <Text style={styles.modalDetailLabel}>Service</Text>
-                      <Text style={styles.modalDetailValue}>
-                        {selected.service}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.modalDetailRow}>
-                    <Ionicons
-                      name="calendar-outline"
-                      size={18}
-                      color={Colors.brand}
-                    />
-                    <View style={styles.modalDetailText}>
-                      <Text style={styles.modalDetailLabel}>Date applied</Text>
-                      <Text style={styles.modalDetailValue}>
-                        {selected.date}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.modalDetailRow}>
-                    <Ionicons
-                      name="cash-outline"
-                      size={18}
-                      color={Colors.brand}
-                    />
-                    <View style={styles.modalDetailText}>
-                      <Text style={styles.modalDetailLabel}>Amount</Text>
-                      <Text style={styles.modalDetailValue}>
-                        KES {selected.amount.toLocaleString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <View
-                    style={[styles.modalDetailRow, styles.modalDetailRowLast]}
-                  >
-                    <Ionicons
-                      name="business-outline"
-                      size={18}
-                      color={Colors.brand}
-                    />
-                    <View style={styles.modalDetailText}>
-                      <Text style={styles.modalDetailLabel}>Provider</Text>
-                      <Text style={styles.modalDetailValue}>
-                        {selected.provider}
-                      </Text>
-                    </View>
+                <View style={styles.modalDetailRow}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color={Colors.brand}
+                  />
+                  <View style={styles.modalDetailText}>
+                    <Text style={styles.modalDetailLabel}>Date applied</Text>
+                    <Text style={styles.modalDetailValue}>{selected.date}</Text>
                   </View>
                 </View>
-
-                <TouchableOpacity
-                  style={styles.modalCloseButton}
-                  activeOpacity={0.7}
-                  onPress={() => setSelected(null)}
+                <View style={styles.modalDetailRow}>
+                  <Ionicons
+                    name="cash-outline"
+                    size={18}
+                    color={Colors.brand}
+                  />
+                  <View style={styles.modalDetailText}>
+                    <Text style={styles.modalDetailLabel}>Amount</Text>
+                    <Text style={styles.modalDetailValue}>
+                      KES {selected.amount.toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[styles.modalDetailRow, styles.modalDetailRowLast]}
                 >
-                  <Text style={styles.modalCloseText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
+                  <Ionicons
+                    name="business-outline"
+                    size={18}
+                    color={Colors.brand}
+                  />
+                  <View style={styles.modalDetailText}>
+                    <Text style={styles.modalDetailLabel}>Provider</Text>
+                    <Text style={styles.modalDetailValue}>
+                      {selected.provider}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                activeOpacity={0.7}
+                onPress={() => setSelected(null)}
+              >
+                <Text style={styles.modalCloseText}>Done</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
       </Modal>
     </ScrollView>
   );
@@ -578,37 +583,33 @@ const styles = StyleSheet.create({
   },
 
   // ── Details sheet ──
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(17, 24, 39, 0.45)",
-  },
-  modalSheet: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 32,
-  },
-  modalHandle: {
-    alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E7EB",
-    marginBottom: 16,
+    backgroundColor: Colors.white,
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  modalHeaderSpacer: {
+    width: 24,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 17,
+    fontWeight: "600",
     color: "#111827",
+  },
+  modalBody: {
+    flex: 1,
+  },
+  modalBodyContent: {
+    padding: 20,
   },
   modalRefRow: {
     flexDirection: "row",
@@ -627,7 +628,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F3F4F6",
     paddingHorizontal: 16,
-    marginBottom: 20,
   },
   modalDetailRow: {
     flexDirection: "row",
@@ -653,15 +653,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111827",
   },
+  modalFooter: {
+    padding: 20,
+    paddingBottom: 36,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
   modalCloseButton: {
     backgroundColor: Colors.brand,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 15,
     alignItems: "center",
   },
   modalCloseText: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
     color: "#FFFFFF",
   },
 });
