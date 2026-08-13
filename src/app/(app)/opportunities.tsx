@@ -3,14 +3,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Image,
-  Linking,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { WebView } from "react-native-webview";
 import { Colors } from "../../theme/colors";
 
 type Tab = "opportunities" | "funding";
@@ -22,10 +22,6 @@ export default function OpportunitiesScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("opportunities");
   const [fundingView, setFundingView] = useState<FundingView>(null);
   const [applyModalType, setApplyModalType] = useState<ApplyModalType>(null);
-
-  const handleOpenEGP = () => {
-    Linking.openURL("https://egpkenya.go.ke/tender");
-  };
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -49,6 +45,7 @@ export default function OpportunitiesScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={activeTab !== "opportunities"}
     >
       {/* ── Header ── */}
       <Text style={styles.title}>Opportunities</Text>
@@ -108,20 +105,25 @@ export default function OpportunitiesScreen() {
             </View>
             <Text style={styles.infoText}>
               Make sure you are registered with e-GP before applying for
-              tenders. Use the official portal below to view the latest tenders.
+              tenders. Browse the latest tenders directly below.
             </Text>
           </View>
 
-          {/* e-GP button */}
-          <TouchableOpacity
-            style={styles.egpButton}
-            onPress={handleOpenEGP}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="globe-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.egpButtonText}>Visit e-GP Portal</Text>
-            <Ionicons name="open-outline" size={16} color="#FFFFFF" />
-          </TouchableOpacity>
+          {/* e-GP WebView */}
+          <View style={styles.webviewContainer}>
+            <WebView
+              source={{ uri: "https://egpkenya.go.ke/tender" }}
+              style={styles.webview}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.webviewLoading}>
+                  <Text style={styles.webviewLoadingText}>
+                    Loading e-GP Portal…
+                  </Text>
+                </View>
+              )}
+            />
+          </View>
         </>
       )}
 
@@ -785,6 +787,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#D1D5DB",
     textAlign: "center",
+  },
+
+  // ── WebView ──
+  webviewContainer: {
+    height: 500,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 24,
+  },
+  webview: {
+    flex: 1,
+  },
+  webviewLoading: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  webviewLoadingText: {
+    fontSize: 14,
+    color: "#6B7280",
   },
 
   // ── Bottom spacer ──

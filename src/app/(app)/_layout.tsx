@@ -47,12 +47,27 @@ function HeaderRight() {
 
   return (
     <View style={styles.headerRight}>
-      <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity
+        style={styles.iconButton}
+        onPress={() => router.push("/my-applications")}
+      >
         <Ionicons name="notifications-outline" size={20} color="#374151" />
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton}>
         <Ionicons name="globe-outline" size={20} color="#374151" />
-        <Text style={{ position: "absolute", top: -4, right: -4, fontSize: 8, color: Colors.white, backgroundColor: Colors.brand, borderRadius: 4, paddingHorizontal: 2 }}>EN
+        <Text
+          style={{
+            position: "absolute",
+            top: -4,
+            right: -4,
+            fontSize: 8,
+            color: Colors.white,
+            backgroundColor: Colors.brand,
+            borderRadius: 4,
+            paddingHorizontal: 2,
+          }}
+        >
+          EN
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>

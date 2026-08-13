@@ -132,7 +132,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* ── Company ── */}
-      <Text style={styles.sectionHeading}>Company</Text>
+      <Text style={styles.sectionHeading}>Location Information</Text>
 
       <View style={styles.card}>
         {/* County */}
