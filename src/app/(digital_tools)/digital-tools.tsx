@@ -1,5 +1,12 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { Colors } from "../../theme/colors";
 
 interface DigitalTool {
@@ -107,8 +114,8 @@ export default function DigitalToolsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.subtitle}>
-        Explore and onboard to essential business tools and solutions to
-        improve productivity, streamline workflows and access to market.
+        Explore and onboard to essential business tools and solutions to improve
+        productivity, streamline workflows and access to market.
       </Text>
 
       {TOOLS.map((tool) => (

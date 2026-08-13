@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, Tabs } from "expo-router";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
 
@@ -53,23 +54,7 @@ function HeaderRight() {
       >
         <Ionicons name="notifications-outline" size={20} color="#374151" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton}>
-        <Ionicons name="globe-outline" size={20} color="#374151" />
-        <Text
-          style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-            fontSize: 8,
-            color: Colors.white,
-            backgroundColor: Colors.brand,
-            borderRadius: 4,
-            paddingHorizontal: 2,
-          }}
-        >
-          EN
-        </Text>
-      </TouchableOpacity>
+      <LanguageSelector variant="header" />
       <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
         <Ionicons name="log-out-outline" size={20} color="#EF4444" />
       </TouchableOpacity>

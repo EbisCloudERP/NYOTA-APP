@@ -25,6 +25,16 @@ export async function getUser(): Promise<object | null> {
   }
 }
 
+const LANGUAGE_KEY = "nyota_language";
+
+export async function setLanguage(language: string): Promise<void> {
+  await SecureStore.setItemAsync(LANGUAGE_KEY, language);
+}
+
+export async function getLanguage(): Promise<string | null> {
+  return SecureStore.getItemAsync(LANGUAGE_KEY);
+}
+
 export async function clearSession(): Promise<void> {
   await Promise.all([
     SecureStore.deleteItemAsync(TOKEN_KEY),
