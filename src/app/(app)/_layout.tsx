@@ -6,13 +6,10 @@ import { Colors } from "../../theme/colors";
 
 function HeaderLeft() {
   const { user } = useAuth();
-  const firstName = (user?.full_name as string)?.split(" ")[0] || "User";
-  const initials = (user?.full_name as string)
-    ?.split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
+  const firstName = user?.first_name || "User";
+  const initials =
+    `${(user?.first_name?.[0] ?? "")}${(user?.last_name?.[0] ?? "")}`.toUpperCase() ||
+    "U";
 
   return (
     <View style={styles.headerLeft}>

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
@@ -14,14 +14,8 @@ import {
     submitEligibilityAnswers,
     type EligibilityQuestion,
 } from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
-
-function generateUuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
 export default function KycScreen() {
   const [questions, setQuestions] = useState<EligibilityQuestion[]>([]);
@@ -29,6 +23,15 @@ export default function KycScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submitting, setSubmitting] = useState(false);
+  const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
+  const [uuid, setUuid] = useState<string>(paramUuid ?? "");
+
+  useEffect(() => {
+    if (uuid) return;
+    getUuid().then((stored) => {
+      if (stored) setUuid(stored);
+    });
+  }, [uuid]);
 
   useEffect(() => {
     getEligibilityQuestions()
@@ -47,21 +50,18 @@ export default function KycScreen() {
   const allAnswered = questions.every((q) => answers[q.key] !== undefined);
 
   const handleSubmit = async () => {
+    if (!uuid) {
+      Alert.alert("Error", "Missing user UUID. Please log in again.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await submitEligibilityAnswers(generateUuid(), answers);
-      const profile = (res.data as Record<string, unknown>)?.profile as Record<string, unknown> | undefined;
-      const tags = (profile?.profile_tags as Record<string, unknown>) ?? {};
+      await submitEligibilityAnswers(uuid, answers);
 
       router.replace({
         pathname: "/results",
-        params: {
-          learningPaths: JSON.stringify(tags?.learning_paths ?? []),
-          categories: JSON.stringify(Object.values((tags?.categories as Record<string, string>) ?? {})),
-          tags: JSON.stringify(tags?.tags ?? []),
-          sections: JSON.stringify(tags?.homepage_sections ?? []),
-          level: (tags?.level as string) ?? "",
-        },
+        params: { uuid },
       });
     } catch (error: unknown) {
       const message =
@@ -130,30 +130,30 @@ export default function KycScreen() {
                       {q.description ? (
                         <Text style={styles.questionDesc}>{q.description}</Text>
                       ) : null}
-                    </View>
-                    {isAnswered && <Text style={styles.checkmark}>✓</Text>}
                   </View>
-                  <View style={styles.optionsList}>
-                    {(q.options ?? []).map((option) => {
-                      const selected = answers[q.key] === option.value;
-                      return (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={[styles.option, selected && styles.optionSelected]}
-                          onPress={() => handleSelect(q.key, option.value)}
+                  {isAnswered && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <View style={styles.optionsList}>
+                  {(q.q_options ?? []).map((option) => {
+                    const selected = answers[q.key] === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.id}
+                        style={[styles.option, selected && styles.optionSelected]}
+                        onPress={() => handleSelect(q.key, option.value)}
+                      >
+                        <View style={styles.radio}>
+                          {selected && <View style={styles.radioFill} />}
+                        </View>
+                        <Text
+                          style={[styles.optionText, selected && styles.optionTextSelected]}
                         >
-                          <View style={styles.radio}>
-                            {selected && <View style={styles.radioFill} />}
-                          </View>
-                          <Text
-                            style={[styles.optionText, selected && styles.optionTextSelected]}
-                          >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
+                          {option.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
                 </View>
               );
             })}

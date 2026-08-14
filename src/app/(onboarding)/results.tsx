@@ -1,39 +1,41 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import {
+    getCourseRecommendations,
+    type CourseRecommendations,
+} from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
-function parseArray(raw: string | string[] | undefined): string[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function ResultsScreen() {
-  const params = useLocalSearchParams<{
-    learningPaths: string;
-    categories: string;
-    tags: string;
-    sections: string;
-    level: string;
-  }>();
+  const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
+  const [uuid, setUuid] = useState<string>(paramUuid ?? "");
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<CourseRecommendations | null>(null);
 
-  const learningPaths = useMemo(() => parseArray(params.learningPaths), [params.learningPaths]);
-  const categories = useMemo(() => parseArray(params.categories), [params.categories]);
-  const tags = useMemo(() => parseArray(params.tags), [params.tags]);
-  const sections = useMemo(() => parseArray(params.sections), [params.sections]);
-  const level = params.level ?? "";
+  useEffect(() => {
+    if (uuid) return;
+    getUuid().then((stored) => {
+      if (stored) setUuid(stored);
+    });
+  }, [uuid]);
+
+  useEffect(() => {
+    if (!uuid) return;
+    getCourseRecommendations(uuid)
+      .then((res) => setData(res.data))
+      .catch(() => Alert.alert("Error", "Failed to load recommendations."))
+      .finally(() => setLoading(false));
+  }, [uuid]);
 
   return (
     <View style={styles.container}>
@@ -43,91 +45,66 @@ export default function ResultsScreen() {
       >
         <Text style={styles.title}>Congratulations!</Text>
         <Text style={styles.subtitle}>
-          Based on your profile, here is what you are eligible for.
+          Here are the courses we recommend based on your profile.
         </Text>
 
-        {learningPaths.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Learning Paths</Text>
-            <View style={styles.tagRow}>
-              {learningPaths.map((p, i) => (
-                <View key={i} style={styles.tag}>
-                  <Text style={styles.tagText}>{p.replace(/_/g, " ")}</Text>
-                </View>
-              ))}
-            </View>
-          </>
-        )}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.brand} />
+            <Text style={styles.loadingText}>Loading recommendations...</Text>
+          </View>
+        ) : (
+          data?.homepage_sections?.map((section) => (
+            <View key={section.key} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              {section.description ? (
+                <Text style={styles.sectionDesc}>{section.description}</Text>
+              ) : null}
 
-        {level ? (
-          <>
-            <Text style={styles.sectionTitle}>Your Level</Text>
-            <View style={styles.tagRow}>
-              <View style={[styles.tag, styles.tagHighlight]}>
-                <Text style={[styles.tagText, styles.tagTextHighlight]}>{level.toUpperCase()}</Text>
-              </View>
-            </View>
-          </>
-        ) : null}
-
-        {categories.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Matched Categories</Text>
-            <View style={styles.tagRow}>
-              {categories.map((c, i) => (
-                <View key={i} style={styles.tag}>
-                  <Text style={styles.tagText}>{c.replace(/-/g, " ")}</Text>
-                </View>
-              ))}
-            </View>
-          </>
-        )}
-
-        {tags.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Your Tags</Text>
-            <View style={styles.tagRow}>
-              {tags.map((t, i) => (
-                <View key={i} style={[styles.tag, styles.tagSmall]}>
-                  <Text style={[styles.tagText, styles.tagTextSmall]}>{t.replace(/-/g, " ")}</Text>
-                </View>
-              ))}
-            </View>
-          </>
-        )}
-
-        {sections.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Recommended For You</Text>
-            <View style={styles.cardsList}>
-              {sections.map((s, i) => (
-                <View key={i} style={styles.courseCard}>
-                  <View style={styles.courseIcon}>
-                    <Text style={styles.courseIconText}>📘</Text>
+              {section.courses?.length ? (
+                section.courses.map((course) => (
+                  <View key={course.id} style={styles.courseCard}>
+                    <View style={styles.courseIcon}>
+                      <Text style={styles.courseIconText}>📘</Text>
+                    </View>
+                    <View style={styles.courseBody}>
+                      <Text style={styles.courseName}>{course.title}</Text>
+                      {course.short_description ? (
+                        <Text style={styles.courseDesc} numberOfLines={2}>
+                          {course.short_description}
+                        </Text>
+                      ) : null}
+                      <View style={styles.courseMeta}>
+                        {course.level ? (
+                          <View style={styles.metaTag}>
+                            <Text style={styles.metaTagText}>{course.level}</Text>
+                          </View>
+                        ) : null}
+                        {course.category ? (
+                          <Text style={styles.metaText}>{course.category.name}</Text>
+                        ) : null}
+                      </View>
+                    </View>
                   </View>
-                  <Text style={styles.courseName}>{s.replace(/_/g, " ")}</Text>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No courses yet.</Text>
+              )}
             </View>
-          </>
+          ))
         )}
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            Your profile has been personalized. You can update it anytime from the
-            dashboard.
-          </Text>
-        </View>
       </ScrollView>
 
       <View style={styles.bottomFixed}>
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => router.replace("/login")}
+          onPress={() => router.replace("/home")}
         >
-          <Text style={styles.continueButtonText}>Proceed to Login</Text>
+          <Text style={styles.continueButtonText}>Proceed to Dashboard</Text>
         </TouchableOpacity>
-        <Text style={styles.footer}>You can update your profile anytime from the dashboard</Text>
+        <Text style={styles.footer}>
+          You can update your profile anytime from the dashboard
+        </Text>
       </View>
     </View>
   );
@@ -140,36 +117,33 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15, color: "#6B7280", marginBottom: 24, lineHeight: 21,
   },
+  loadingContainer: { alignItems: "center", paddingVertical: 60 },
+  loadingText: { marginTop: 14, fontSize: 14, color: "#9CA3AF" },
+  section: { marginBottom: 24 },
   sectionTitle: {
-    fontSize: 14, fontWeight: "700", color: "#374151",
-    textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10, marginTop: 8,
+    fontSize: 16, fontWeight: "700", color: "#1F2937", marginBottom: 4,
   },
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  tag: {
-    backgroundColor: "#F5F3FF", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-  },
-  tagHighlight: { backgroundColor: Colors.brand },
-  tagText: {
-    fontSize: 13, fontWeight: "600", color: Colors.brand, textTransform: "capitalize",
-  },
-  tagTextHighlight: { color: "#FFFFFF" },
-  tagSmall: { paddingHorizontal: 10, paddingVertical: 4 },
-  tagTextSmall: { fontSize: 12 },
-  cardsList: { gap: 10, marginBottom: 16 },
+  sectionDesc: { fontSize: 13, color: "#6B7280", marginBottom: 12, lineHeight: 18 },
   courseCard: {
-    flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 16,
-    borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    flexDirection: "row", alignItems: "flex-start", paddingVertical: 14,
+    paddingHorizontal: 16, borderRadius: 12, borderWidth: 1,
+    borderColor: "#E5E7EB", backgroundColor: "#F9FAFB", marginBottom: 10,
   },
   courseIcon: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: "#EDE9FE",
+    width: 40, height: 40, borderRadius: 10, backgroundColor: "#EDE9FE",
     alignItems: "center", justifyContent: "center", marginRight: 12,
   },
-  courseIconText: { fontSize: 16 },
-  courseName: { flex: 1, fontSize: 14, fontWeight: "500", color: "#1F2937", textTransform: "capitalize" },
-  infoCard: {
-    backgroundColor: "#F0FDF4", borderRadius: 12, padding: 16, marginBottom: 12,
+  courseIconText: { fontSize: 18 },
+  courseBody: { flex: 1 },
+  courseName: { fontSize: 14, fontWeight: "600", color: "#1F2937", lineHeight: 19 },
+  courseDesc: { fontSize: 12, color: "#6B7280", marginTop: 4, lineHeight: 17 },
+  courseMeta: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
+  metaTag: {
+    backgroundColor: "#F5F3FF", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
-  infoText: { fontSize: 14, color: "#166534", lineHeight: 21 },
+  metaTagText: { fontSize: 11, fontWeight: "600", color: Colors.brand, textTransform: "capitalize" },
+  metaText: { fontSize: 12, color: "#6B7280" },
+  emptyText: { fontSize: 13, color: "#9CA3AF" },
   bottomFixed: {
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40,
     borderTopWidth: 1, borderTopColor: "#F3F4F6", backgroundColor: "#FFFFFF",

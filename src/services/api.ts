@@ -10,20 +10,20 @@ interface ApiResponse<T = unknown> {
 
 interface LoginResponse {
   otp: string;
+  uuid?: string;
 }
 
 interface AuthUser {
-  id: number;
-  full_name: string;
+  uuid: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
   email: string;
   phone: string | null;
   avatar: string | null;
   status: string;
-  gender: string;
-  date_of_birth: string;
-  education_level: string | null;
-  employment_status: string;
-  roles: unknown[];
+  county: string | null;
+  sub_county: string | null;
   is_onboarded: boolean;
   last_login_at: string;
 }
@@ -57,9 +57,14 @@ async function request<T>(
   const json = await response.json();
 
   if (!response.ok || !json.success) {
-    throw new Error(
-      json.message || `Request failed with status ${response.status}`
-    );
+    const base =
+      json.message || `Request failed with status ${response.status}`;
+    const details = json.errors
+      ? `\n${typeof json.errors === "string"
+          ? json.errors
+          : JSON.stringify(json.errors, null, 2)}`
+      : "";
+    throw new Error(`${base}${details}`);
   }
 
   return json;
@@ -80,16 +85,31 @@ export async function login(
   });
 }
 
-export async function loginOtp(otp: string): Promise<ApiResponse<LoginOtpResponse>> {
+export async function loginOtp(
+  otp: string,
+  uuid: string
+): Promise<ApiResponse<LoginOtpResponse>> {
   return request<LoginOtpResponse>("/login_otp", {
     method: "POST",
-    body: JSON.stringify({ otp }),
+    body: JSON.stringify({ otp, uuid }),
   });
 }
 
 interface VerifyEmailResponse {
   exists: boolean;
   otp?: string;
+}
+
+export async function verifyPhone(
+  contact: string
+): Promise<ApiResponse<VerifyEmailResponse>> {
+  return request<VerifyEmailResponse>("/verify-email", {
+    method: "POST",
+    body: JSON.stringify({
+      type: "mobile",
+      contact,
+    }),
+  });
 }
 
 export async function verifyEmail(
@@ -161,7 +181,8 @@ export interface EligibilityQuestion {
   is_required: boolean;
   order: number;
   metadata: unknown;
-  options: EligibilityOption[];
+  options: EligibilityOption[] | null;
+  q_options: EligibilityOption[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -194,12 +215,87 @@ interface RegisterRequest {
   password_confirmation: string;
 }
 
+interface RegisterResponse {
+  message: string;
+  step: unknown;
+}
+
 export async function registerUser(
   data: RegisterRequest
-): Promise<ApiResponse<unknown>> {
-  return request("/register_request", {
+): Promise<ApiResponse<RegisterResponse>> {
+  return request<RegisterResponse>("/register_request", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+export interface CourseCategory {
+  id: number;
+  parent_id: number | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  is_active: number;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseLesson {
+  id: number;
+  course_id: number;
+  title: string;
+  slug: string;
+  type: string;
+}
+
+export interface Course {
+  id: number;
+  instructor_id: number | null;
+  category_id: number;
+  title: string;
+  slug: string;
+  short_description: string;
+  description: string | null;
+  thumbnail: string | null;
+  preview_video: string | null;
+  level: string;
+  status: string;
+  access_type: string;
+  duration_minutes: number;
+  total_lessons: number;
+  completion_rate: string;
+  avg_rating: string;
+  enrolled_count: number;
+  certificate_enabled: number;
+  passing_score: number;
+  category: CourseCategory | null;
+  lessons: CourseLesson[];
+}
+
+export interface HomepageSection {
+  key: string;
+  title: string;
+  description: string;
+  courses: Course[];
+  type: string;
+}
+
+export interface CourseRecommendations {
+  courses: Course[];
+  homepage_sections: HomepageSection[];
+  suggested_tags: unknown;
+  related_lessons: unknown[];
+  profile_incomplete: boolean;
+}
+
+export async function getCourseRecommendations(
+  uuid: string
+): Promise<ApiResponse<CourseRecommendations>> {
+  return request<CourseRecommendations>("/course/user_recommendations", {
+    method: "POST",
+    body: JSON.stringify({ uuid }),
   });
 }
 
@@ -263,7 +359,7 @@ export async function sendSms(
       Accept: "application/json",
     },
     body: JSON.stringify({
-      api_key: "cnaGrv6lg1Z0zQeR3AusWYxkfmCdbIBJ579hViLTtNDEFjyX2H",
+      api_key: "igFS48Ip9YLGHh0NAKojOtBnR7TaWZM5dzqPxCs3rDv1f2Vylm",
       service_id: 0,
       mobile,
       response_type: "json",

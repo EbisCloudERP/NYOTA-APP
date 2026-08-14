@@ -1,6 +1,7 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
     Platform,
@@ -27,6 +28,13 @@ export default function OtpVerifyPhoneScreen() {
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const { otp: expectedOtp } = useLocalSearchParams<{
+    phone: string;
+    password: string;
+    otp: string;
+  }>();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -64,15 +72,21 @@ export default function OtpVerifyPhoneScreen() {
     }
   };
 
-  const handleVerify = (fullCode: string) => {
-    // TODO: verify phone OTP
-    console.log("Verify phone code", { code: fullCode });
-    setTimeout(() => {
-      router.replace("/login");
-      setTimeout(() => {
-        Alert.alert("Success", "Login with your new credentials");
-      }, 300);
-    }, 250);
+  const handleVerify = async (fullCode: string) => {
+    if (verified || loading) return;
+    setLoading(true);
+
+    await new Promise((r) => setTimeout(r, 500));
+
+    if (fullCode !== expectedOtp) {
+      setLoading(false);
+      Alert.alert("Invalid Code", "The verification code you entered is incorrect. Please try again.");
+      return;
+    }
+
+    setVerified(true);
+    setLoading(false);
+    router.replace("/login");
   };
 
   const handleResend = () => {
@@ -114,6 +128,10 @@ export default function OtpVerifyPhoneScreen() {
             </View>
           ))}
         </View>
+
+        {loading && (
+          <ActivityIndicator color={Colors.brand} style={styles.loader} />
+        )}
 
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
@@ -219,6 +237,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
+  },
+  loader: {
+    marginBottom: 16,
   },
   timerContainer: {
     flexDirection: "row",

@@ -15,8 +15,7 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { getCounties, registerUser, login, loginOtp, type County } from "../../services/api";
-import { useAuth, type UserData } from "../../services/AuthContext";
+import { getCounties, registerUser, type County } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 const PICKER_ITEM_HEIGHT = 48;
@@ -87,7 +86,6 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { email } = useLocalSearchParams<{ email: string }>();
-  const { signIn } = useAuth();
 
   useEffect(() => {
     getCounties()
@@ -174,14 +172,10 @@ export default function RegisterScreen() {
         password_confirmation: confirmPassword,
       });
 
-      const loginRes = await login(email, password);
-      const otpResponse = await loginOtp(loginRes.data.otp);
-      await signIn(
-        otpResponse.data.token,
-        otpResponse.data.user as unknown as UserData
-      );
-
-      router.replace("/kyc");
+      router.replace({
+        pathname: "/verify-phone",
+        params: { password },
+      });
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Registration failed. Please try again.";

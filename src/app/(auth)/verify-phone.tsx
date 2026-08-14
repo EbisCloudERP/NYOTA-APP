@@ -1,6 +1,8 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -11,13 +13,39 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { verifyPhone, sendSms } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 export default function VerifyPhoneScreen() {
   const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { password } = useLocalSearchParams<{ password: string }>();
 
-  const handleVerify = () => {
-    router.push("/otp-verify-phone");
+  const handleVerify = async () => {
+    if (phone.trim().length < 9) {
+      Alert.alert("Invalid Number", "Please enter a valid phone number.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      const mobile = `254${phone.trim()}`;
+
+      router.push({
+        pathname: "/otp-verify-phone",
+        params: { phone: phone.trim(), password, otp },
+      });
+
+      verifyPhone(phone.trim()).catch(() => {});
+      sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(() => {});
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed. Please try again.";
+      Alert.alert("Verification Failed", message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,8 +89,16 @@ export default function VerifyPhoneScreen() {
           </Text>
 
           {/* Verify Button */}
-          <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-            <Text style={styles.verifyButtonText}>Verify</Text>
+          <TouchableOpacity
+            style={[styles.verifyButton, loading && { opacity: 0.7 }]}
+            onPress={handleVerify}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.verifyButtonText}>Verify</Text>
+            )}
           </TouchableOpacity>
 
           {/* Go Back */}
