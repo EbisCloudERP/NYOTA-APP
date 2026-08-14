@@ -7,9 +7,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const firstName = user?.first_name || "User";
+  const isOnboarded = user?.is_onboarded;
+  const county = user?.county;
+
   return (
     <ScrollView
       style={styles.container}
@@ -17,7 +23,7 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Greeting */}
-      <Text style={styles.greeting}>Welcome back, Joab! 👋</Text>
+      <Text style={styles.greeting}>Welcome back, {firstName}! 👋</Text>
       <Text style={styles.subtitle}>
         Here's a summary of your recent activity.
       </Text>
@@ -25,14 +31,39 @@ export default function HomeScreen() {
       {/* Badges */}
       <View style={styles.badges}>
         <View style={styles.badge}>
-          <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-          <Text style={styles.badgeText}>Onboarded</Text>
+          <Ionicons
+            name={isOnboarded ? "checkmark-circle" : "alert-circle"}
+            size={16}
+            color={isOnboarded ? "#10B981" : "#F59E0B"}
+          />
+          <Text style={styles.badgeText}>
+            {isOnboarded ? "Onboarded" : "Profile incomplete"}
+          </Text>
         </View>
-        <View style={styles.badge}>
-          <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-          <Text style={styles.badgeText}>Profile setup completed</Text>
-        </View>
+        {county ? (
+          <View style={styles.badge}>
+            <Ionicons name="location-outline" size={16} color={Colors.brand} />
+            <Text style={styles.badgeText}>{county}</Text>
+          </View>
+        ) : null}
       </View>
+
+      {/* Next step */}
+      {!isOnboarded && (
+        <View style={styles.nextStepCard}>
+          <Text style={styles.nextStepTitle}>Your next step</Text>
+          <Text style={styles.nextStepText}>
+            Complete the eligibility questions to unlock courses and
+            opportunities matched to you.
+          </Text>
+          <TouchableOpacity
+            style={styles.nextStepButton}
+            onPress={() => router.push("/kyc")}
+          >
+            <Text style={styles.nextStepButtonText}>Complete profile</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Quick Access */}
       <Text style={styles.sectionTitle}>Quick Access</Text>
@@ -375,6 +406,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     color: "#065F46",
+  },
+  nextStepCard: {
+    backgroundColor: "#F5F3FF",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#EDE9FE",
+    padding: 16,
+    marginBottom: 28,
+  },
+  nextStepTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 6,
+  },
+  nextStepText: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+  nextStepButton: {
+    backgroundColor: Colors.brand,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  nextStepButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   // Quick Access
   quickGrid: {

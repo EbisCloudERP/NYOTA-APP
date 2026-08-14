@@ -6,21 +6,29 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { setToken, setUser, getToken, getUser, clearSession } from "./storage";
+import { router } from "expo-router";
+import { loginOtp } from "./api";
+import {
+  setToken,
+  setUser,
+  getToken,
+  getUser,
+  getUuid,
+  clearSession,
+} from "./storage";
 
 export interface UserData {
   [key: string]: unknown;
-  id: number;
-  full_name: string;
+  uuid: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
   email: string;
   phone: string | null;
   avatar: string | null;
   status: string;
-  gender: string;
-  date_of_birth: string;
-  education_level: string | null;
-  employment_status: string;
-  roles: Array<unknown>;
+  county: string | null;
+  sub_county: string | null;
   is_onboarded: boolean;
   last_login_at: string;
 }
@@ -31,6 +39,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   signIn: (token: string, user: UserData) => Promise<void>;
+  signInWithOtp: (otp: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -68,6 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await Promise.all([setToken(newToken), setUser(newUser)]);
   }, []);
 
+  const signInWithOtp = useCallback(
+    async (otp: string) => {
+      const uuid = (await getUuid()) ?? "";
+      const response = await loginOtp(otp, uuid);
+      await signIn(response.data.token, response.data.user as UserData);
+
+      if (response.data.user.is_onboarded) {
+        router.replace("/home");
+      } else {
+        router.replace({ pathname: "/kyc", params: { uuid } });
+      }
+    },
+    [signIn]
+  );
+
   const signOut = useCallback(async () => {
     setTokenState(null);
     setUserState(null);
@@ -82,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token,
         isLoading,
         signIn,
+        signInWithOtp,
         signOut,
       }}
     >
