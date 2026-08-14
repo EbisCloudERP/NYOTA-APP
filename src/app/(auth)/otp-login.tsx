@@ -12,8 +12,7 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { loginOtp } from "../../services/api";
-import { useAuth, type UserData } from "../../services/AuthContext";
+import { useAuth } from "../../services/AuthContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -32,7 +31,7 @@ export default function OtpLoginScreen() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
-  const { signIn } = useAuth();
+  const { signInWithOtp } = useAuth();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -77,10 +76,8 @@ export default function OtpLoginScreen() {
     if (verified || loading) return;
     setLoading(true);
     try {
-      const response = await loginOtp(fullCode);
+      await signInWithOtp(fullCode);
       setVerified(true);
-      await signIn(response.data.token, response.data.user as unknown as UserData);
-      router.replace("/home");
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Verification failed. Please try again.";

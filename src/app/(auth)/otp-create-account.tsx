@@ -30,7 +30,7 @@ export default function OtpCreateAccountScreen() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
-  const { otp: expectedOtp } = useLocalSearchParams<{ email: string; otp: string }>();
+  const { otp: expectedOtp, email } = useLocalSearchParams<{ email: string; otp: string }>();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -83,7 +83,7 @@ export default function OtpCreateAccountScreen() {
 
     setVerified(true);
     setLoading(false);
-    router.replace("/register");
+    router.replace({ pathname: "/register", params: { email } });
   };
 
   const handleResend = () => {

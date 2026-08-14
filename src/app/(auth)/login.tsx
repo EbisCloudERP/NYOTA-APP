@@ -12,7 +12,8 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { login, sendEmailOtp } from "../../services/api";
+import { login, sendEmailOtp, sendSms } from "../../services/api";
+import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 const NYOTA_IMAGE = require("../../../assets/images/nyotapic_teens.jpeg");
@@ -47,10 +48,19 @@ export default function LoginScreen() {
       const otp = response.data.otp;
       const isEmail = trimmedContact.includes("@");
 
+      if (response.data.uuid) {
+        await setUuid(response.data.uuid);
+      }
+
       router.push("/otp-login");
 
       if (isEmail) {
         sendEmailOtp(trimmedContact, otp).catch(() => {});
+      } else {
+        const mobile = `254${trimmedContact.replace(/^\+|^0+/, "")}`;
+        sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
+          () => {}
+        );
       }
     } catch (error: unknown) {
       const message =
