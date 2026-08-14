@@ -164,13 +164,13 @@ export default function LoginScreen() {
             <Text style={styles.signUpButtonText}>Sign Up</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.onboardTestContainer}
             onPress={() => router.push("/getstarted")}
             disabled={loading}
           >
             <Text style={styles.onboardTestText}>Onboard test</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Footer */}
           <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
