@@ -1,7 +1,8 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -9,110 +10,59 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { enrollCourse, getCourseCatalogue } from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 type Tab = "all" | "recommended";
-
-type Level = "Beginner" | "Intermediate" | "Advanced";
-type Pace = "Self-paced" | "Instructor-led";
 
 interface Course {
   id: string;
   title: string;
   description: string;
   category: string;
-  level: Level;
-  pace: Pace;
+  level: string;
+  pace: string;
   progress: number; // 0–100
   totalLessons: number;
   completedLessons: number;
   isRecommended: boolean;
 }
 
-const INITIAL_COURSES: Course[] = [
-  {
-    id: "1",
-    title: "Introduction to Public Procurement",
-    description:
-      "Learn the fundamentals of public procurement processes, legal frameworks, and best practices in Kenya.",
-    category: "Procurement",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 75,
-    totalLessons: 12,
-    completedLessons: 9,
-    isRecommended: true,
-  },
-  {
-    id: "2",
-    title: "AGPO Certification Guide",
-    description:
-      "Step-by-step guide to obtaining AGPO certification for youth, women, and PWD-owned businesses.",
-    category: "Certification",
-    level: "Intermediate",
-    pace: "Self-paced",
-    progress: 40,
-    totalLessons: 8,
-    completedLessons: 3,
-    isRecommended: true,
-  },
-  {
-    id: "3",
-    title: "Digital Literacy for Business",
-    description:
-      "Master essential digital tools and platforms to run and grow your business online.",
-    category: "Digital Skills",
-    level: "Beginner",
-    pace: "Instructor-led",
-    progress: 0,
-    totalLessons: 10,
-    completedLessons: 0,
-    isRecommended: false,
-  },
-  {
-    id: "4",
-    title: "Financial Management Basics",
-    description:
-      "Understand budgeting, cash flow, and financial reporting for small and medium enterprises.",
-    category: "Finance",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 100,
-    totalLessons: 6,
-    completedLessons: 6,
-    isRecommended: true,
-  },
-  {
-    id: "5",
-    title: "Tender Application Process",
-    description:
-      "Navigate the end-to-end tender application process including documentation, pricing, and submission.",
-    category: "Procurement",
-    level: "Advanced",
-    pace: "Instructor-led",
-    progress: 20,
-    totalLessons: 14,
-    completedLessons: 3,
-    isRecommended: false,
-  },
-  {
-    id: "6",
-    title: "Entrepreneurship Fundamentals",
-    description:
-      "Build a strong foundation in entrepreneurship covering ideation, validation, and go-to-market strategies.",
-    category: "Business",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 0,
-    totalLessons: 16,
-    completedLessons: 0,
-    isRecommended: false,
-  },
-];
+const capitalize = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 export default function MyLearningScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCourseCatalogue()
+      .then((res) =>
+        setCourses(
+          res.data.map((c) => ({
+            id: String(c.id),
+            title: c.title,
+            description: c.description,
+            category: c.category?.name ?? "",
+            level: capitalize(c.level),
+            pace: "Self-paced",
+            progress: 0,
+            totalLessons: c.total_lessons,
+            completedLessons: 0,
+            isRecommended: false,
+          })),
+        ),
+      )
+      .catch((e) =>
+        Alert.alert(
+          "Error",
+          e instanceof Error ? e.message : "Failed to load courses.",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleEnroll = (course: Course) => {
     Alert.alert(
@@ -122,10 +72,21 @@ export default function MyLearningScreen() {
         { text: "Cancel", style: "cancel" },
         {
           text: "Enroll",
-          onPress: () => {
-            setCourses((prev) =>
-              prev.map((c) => (c.id === course.id ? { ...c, progress: 1 } : c)),
-            );
+          onPress: async () => {
+            try {
+              const uuid = (await getUuid()) ?? "";
+              await enrollCourse(course.id, uuid);
+              setCourses((prev) =>
+                prev.map((c) =>
+                  c.id === course.id ? { ...c, progress: 1 } : c,
+                ),
+              );
+            } catch (e) {
+              Alert.alert(
+                "Enroll Failed",
+                e instanceof Error ? e.message : "Please try again.",
+              );
+            }
           },
         },
       ],
@@ -134,6 +95,14 @@ export default function MyLearningScreen() {
 
   const filteredCourses =
     activeTab === "all" ? courses : courses.filter((c) => c.isRecommended);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -337,6 +306,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 
   // ── Header ──

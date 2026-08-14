@@ -299,6 +299,47 @@ export async function getCourseRecommendations(
   });
 }
 
+export interface CatalogueLesson {
+  id: number;
+  title: string;
+  type: string;
+  duration_minutes: number;
+  is_preview: boolean;
+  content: unknown;
+}
+
+export interface CatalogueCourse {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  level: string;
+  status: string;
+  duration_minutes: number;
+  total_lessons: number;
+  completed_lessons: number | null;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  lessons: CatalogueLesson[];
+}
+
+export async function getCourseCatalogue(): Promise<ApiResponse<CatalogueCourse[]>> {
+  return request<CatalogueCourse[]>("/course/catalogue");
+}
+
+export async function enrollCourse(
+  course_id: string,
+  uuid: string
+): Promise<ApiResponse<unknown>> {
+  return request("/course/enroll", {
+    method: "POST",
+    body: JSON.stringify({ course_id, uuid }),
+  });
+}
+
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";
 
 interface EmailParams {
