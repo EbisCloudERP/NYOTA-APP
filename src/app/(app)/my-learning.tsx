@@ -10,7 +10,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { enrollCourse, getCourseCatalogue } from "../../services/api";
+import {
+  enrollCourse,
+  getCourseCatalogue,
+  getEnrolledCourses,
+} from "../../services/api";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -19,6 +23,7 @@ type Tab = "all" | "recommended";
 interface Course {
   id: string;
   title: string;
+  slug: string;
   description: string;
   category: string;
   level: string;
@@ -26,6 +31,7 @@ interface Course {
   progress: number; // 0–100
   totalLessons: number;
   completedLessons: number;
+  isEnrolled: boolean;
   isRecommended: boolean;
 }
 
@@ -38,23 +44,39 @@ export default function MyLearningScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getCourseCatalogue()
-      .then((res) =>
+    Promise.all([getEnrolledCourses(), getCourseCatalogue()])
+      .then(([enrolledRes, catalogueRes]) => {
+        const enrolledById = new Map(
+          enrolledRes.data.map((c) => [String(c.id), c]),
+        );
+
         setCourses(
-          res.data.map((c) => ({
-            id: String(c.id),
-            title: c.title,
-            description: c.description,
-            category: c.category?.name ?? "",
-            level: capitalize(c.level),
-            pace: "Self-paced",
-            progress: 0,
-            totalLessons: c.total_lessons,
-            completedLessons: 0,
-            isRecommended: false,
-          })),
-        ),
-      )
+          catalogueRes.data.map((c) => {
+            const enrolled = enrolledById.get(String(c.id));
+            const progress = enrolled
+              ? Math.min(100, Math.max(0, enrolled.completed_lessons ?? 0))
+              : 0;
+            const completedLessons = enrolled
+              ? Math.round((progress / 100) * (c.total_lessons || 0))
+              : 0;
+
+            return {
+              id: String(c.id),
+              title: c.title,
+              slug: c.slug,
+              description: c.description,
+              category: c.category?.name ?? "",
+              level: capitalize(c.level),
+              pace: "Self-paced",
+              progress,
+              totalLessons: c.total_lessons,
+              completedLessons,
+              isEnrolled: Boolean(enrolled),
+              isRecommended: false,
+            };
+          }),
+        );
+      })
       .catch((e) =>
         Alert.alert(
           "Error",
@@ -78,7 +100,7 @@ export default function MyLearningScreen() {
               await enrollCourse(course.id, uuid);
               setCourses((prev) =>
                 prev.map((c) =>
-                  c.id === course.id ? { ...c, progress: 1 } : c,
+                  c.id === course.id ? { ...c, isEnrolled: true } : c,
                 ),
               );
             } catch (e) {
@@ -164,7 +186,7 @@ export default function MyLearningScreen() {
                 styles.enrollmentBadge,
                 course.progress === 100
                   ? styles.enrollmentBadgeCompleted
-                  : course.progress > 0
+                  : course.isEnrolled
                     ? styles.enrollmentBadgeEnrolled
                     : styles.enrollmentBadgeNotEnrolled,
               ]}
@@ -173,7 +195,7 @@ export default function MyLearningScreen() {
                 name={
                   course.progress === 100
                     ? "checkmark-circle"
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? "checkmark-circle"
                       : "close-circle-outline"
                 }
@@ -181,7 +203,7 @@ export default function MyLearningScreen() {
                 color={
                   course.progress === 100
                     ? Colors.brand
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? "#16A34A"
                       : "#9CA3AF"
                 }
@@ -191,14 +213,14 @@ export default function MyLearningScreen() {
                   styles.enrollmentBadgeText,
                   course.progress === 100
                     ? styles.enrollmentBadgeTextCompleted
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? styles.enrollmentBadgeTextEnrolled
                       : styles.enrollmentBadgeTextNotEnrolled,
                 ]}
               >
                 {course.progress === 100
                   ? "Completed"
-                  : course.progress > 0
+                  : course.isEnrolled
                     ? "Enrolled"
                     : "Not enrolled"}
               </Text>
@@ -241,28 +263,31 @@ export default function MyLearningScreen() {
           <TouchableOpacity
             style={[
               styles.cardButton,
-              course.progress > 0 &&
+              course.isEnrolled &&
                 course.progress < 100 &&
                 styles.cardButtonOutline,
             ]}
             activeOpacity={0.7}
             onPress={() => {
-              if (course.progress === 0) {
+              if (!course.isEnrolled) {
                 handleEnroll(course);
               } else if (course.progress < 100) {
-                router.push("/(lessons)/lessons");
+                router.push({
+                  pathname: "/(lessons)/lessons",
+                  params: { slug: course.slug },
+                });
               }
             }}
           >
             <Text
               style={[
                 styles.cardButtonText,
-                course.progress > 0 &&
+                course.isEnrolled &&
                   course.progress < 100 &&
                   styles.cardButtonTextOutline,
               ]}
             >
-              {course.progress === 0
+              {!course.isEnrolled
                 ? "Enroll now"
                 : course.progress === 100
                   ? "Review course"
@@ -272,7 +297,7 @@ export default function MyLearningScreen() {
               name="arrow-forward"
               size={16}
               color={
-                course.progress > 0 && course.progress < 100
+                course.isEnrolled && course.progress < 100
                   ? Colors.brand
                   : "#FFFFFF"
               }

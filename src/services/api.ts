@@ -330,6 +330,242 @@ export async function getCourseCatalogue(): Promise<ApiResponse<CatalogueCourse[
   return request<CatalogueCourse[]>("/course/catalogue");
 }
 
+export async function getEnrolledCourses(): Promise<ApiResponse<CatalogueCourse[]>> {
+  return request<CatalogueCourse[]>("/course/enrolled_courses");
+}
+
+export interface CourseDetailLesson {
+  id: number;
+  title: string;
+  type: string;
+  duration_minutes: number;
+  is_preview: boolean;
+  content: unknown;
+}
+
+export interface CourseDetail {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  level: string;
+  status: string;
+  duration_minutes: number;
+  total_lessons: number;
+  completed_lessons: number | null;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
+  enrollment: {
+    status: string;
+  };
+  progress: {
+    total: number;
+    completed: number;
+    current_lesson: {
+      id: number;
+      title: string;
+      order: number;
+    } | null;
+    percentage: number;
+  };
+  lessons: CourseDetailLesson[];
+}
+
+export async function getCourse(slug: string): Promise<ApiResponse<CourseDetail>> {
+  return request<CourseDetail>(`/course/${encodeURIComponent(slug)}`);
+}
+
+export interface LessonContent {
+  type: string;
+  embed_url: string | null;
+  pdf_url: string | null;
+  content: string | null;
+  metadata: unknown;
+}
+
+export interface LessonVideo {
+  id: number;
+  url: string;
+  mux_asset_id: string;
+  mux_playback_id: string;
+  status: string;
+}
+
+export interface QuizOption {
+  id: number;
+  option_text: string;
+  order: number;
+}
+
+export interface QuizQuestion {
+  id: number;
+  question: string;
+  type: string;
+  difficulty: string;
+  explanation: string | null;
+  points: number;
+  options: QuizOption[];
+}
+
+export interface LessonQuiz {
+  id: number;
+  title: string;
+  description: string | null;
+  pass_mark: number;
+  max_attempts: number;
+  time_limit_minutes: number | null;
+  questions_count: number;
+  questions: QuizQuestion[];
+}
+
+export interface LessonDetail {
+  id: number;
+  title: string;
+  description: string | null;
+  type: string;
+  duration_minutes: number;
+  order: number;
+  is_preview: boolean;
+  is_required: boolean;
+  content: LessonContent | null;
+  videos: LessonVideo[];
+  quizz: LessonQuiz[];
+  course: {
+    id: number;
+    title: string;
+    slug: string;
+    description: string | null;
+    level: string;
+    status: string;
+    duration_minutes: number;
+    total_lessons: number;
+    completed_lessons: number | null;
+    lessons: CourseDetailLesson[];
+  } | null;
+}
+
+export async function getLesson(
+  lessonId: string | number,
+): Promise<ApiResponse<LessonDetail>> {
+  return request<LessonDetail>(`/lesson/${encodeURIComponent(String(lessonId))}`);
+}
+
+export async function completeLesson(
+  lessonId: string | number,
+  uuid: string,
+): Promise<ApiResponse<unknown>> {
+  return request("/course/lesson/complete", {
+    method: "POST",
+    body: JSON.stringify({ lesson_id: String(lessonId), uuid }),
+  });
+}
+
+export interface ExamOption {
+  id: number;
+  question_id: number;
+  option_text: string;
+  order: number;
+}
+
+export interface ExamQuestion {
+  id: number;
+  question: string;
+  type: string;
+  points: number;
+  pivot: {
+    quiz_id: number;
+    question_id: number;
+    order: number;
+    points: number | null;
+  };
+  options: ExamOption[];
+}
+
+export interface Exam {
+  id: number;
+  title: string;
+  description: string | null;
+  type: string;
+  pass_mark: number;
+  max_attempts: number;
+  time_limit_minutes: number | null;
+  is_active: boolean;
+  questions: ExamQuestion[];
+}
+
+export async function getExams(
+  uuid: string,
+  courseId: string | number,
+): Promise<ApiResponse<Exam>> {
+  return request<Exam>("/course/exams", {
+    method: "POST",
+    body: JSON.stringify({ uuid, course_id: String(courseId) }),
+  });
+}
+
+export interface ExamSubmissionAnswer {
+  id: number;
+  attempt_id: number;
+  question_id: number;
+  selected_option_ids: string;
+  text_answer: string | null;
+  is_correct: boolean;
+  points_awarded: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExamSubmissionResult {
+  id: number;
+  user_id: number;
+  quiz_id: number;
+  attempt_number: number;
+  score: number;
+  total_points: number;
+  percentage: string;
+  passed: boolean;
+  status: string;
+  started_at: string;
+  completed_at: string | null;
+  next_attempt_at: string | null;
+  created_at: string;
+  updated_at: string;
+  answers: ExamSubmissionAnswer[];
+}
+
+export async function submitExam(
+  uuid: string,
+  examId: string | number,
+  answers: Record<number, number>,
+): Promise<ApiResponse<ExamSubmissionResult>> {
+  const answerPayload: Record<string, string> = {};
+  Object.entries(answers).forEach(([questionId, optionId]) => {
+    answerPayload[questionId] = String(optionId);
+  });
+
+  return request<ExamSubmissionResult>("/course/exams/submit", {
+    method: "POST",
+    body: JSON.stringify({
+      uuid,
+      exam_id: String(examId),
+      answers: answerPayload,
+    }),
+  });
+}
+
+export async function startExamAttempt(
+  uuid: string,
+  examId: string | number,
+): Promise<ApiResponse<unknown>> {
+  return request("/course/exams/attempt", {
+    method: "POST",
+    body: JSON.stringify({ uuid, exam_id: String(examId) }),
+  });
+}
+
 export async function enrollCourse(
   course_id: string,
   uuid: string
