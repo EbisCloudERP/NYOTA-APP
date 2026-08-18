@@ -1,52 +1,102 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { getLesson, completeLesson, type LessonDetail } from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
-const MUX_PLAYBACK_ID = "9OMsZCJm01qBK3o8jB2Tqx6z6EpvYAFDHW00002w00GIitw";
+function LessonVideo({ url }: { url: string }) {
+  const player = useVideoPlayer(url, (p) => {
+    p.loop = false;
+  });
 
-const DUMMY_LESSON = {
-  title: "Introduction to Financial Planning",
-  objective:
-    "Understand the core principles of financial planning and why it matters",
-  description:
-    "In this lesson, you will learn the fundamentals of financial planning, including goal setting, risk assessment, and creating a roadmap for your financial future.",
-  type: "video" as "video" | "text",
-  duration: "15 min",
-  videoUrl: `https://stream.mux.com/${MUX_PLAYBACK_ID}.m3u8`,
-  content: `Financial planning is the process of managing your money to achieve personal economic satisfaction. It allows you to control your financial situation and provides a roadmap to achieve your goals.
-
-Key concepts covered in this lesson:
-
-1. Setting SMART Financial Goals
-Specific, Measurable, Achievable, Relevant, and Time-bound goals form the foundation of any good financial plan. Without clear goals, it's difficult to measure progress or stay motivated.
-
-2. Understanding Your Current Financial Position
-Before you can plan for the future, you need to know where you stand today. This includes assessing your income, expenses, assets, and liabilities.
-
-3. Creating a Budget
-A budget is a spending plan that helps you track where your money goes each month. The 50/30/20 rule is a simple framework: 50% for needs, 30% for wants, and 20% for savings and debt repayment.
-
-4. Building an Emergency Fund
-An emergency fund is money set aside for unexpected expenses. Aim to save 3-6 months of living expenses in an easily accessible account.
-
-5. Risk Management and Insurance
-Protecting yourself and your assets through appropriate insurance coverage is a critical part of financial planning.`,
-};
+  return (
+    <View style={styles.videoCard}>
+      <VideoView player={player} style={styles.video} nativeControls />
+    </View>
+  );
+}
 
 export default function LessonScreen() {
-  const isVideoLesson = DUMMY_LESSON.type === "video";
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [lesson, setLesson] = useState<LessonDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const player = useVideoPlayer(DUMMY_LESSON.videoUrl, (player) => {
-    player.loop = false;
-  });
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    getLesson(id)
+      .then((res) => setLesson(res.data))
+      .catch((e) =>
+        Alert.alert(
+          "Error",
+          e instanceof Error ? e.message : "Failed to load lesson.",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
+
+  if (!lesson) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.emptyText}>Lesson not found.</Text>
+      </View>
+    );
+  }
+
+  const contentText = lesson.content?.content?.replace(/\r/g, "") ?? "";
+  const video = lesson.videos?.[0];
+  const videoUrl = video?.mux_playback_id
+    ? `https://stream.mux.com/${video.mux_playback_id}.m3u8`
+    : null;
+  const quiz = lesson.quizz?.[0];
+
+  const handleStartExam = async () => {
+    const courseId = lesson.course?.id;
+    if (!courseId) {
+      Alert.alert("Error", "Course information is missing.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const uuid = (await getUuid()) ?? "";
+      await completeLesson(lesson.id, uuid);
+      router.push({
+        pathname: "/(quiz)/quiz",
+        params: { courseId: String(courseId) },
+      });
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to start exam.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <ScrollView
@@ -54,55 +104,67 @@ export default function LessonScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       {/* Lesson title */}
-      <Text style={styles.lessonTitle}>{DUMMY_LESSON.title}</Text>
+      <Text style={styles.lessonTitle}>{lesson.title}</Text>
 
-      {/* Objective & Description Card */}
-      <View style={styles.objectiveCard}>
-        <View style={styles.objectiveRow}>
-          <View style={styles.objectiveLeft}>
-            <Ionicons name="bulb" size={20} color={Colors.brand} />
-            <Text style={styles.objectiveLabel}>Learning objective</Text>
+      {/* Description / duration card */}
+      {(lesson.description || lesson.duration_minutes > 0) && (
+        <View style={styles.objectiveCard}>
+          <View style={styles.objectiveRow}>
+            <View style={styles.objectiveLeft}>
+              <Ionicons name="bulb" size={20} color={Colors.brand} />
+              <Text style={styles.objectiveLabel}>About this lesson</Text>
+            </View>
+            {lesson.duration_minutes > 0 && (
+              <View style={styles.durationBadge}>
+                <Ionicons name="time-outline" size={12} color="#6B7280" />
+                <Text style={styles.durationBadgeText}>
+                  {lesson.duration_minutes} min
+                </Text>
+              </View>
+            )}
           </View>
-          <View style={styles.durationBadge}>
-            <Ionicons name="time-outline" size={12} color="#6B7280" />
-            <Text style={styles.durationBadgeText}>
-              {DUMMY_LESSON.duration}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.objectiveText}>{DUMMY_LESSON.objective}</Text>
-        <Text style={styles.description}>{DUMMY_LESSON.description}</Text>
-      </View>
-
-      {/* Video card — only shown for video lessons */}
-      {isVideoLesson && (
-        <View style={styles.videoCard}>
-          <VideoView player={player} style={styles.video} nativeControls />
+          {lesson.description && (
+            <Text style={styles.description}>{lesson.description}</Text>
+          )}
         </View>
       )}
 
+      {/* Video card */}
+      {videoUrl && <LessonVideo url={videoUrl} />}
+
       {/* Lesson content */}
-      <View style={styles.contentCard}>
-        <Text style={styles.contentTitle}>Lesson Content</Text>
-        <Text style={styles.contentText}>{DUMMY_LESSON.content}</Text>
-      </View>
+      {contentText ? (
+        <View style={styles.contentCard}>
+          <Text style={styles.contentTitle}>Lesson Content</Text>
+          <Text style={styles.contentText}>{contentText}</Text>
+        </View>
+      ) : null}
 
       {/* Start quiz button */}
-      <TouchableOpacity
-        style={styles.quizButton}
-        activeOpacity={0.7}
-        onPress={() => {
-          router.push("/(quiz)/quiz");
-        }}
-      >
-        <Ionicons name="help-circle" size={20} color={Colors.white} />
-        <Text style={styles.quizButtonText}>Start quiz</Text>
-      </TouchableOpacity>
+      {quiz && (
+        <>
+          <TouchableOpacity
+            style={[styles.quizButton, submitting && styles.quizButtonDisabled]}
+            activeOpacity={0.7}
+            disabled={submitting}
+            onPress={handleStartExam}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Ionicons name="help-circle" size={20} color={Colors.white} />
+            )}
+            <Text style={styles.quizButtonText}>
+              {submitting ? "Starting..." : "Start quiz"}
+            </Text>
+          </TouchableOpacity>
 
-      {/* Footer */}
-      <Text style={styles.footerText}>
-        Take the quiz to complete this lesson
-      </Text>
+          {/* Footer */}
+          <Text style={styles.footerText}>
+            Take the quiz to complete this lesson
+          </Text>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -116,6 +178,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#9CA3AF",
   },
 
   // Lesson title
@@ -234,6 +306,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.white,
+  },
+  quizButtonDisabled: {
+    opacity: 0.7,
   },
 
   // Footer

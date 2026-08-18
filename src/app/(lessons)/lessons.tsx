@@ -1,59 +1,112 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { getCourse, type CourseDetail } from "../../services/api";
 import { Colors } from "../../theme/colors";
+
+type LessonStatus = "current" | "upcoming" | "completed";
 
 interface Lesson {
   id: number;
   title: string;
   duration: string;
-  status: "current" | "upcoming" | "completed";
+  status: LessonStatus;
+  number: number;
 }
 
-const DUMMY_COURSE = {
-  title: "Financial Literacy 101",
-  subtitle: "Master the fundamentals of personal and business finance",
-};
-
-const DUMMY_COMPLETED_LESSONS = [
-  { id: 101, title: "Setting Financial Goals" },
-  { id: 102, title: "Understanding Credit Scores" },
-];
-
-const DUMMY_LESSONS: Lesson[] = [
-  {
-    id: 1,
-    title: "Introduction to Financial Planning",
-    duration: "15 min",
-    status: "current",
-  },
-  {
-    id: 2,
-    title: "Budgeting and Saving Strategies",
-    duration: "20 min",
-    status: "upcoming",
-  },
-];
-
 export default function LessonsScreen() {
-  const completedFromList = DUMMY_LESSONS.filter(
-    (l) => l.status === "completed",
-  ).length;
-  const totalCompleted = completedFromList + DUMMY_COMPLETED_LESSONS.length;
-  const totalCount = DUMMY_LESSONS.length + DUMMY_COMPLETED_LESSONS.length;
-  const progressPercent =
-    totalCount > 0 ? (totalCompleted / totalCount) * 100 : 0;
-  const remainingCount = totalCount - totalCompleted;
-  const allCompleted = true; // TODO: revert after preview
+  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
+
+    getCourse(slug)
+      .then((res) => setCourse(res.data))
+      .catch((e) =>
+        Alert.alert(
+          "Error",
+          e instanceof Error ? e.message : "Failed to load lessons.",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
+
+  if (!course) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.emptyText}>Course not found.</Text>
+      </View>
+    );
+  }
+
+  const completedCount = course.progress?.completed ?? course.completed_lessons ?? 0;
+
+  const lessons: Lesson[] = (course.lessons ?? []).map((lesson, index) => {
+    const status: LessonStatus =
+      index < completedCount
+        ? "completed"
+        : index === completedCount
+          ? "current"
+          : "upcoming";
+
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      duration: lesson.duration_minutes
+        ? `${lesson.duration_minutes} min`
+        : "—",
+      status,
+      number: index + 1,
+    };
+  });
+
+  const completedLessons = lessons.filter((l) => l.status === "completed");
+  const activeLessons = lessons.filter((l) => l.status !== "completed");
+  const totalCount = lessons.length;
+  const totalCompleted = completedLessons.length;
+  const progressPercent =
+    course.progress?.percentage ??
+    (totalCount > 0 ? Math.round((totalCompleted / totalCount) * 100) : 0);
+  const remainingCount = totalCount - totalCompleted;
+  const allCompleted = totalCount > 0 && totalCompleted === totalCount;
   const currentLesson =
-    DUMMY_LESSONS.find((l) => l.status === "current") || DUMMY_LESSONS[0];
+    activeLessons.find(
+      (l) => l.id === course.progress?.current_lesson?.id,
+    ) ||
+    activeLessons.find((l) => l.status === "current") ||
+    activeLessons[0];
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Course title & subtitle */}
-      <Text style={styles.courseTitle}>{DUMMY_COURSE.title}</Text>
-      <Text style={styles.courseSubtitle}>{DUMMY_COURSE.subtitle}</Text>
+      <Text style={styles.courseTitle}>{course.title}</Text>
+      <Text style={styles.courseSubtitle}>{course.description || ""}</Text>
 
       {/* Progress Card */}
       <View style={styles.progressCard}>
@@ -64,12 +117,14 @@ export default function LessonsScreen() {
         </View>
 
         {/* Current lesson row */}
-        <View style={styles.currentLessonRow}>
-          <Ionicons name="play-circle" size={20} color={Colors.brand} />
-          <Text style={styles.currentLessonText} numberOfLines={1}>
-            {currentLesson.title}
-          </Text>
-        </View>
+        {currentLesson && (
+          <View style={styles.currentLessonRow}>
+            <Ionicons name="play-circle" size={20} color={Colors.brand} />
+            <Text style={styles.currentLessonText} numberOfLines={1}>
+              {currentLesson.title}
+            </Text>
+          </View>
+        )}
 
         {/* Progress bar */}
         <View style={styles.progressBarTrack}>
@@ -89,11 +144,11 @@ export default function LessonsScreen() {
         </View>
 
         {/* Completed lessons */}
-        {DUMMY_COMPLETED_LESSONS.length > 0 && (
+        {completedLessons.length > 0 && (
           <View style={styles.completedSection}>
             <Text style={styles.completedSubtitle}>Completed lessons</Text>
             <View style={styles.completedBadgesRow}>
-              {DUMMY_COMPLETED_LESSONS.map((lesson) => (
+              {completedLessons.map((lesson) => (
                 <View key={lesson.id} style={styles.completedBadge}>
                   <Ionicons name="checkmark-circle" size={12} color="#059669" />
                   <Text style={styles.completedBadgeText} numberOfLines={1}>
@@ -117,9 +172,7 @@ export default function LessonsScreen() {
           <TouchableOpacity
             style={styles.certificateButton}
             activeOpacity={0.7}
-            onPress={() => {
-              // Navigate to certificates
-            }}
+            onPress={() => router.push("/(certificates)/certificates")}
           >
             <Ionicons name="ribbon" size={16} color={Colors.white} />
             <Text style={styles.certificateButtonText}>Go to certificates</Text>
@@ -130,10 +183,9 @@ export default function LessonsScreen() {
       {/* Lessons Section */}
       <Text style={styles.sectionTitle}>Lessons</Text>
 
-      {DUMMY_LESSONS.map((lesson, index) => {
+      {activeLessons.map((lesson) => {
         const isLocked = lesson.status === "upcoming";
         const isCurrent = lesson.status === "current";
-        const lessonNumber = index + 1;
 
         return (
           <View key={lesson.id} style={styles.lessonCard}>
@@ -145,7 +197,7 @@ export default function LessonsScreen() {
                   size={22}
                   color={isLocked ? "#9CA3AF" : Colors.brand}
                 />
-                <Text style={styles.lessonLabel}>Lesson {lessonNumber}:</Text>
+                <Text style={styles.lessonLabel}>Lesson {lesson.number}:</Text>
                 <Text style={styles.lessonTitle} numberOfLines={1}>
                   {lesson.title}
                 </Text>
@@ -192,7 +244,10 @@ export default function LessonsScreen() {
               activeOpacity={0.7}
               onPress={() => {
                 if (!isLocked) {
-                  router.push("/(lesson)/lesson");
+                  router.push({
+                    pathname: "/(lesson)/lesson",
+                    params: { id: String(lesson.id) },
+                  });
                 }
               }}
             >
@@ -213,7 +268,14 @@ export default function LessonsScreen() {
           </View>
         );
       })}
-    </View>
+
+      {activeLessons.length === 0 && !allCompleted && (
+        <View style={styles.emptyState}>
+          <Ionicons name="book-outline" size={40} color="#D1D5DB" />
+          <Text style={styles.emptyText}>No lessons available.</Text>
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
@@ -221,8 +283,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
+  },
+  scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    marginTop: 12,
   },
 
   // Course title & subtitle

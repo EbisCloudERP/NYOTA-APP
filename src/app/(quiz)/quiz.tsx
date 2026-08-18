@@ -1,8 +1,10 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as ScreenCapture from "expo-screen-capture";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   AppState,
   BackHandler,
   ScrollView,
@@ -11,13 +13,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  getExams,
+  startExamAttempt,
+  submitExam,
+  type ExamSubmissionResult,
+} from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 // ── Types ──────────────────────────────────────────────
 type Phase = "intro" | "active" | "results";
 
 interface Option {
-  id: string;
+  id: number;
   text: string;
 }
 
@@ -25,68 +34,7 @@ interface Question {
   id: number;
   text: string;
   options: Option[];
-  correctOptionId: string;
 }
-
-interface QuizResult {
-  score: number;
-  total: number;
-  correctCount: number;
-  passed: boolean;
-  completedAt: Date;
-  nextAttemptAt: Date;
-}
-
-// ── Dummy data ─────────────────────────────────────────
-const QUIZ_TITLE = "Financial Planning Basics";
-const PASS_PERCENTAGE = 50;
-const TIME_LIMIT_SECONDS = 300; // 5 minutes
-const QUESTIONS: Question[] = [
-  {
-    id: 1,
-    text: "What does the 'S' in SMART goals stand for?",
-    options: [
-      { id: "1a", text: "Strategic" },
-      { id: "1b", text: "Specific" },
-      { id: "1c", text: "Simple" },
-      { id: "1d", text: "Sustainable" },
-    ],
-    correctOptionId: "1b",
-  },
-  {
-    id: 2,
-    text: "According to the 50/30/20 rule, what percentage of income should go to savings and debt?",
-    options: [
-      { id: "2a", text: "10%" },
-      { id: "2b", text: "30%" },
-      { id: "2c", text: "20%" },
-      { id: "2d", text: "50%" },
-    ],
-    correctOptionId: "2c",
-  },
-  {
-    id: 3,
-    text: "How many months of living expenses should an emergency fund cover?",
-    options: [
-      { id: "3a", text: "1–2 months" },
-      { id: "3b", text: "3–6 months" },
-      { id: "3c", text: "12 months" },
-      { id: "3d", text: "1 month" },
-    ],
-    correctOptionId: "3b",
-  },
-  {
-    id: 4,
-    text: "What is the primary purpose of insurance in financial planning?",
-    options: [
-      { id: "4a", text: "To generate investment returns" },
-      { id: "4b", text: "To replace a budget" },
-      { id: "4c", text: "To protect against financial loss" },
-      { id: "4d", text: "To avoid paying taxes" },
-    ],
-    correctOptionId: "4c",
-  },
-];
 
 // ── Helpers ────────────────────────────────────────────
 function formatTime(seconds: number): string {
@@ -95,8 +43,8 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatDateTime(date: Date): string {
-  return date.toLocaleString("en-US", {
+function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -106,25 +54,63 @@ function formatDateTime(date: Date): string {
   });
 }
 
-function addHours(date: Date, hours: number): Date {
-  return new Date(date.getTime() + hours * 60 * 60 * 1000);
-}
-
 // ── Component ──────────────────────────────────────────
 export default function QuizScreen() {
+  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const [examId, setExamId] = useState(0);
+  const [examTitle, setExamTitle] = useState("");
+  const [passMark, setPassMark] = useState(0);
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(0);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
-    Record<number, string>
+    Record<number, number>
   >({});
-  const [timeRemaining, setTimeRemaining] = useState(TIME_LIMIT_SECONDS);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [backgroundCount, setBackgroundCount] = useState(0);
-  const [attemptNumber, setAttemptNumber] = useState(1);
-  const [result, setResult] = useState<QuizResult | null>(null);
+  const [result, setResult] = useState<ExamSubmissionResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef = useRef<Date>(new Date());
   const appStateRef = useRef(AppState.currentState);
+
+  const hasTimeLimit = timeLimitSeconds > 0;
+
+  // ── Fetch exam ──────────────────────────────────────
+  useEffect(() => {
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
+    getUuid()
+      .then((uuid) => getExams(uuid ?? "", courseId))
+      .then((res) => {
+        const exam = res.data;
+        setExamId(exam.id);
+        setExamTitle(exam.title);
+        setPassMark(exam.pass_mark);
+        setTimeLimitSeconds((exam.time_limit_minutes ?? 0) * 60);
+        setQuestions(
+          (exam.questions ?? []).map((q) => ({
+            id: q.id,
+            text: q.question,
+            options: q.options.map((o) => ({ id: o.id, text: o.option_text })),
+          })),
+        );
+      })
+      .catch((e) =>
+        Alert.alert(
+          "Error",
+          e instanceof Error ? e.message : "Failed to load exam.",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [courseId]);
 
   // ── Timer ──────────────────────────────────────────
   const clearTimer = useCallback(() => {
@@ -136,6 +122,7 @@ export default function QuizScreen() {
 
   const startTimer = useCallback(() => {
     clearTimer();
+    if (!hasTimeLimit) return;
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -145,27 +132,25 @@ export default function QuizScreen() {
         return prev - 1;
       });
     }, 1000);
-  }, [clearTimer]);
+  }, [clearTimer, hasTimeLimit]);
 
   // Auto-submit when time runs out
   useEffect(() => {
-    if (phase === "active" && timeRemaining === 0) {
+    if (phase === "active" && hasTimeLimit && timeRemaining === 0) {
       handleSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRemaining, phase]);
+  }, [timeRemaining, phase, hasTimeLimit]);
 
   // ── Security: back button, app state, screen capture ─
   useEffect(() => {
     if (phase !== "active") return;
 
-    // Block hardware back
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => true,
     );
 
-    // Detect app backgrounding
     const appStateSub = AppState.addEventListener("change", (nextState) => {
       if (
         appStateRef.current === "active" &&
@@ -176,7 +161,6 @@ export default function QuizScreen() {
       appStateRef.current = nextState;
     });
 
-    // Prevent screenshots
     ScreenCapture.preventScreenCaptureAsync().catch(() => {});
 
     return () => {
@@ -188,61 +172,74 @@ export default function QuizScreen() {
   }, [phase, clearTimer]);
 
   // ── Actions ─────────────────────────────────────────
-  const handleStart = () => {
-    setSelectedAnswers({});
-    setCurrentIndex(0);
-    setTimeRemaining(TIME_LIMIT_SECONDS);
-    setBackgroundCount(0);
-    startTimeRef.current = new Date();
-    setPhase("active");
-    startTimer();
+  const handleStart = async () => {
+    try {
+      setStarting(true);
+      const uuid = (await getUuid()) ?? "";
+      await startExamAttempt(uuid, examId);
+      setSelectedAnswers({});
+      setCurrentIndex(0);
+      setTimeRemaining(timeLimitSeconds);
+      setBackgroundCount(0);
+      setPhase("active");
+      startTimer();
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to start exam.",
+      );
+    } finally {
+      setStarting(false);
+    }
   };
 
-  const handleSelectOption = (questionId: number, optionId: string) => {
+  const handleSelectOption = (questionId: number, optionId: number) => {
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   };
 
   const handleNext = () => {
-    if (currentIndex < QUESTIONS.length - 1) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex((i) => i + 1);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     clearTimer();
-    const completedAt = new Date();
-    let correctCount = 0;
-    QUESTIONS.forEach((q) => {
-      if (selectedAnswers[q.id] === q.correctOptionId) correctCount++;
-    });
-    const score = Math.round((correctCount / QUESTIONS.length) * 100);
-    const passed = score >= PASS_PERCENTAGE;
-    const nextAttemptAt = passed ? completedAt : addHours(completedAt, 24);
-
-    setResult({
-      score,
-      total: QUESTIONS.length,
-      correctCount,
-      passed,
-      completedAt,
-      nextAttemptAt,
-    });
-    setPhase("results");
+    try {
+      setSubmitting(true);
+      const uuid = (await getUuid()) ?? "";
+      const res = await submitExam(uuid, examId, selectedAnswers);
+      setResult(res.data);
+      setPhase("results");
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to submit exam.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleRetake = () => {
-    setAttemptNumber((a) => a + 1);
     handleStart();
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   // ── Render: Intro ───────────────────────────────────
   if (phase === "intro") {
     return (
       <View style={styles.container}>
-        <Text style={styles.quizTitle}>{QUIZ_TITLE}</Text>
+        <Text style={styles.quizTitle}>{examTitle}</Text>
         <Text style={styles.passText}>
-          You need <Text style={styles.passHighlight}>{PASS_PERCENTAGE}%</Text>{" "}
-          to pass
+          You need <Text style={styles.passHighlight}>{passMark}%</Text> to pass
         </Text>
 
         <View style={styles.instructionsCard}>
@@ -254,18 +251,23 @@ export default function QuizScreen() {
             />
             <Text style={styles.instructionsTitle}>Exam Instructions</Text>
           </View>
-          <View style={styles.instructionItem}>
-            <Ionicons name="time-outline" size={16} color="#6B7280" />
-            <Text style={styles.instructionText}>
-              Time limit: <Text style={styles.instructionBold}>5 minutes</Text>
-            </Text>
-          </View>
+          {hasTimeLimit && (
+            <View style={styles.instructionItem}>
+              <Ionicons name="time-outline" size={16} color="#6B7280" />
+              <Text style={styles.instructionText}>
+                Time limit:{" "}
+                <Text style={styles.instructionBold}>
+                  {timeLimitSeconds / 60} minutes
+                </Text>
+              </Text>
+            </View>
+          )}
           <View style={styles.instructionItem}>
             <Ionicons name="help-circle-outline" size={16} color="#6B7280" />
             <Text style={styles.instructionText}>
               Questions:{" "}
               <Text style={styles.instructionBold}>
-                {QUESTIONS.length} multiple choice
+                {questions.length} multiple choice
               </Text>
             </Text>
           </View>
@@ -277,30 +279,31 @@ export default function QuizScreen() {
             />
             <Text style={styles.instructionText}>
               Pass mark:{" "}
-              <Text style={styles.instructionBold}>{PASS_PERCENTAGE}%</Text>
+              <Text style={styles.instructionBold}>{passMark}%</Text>
             </Text>
           </View>
           <View style={styles.instructionItem}>
             <Ionicons name="warning-outline" size={16} color="#6B7280" />
             <Text style={styles.instructionText}>
-              Do not leave the screen or switch apps during the quiz
-            </Text>
-          </View>
-          <View style={styles.instructionItem}>
-            <Ionicons name="refresh-outline" size={16} color="#6B7280" />
-            <Text style={styles.instructionText}>
-              You can retake the quiz after 24 hours if you fail
+              Do not leave the screen or switch apps during the exam
             </Text>
           </View>
         </View>
 
         <TouchableOpacity
-          style={styles.startButton}
+          style={[styles.startButton, starting && styles.startButtonDisabled]}
           activeOpacity={0.7}
+          disabled={starting}
           onPress={handleStart}
         >
-          <Ionicons name="play-circle" size={20} color={Colors.white} />
-          <Text style={styles.startButtonText}>Start now</Text>
+          {starting ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <Ionicons name="play-circle" size={20} color={Colors.white} />
+          )}
+          <Text style={styles.startButtonText}>
+            {starting ? "Starting..." : "Start now"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -317,30 +320,32 @@ export default function QuizScreen() {
 
   // ── Render: Active ──────────────────────────────────
   if (phase === "active") {
-    const question = QUESTIONS[currentIndex];
-    const isLast = currentIndex === QUESTIONS.length - 1;
+    const question = questions[currentIndex];
+    const isLast = currentIndex === questions.length - 1;
     const selectedId = selectedAnswers[question.id];
-    const isTimeLow = timeRemaining <= 60;
+    const isTimeLow = hasTimeLimit && timeRemaining <= 60;
 
     return (
       <View style={styles.container}>
         {/* Timer */}
-        <View style={[styles.timerBox, isTimeLow && styles.timerBoxWarning]}>
-          <Ionicons
-            name="time"
-            size={24}
-            color={isTimeLow ? "#DC2626" : Colors.brand}
-          />
-          <Text
-            style={[styles.timerText, isTimeLow && styles.timerTextWarning]}
-          >
-            {formatTime(timeRemaining)}
-          </Text>
-        </View>
+        {hasTimeLimit && (
+          <View style={[styles.timerBox, isTimeLow && styles.timerBoxWarning]}>
+            <Ionicons
+              name="time"
+              size={24}
+              color={isTimeLow ? "#DC2626" : Colors.brand}
+            />
+            <Text
+              style={[styles.timerText, isTimeLow && styles.timerTextWarning]}
+            >
+              {formatTime(timeRemaining)}
+            </Text>
+          </View>
+        )}
 
         {/* Question progress */}
         <Text style={styles.questionProgress}>
-          Question {currentIndex + 1} of {QUESTIONS.length}
+          Question {currentIndex + 1} of {questions.length}
         </Text>
 
         {/* Question */}
@@ -378,24 +383,34 @@ export default function QuizScreen() {
         <TouchableOpacity
           style={[
             styles.submitButton,
-            !selectedId && styles.submitButtonDisabled,
+            (selectedId === undefined || submitting) &&
+              styles.submitButtonDisabled,
           ]}
           activeOpacity={0.7}
-          disabled={!selectedId}
+          disabled={selectedId === undefined || submitting}
           onPress={isLast ? handleSubmit : handleNext}
         >
-          <Ionicons
-            name={isLast ? "checkmark-circle" : "arrow-forward-circle"}
-            size={20}
-            color={selectedId ? Colors.white : "#9CA3AF"}
-          />
+          {isLast && submitting ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <Ionicons
+              name={isLast ? "checkmark-circle" : "arrow-forward-circle"}
+              size={20}
+              color={selectedId !== undefined ? Colors.white : "#9CA3AF"}
+            />
+          )}
           <Text
             style={[
               styles.submitButtonText,
-              !selectedId && styles.submitButtonTextDisabled,
+              (selectedId === undefined || submitting) &&
+                styles.submitButtonTextDisabled,
             ]}
           >
-            {isLast ? "Submit quiz" : "Next question"}
+            {isLast
+              ? submitting
+                ? "Submitting..."
+                : "Submit exam"
+              : "Next question"}
           </Text>
         </TouchableOpacity>
 
@@ -404,7 +419,7 @@ export default function QuizScreen() {
           <View style={styles.warningBanner}>
             <Ionicons name="warning" size={14} color="#D97706" />
             <Text style={styles.warningText}>
-              Switching apps during the quiz has been flagged ({backgroundCount}
+              Switching apps during the exam has been flagged ({backgroundCount}
               ×). This may affect your result.
             </Text>
           </View>
@@ -414,121 +429,137 @@ export default function QuizScreen() {
   }
 
   // ── Render: Results ─────────────────────────────────
-  if (phase === "results" && result) {
-    const passed = result.passed;
-    const scorePercent = result.score;
-
+  if (!result) {
     return (
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Score */}
-        <View style={styles.scoreCircle}>
-          <Text
-            style={[
-              styles.scorePercent,
-              { color: passed ? "#059669" : "#DC2626" },
-            ]}
-          >
-            {scorePercent}%
-          </Text>
-          <Text style={styles.scoreLabel}>Final score</Text>
-        </View>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
-        {/* Pass / fail message */}
-        <View
+  const passed = result.passed;
+  const scoreDisplay = `${Number.parseFloat(result.percentage)}%`;
+  const correctCount = result.answers.filter((a) => a.is_correct).length;
+  const hasNextAttempt = !passed && result.next_attempt_at;
+
+  return (
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+    >
+      {/* Score */}
+      <View style={styles.scoreCircle}>
+        <Text
           style={[
-            styles.passFailBanner,
-            passed ? styles.passBanner : styles.failBanner,
+            styles.scorePercent,
+            { color: passed ? "#059669" : "#DC2626" },
           ]}
         >
-          <Ionicons
-            name={passed ? "checkmark-circle" : "close-circle"}
-            size={22}
-            color={passed ? "#059669" : "#DC2626"}
-          />
-          <Text
+          {scoreDisplay}
+        </Text>
+        <Text style={styles.scoreLabel}>Final score</Text>
+      </View>
+
+      {/* Pass / fail message */}
+      <View
+        style={[
+          styles.passFailBanner,
+          passed ? styles.passBanner : styles.failBanner,
+        ]}
+      >
+        <Ionicons
+          name={passed ? "checkmark-circle" : "close-circle"}
+          size={22}
+          color={passed ? "#059669" : "#DC2626"}
+        />
+        <Text
+          style={[
+            styles.passFailText,
+            { color: passed ? "#065F46" : "#991B1B" },
+          ]}
+        >
+          {passed
+            ? `Congratulations! You passed with ${scoreDisplay}`
+            : `You scored ${scoreDisplay}. The pass mark is ${passMark}%.`}
+        </Text>
+      </View>
+
+      {/* Results card */}
+      <View style={styles.resultsCard}>
+        <Text style={styles.resultsCardTitle}>{examTitle}</Text>
+
+        <View style={styles.resultRow}>
+          <Text style={styles.resultLabel}>Status</Text>
+          <View
             style={[
-              styles.passFailText,
-              { color: passed ? "#065F46" : "#991B1B" },
+              styles.statusBadge,
+              passed ? styles.statusPass : styles.statusFail,
             ]}
           >
-            {passed
-              ? `Congratulations! You passed with ${scorePercent}%`
-              : `You scored ${scorePercent}%. The pass mark is ${PASS_PERCENTAGE}%.`}
-          </Text>
-        </View>
-
-        {/* Results card */}
-        <View style={styles.resultsCard}>
-          <Text style={styles.resultsCardTitle}>{QUIZ_TITLE}</Text>
-
-          <View style={styles.resultRow}>
-            <Text style={styles.resultLabel}>Status</Text>
-            <View
+            <Ionicons
+              name={passed ? "checkmark-circle" : "close-circle"}
+              size={14}
+              color={passed ? "#059669" : "#DC2626"}
+            />
+            <Text
               style={[
-                styles.statusBadge,
-                passed ? styles.statusPass : styles.statusFail,
+                styles.statusBadgeText,
+                { color: passed ? "#059669" : "#DC2626" },
               ]}
             >
-              <Ionicons
-                name={passed ? "checkmark-circle" : "close-circle"}
-                size={14}
-                color={passed ? "#059669" : "#DC2626"}
-              />
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  { color: passed ? "#059669" : "#DC2626" },
-                ]}
-              >
-                {passed ? "Passed" : "Failed"}
-              </Text>
-            </View>
+              {passed ? "Passed" : "Failed"}
+            </Text>
           </View>
+        </View>
 
+        <View style={styles.resultRow}>
+          <Text style={styles.resultLabel}>Attempt</Text>
+          <Text style={styles.resultValue}>{result.attempt_number}</Text>
+        </View>
+
+        {result.completed_at && (
           <View style={styles.resultRow}>
             <Text style={styles.resultLabel}>Completed at</Text>
             <Text style={styles.resultValue}>
-              {formatDateTime(result.completedAt)}
+              {formatDateTime(result.completed_at)}
+            </Text>
+          </View>
+        )}
+
+        {hasNextAttempt && (
+          <View style={styles.resultRow}>
+            <Text style={styles.resultLabel}>Next attempt</Text>
+            <Text style={styles.resultValue}>
+              {formatDateTime(result.next_attempt_at!)}
+            </Text>
+          </View>
+        )}
+
+        {/* Performance summary */}
+        <View style={styles.performanceSection}>
+          <View style={styles.performanceHeader}>
+            <Ionicons name="stats-chart" size={18} color={Colors.brand} />
+            <Text style={styles.performanceTitle}>Performance summary</Text>
+          </View>
+
+          <View style={styles.performanceRow}>
+            <Ionicons name="trophy-outline" size={16} color="#6B7280" />
+            <Text style={styles.performanceLabel}>Score</Text>
+            <Text style={styles.performanceValue}>
+              {result.score}/{result.total_points} points
             </Text>
           </View>
 
-          {!passed && (
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Next attempt</Text>
-              <Text style={styles.resultValue}>
-                {formatDateTime(result.nextAttemptAt)}
-              </Text>
-            </View>
-          )}
-
-          {/* Performance summary */}
-          <View style={styles.performanceSection}>
-            <View style={styles.performanceHeader}>
-              <Ionicons name="stats-chart" size={18} color={Colors.brand} />
-              <Text style={styles.performanceTitle}>Performance summary</Text>
-            </View>
-
-            <View style={styles.performanceRow}>
-              <Ionicons name="trophy-outline" size={16} color="#6B7280" />
-              <Text style={styles.performanceLabel}>Score</Text>
-              <Text style={styles.performanceValue}>
-                {result.correctCount}/{result.total} points
-              </Text>
-              <Text style={styles.attemptBadge}>Attempt {attemptNumber}</Text>
-            </View>
-
-            <View style={styles.performanceRow}>
-              <Ionicons name="checkmark-done" size={16} color="#6B7280" />
-              <Text style={styles.performanceLabel}>Correct answers</Text>
-              <Text style={styles.performanceValue}>{result.correctCount}</Text>
-            </View>
+          <View style={styles.performanceRow}>
+            <Ionicons name="checkmark-done" size={16} color="#6B7280" />
+            <Text style={styles.performanceLabel}>Correct answers</Text>
+            <Text style={styles.performanceValue}>{correctCount}</Text>
           </View>
         </View>
+      </View>
 
-        {/* Buttons */}
+      {/* Buttons */}
+      {!passed && (
         <TouchableOpacity
           style={styles.retakeButton}
           activeOpacity={0.7}
@@ -537,20 +568,18 @@ export default function QuizScreen() {
           <Ionicons name="refresh" size={18} color={Colors.white} />
           <Text style={styles.retakeButtonText}>Retake exam</Text>
         </TouchableOpacity>
+      )}
 
-        <TouchableOpacity
-          style={styles.backToLessonsButton}
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="book-outline" size={18} color={Colors.brand} />
-          <Text style={styles.backToLessonsText}>Back to lessons</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    );
-  }
-
-  return null;
+      <TouchableOpacity
+        style={styles.backToLessonsButton}
+        activeOpacity={0.7}
+        onPress={() => router.back()}
+      >
+        <Ionicons name="book-outline" size={18} color={Colors.brand} />
+        <Text style={styles.backToLessonsText}>Back to lessons</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 }
 
 // ── Styles ─────────────────────────────────────────────
@@ -570,6 +599,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
   },
 
   // ── Intro ───────────────────────────────────────────
@@ -641,6 +676,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.white,
+  },
+  startButtonDisabled: {
+    opacity: 0.7,
   },
   backButton: {
     flexDirection: "row",
@@ -797,8 +835,6 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginTop: 2,
   },
-
-  // Pass/fail banner
   passFailBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -823,8 +859,6 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-
-  // Results card
   resultsCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
@@ -872,8 +906,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-
-  // Performance summary
   performanceSection: {
     marginTop: 6,
     borderTopWidth: 1,
@@ -907,18 +939,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111827",
   },
-  attemptBadge: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-
-  // Retake / Back
   retakeButton: {
     flexDirection: "row",
     alignItems: "center",
