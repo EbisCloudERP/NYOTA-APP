@@ -1,81 +1,40 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     Image,
     Modal,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import { useAuth } from "../../services/AuthContext";
+import { getEnrolledCourses, type CatalogueCourse } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 // ── Types ──────────────────────────────────────────────
 interface Certificate {
   id: string;
-  name: string;
-  courseName: string;
-  courseDescription: string;
+  title: string;
+  description: string;
   studentName: string;
-  instructor: string;
-  duration: string;
+  durationMinutes: number;
+  completedLessons: number;
+  totalLessons: number;
   lessons: string[];
-  issueDate: Date;
-  expiryDate: Date;
 }
 
-// ── Dummy data ─────────────────────────────────────────
-const CERTIFICATES: Certificate[] = [
-  {
-    id: "CERT-2026-001234",
-    name: "Financial Planning Fundamentals",
-    courseName: "Introduction to Financial Planning",
-    courseDescription:
-      "Master the core principles of financial planning including goal setting, budgeting, risk management, and investment strategies.",
-    studentName: "Joab Ochieng",
-    instructor: "Jane Muthoni",
-    duration: "2 hours",
-    lessons: [
-      "Setting SMART Financial Goals",
-      "Understanding Your Current Position",
-      "Creating a Budget",
-      "Building an Emergency Fund",
-      "Risk Management & Insurance",
-    ],
-    issueDate: new Date("2026-08-10"),
-    expiryDate: new Date("2028-08-10"),
-  },
-  {
-    id: "CERT-2026-001289",
-    name: "Public Procurement Basics",
-    courseName: "Introduction to Public Procurement",
-    courseDescription:
-      "Learn the fundamentals of public procurement processes, AGPO requirements, tender documentation, and compliance standards.",
-    studentName: "Joab Ochieng",
-    instructor: "Peter Kimani",
-    duration: "3 hours",
-    lessons: [
-      "Procurement Principles",
-      "AGPO Registration Process",
-      "Tender Document Preparation",
-      "Bid Evaluation & Award",
-      "Compliance & Ethics",
-      "Contract Management",
-    ],
-    issueDate: new Date("2026-07-22"),
-    expiryDate: new Date("2028-07-22"),
-  },
-];
-
 // ── Helpers ────────────────────────────────────────────
-function fmt(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function formatDuration(minutes: number): string {
+  if (!minutes) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h ${m}m` : `${h} hours`;
 }
 
 // ── Certificate detail modal ───────────────────────────
@@ -129,7 +88,6 @@ function CertificateModal({
 
         {/* ── Certificate card (with border) ── */}
         <View style={modalStyles.certCard}>
-          {/* Nyota + Completion badge */}
           <Image
             source={require("../../../assets/images/NYOTA.jpg")}
             style={modalStyles.certNyotaImage}
@@ -152,24 +110,23 @@ function CertificateModal({
           <Text style={modalStyles.forCompleting}>
             for successfully completing
           </Text>
-          <Text style={modalStyles.courseName}>{cert.courseName}</Text>
+          <Text style={modalStyles.courseName}>{cert.title}</Text>
 
           {/* Certificate details */}
           <View style={modalStyles.metaRow}>
             <View style={modalStyles.metaItem}>
-              <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-              <Text style={modalStyles.metaLabel}>Issued</Text>
-              <Text style={modalStyles.metaValue}>{fmt(cert.issueDate)}</Text>
-            </View>
-            <View style={modalStyles.metaItem}>
-              <Ionicons name="person-outline" size={16} color="#6B7280" />
-              <Text style={modalStyles.metaLabel}>Instructor</Text>
-              <Text style={modalStyles.metaValue}>{cert.instructor}</Text>
+              <Ionicons name="school-outline" size={16} color="#6B7280" />
+              <Text style={modalStyles.metaLabel}>Lessons</Text>
+              <Text style={modalStyles.metaValue}>
+                {cert.completedLessons}/{cert.totalLessons}
+              </Text>
             </View>
             <View style={modalStyles.metaItem}>
               <Ionicons name="time-outline" size={16} color="#6B7280" />
               <Text style={modalStyles.metaLabel}>Duration</Text>
-              <Text style={modalStyles.metaValue}>{cert.duration}</Text>
+              <Text style={modalStyles.metaValue}>
+                {formatDuration(cert.durationMinutes)}
+              </Text>
             </View>
           </View>
 
@@ -198,33 +155,32 @@ function CertificateModal({
               <Ionicons name="school" size={22} color={Colors.brand} />
             </View>
             <View style={modalStyles.courseCardTitleRow}>
-              <Text style={modalStyles.courseCardTitle}>{cert.courseName}</Text>
+              <Text style={modalStyles.courseCardTitle}>{cert.title}</Text>
               <Text style={modalStyles.courseCardSubtitle}>
                 Completed course
               </Text>
             </View>
           </View>
 
-          <Text style={modalStyles.courseDescription}>
-            {cert.courseDescription}
-          </Text>
+          {cert.description ? (
+            <Text style={modalStyles.courseDescription}>
+              {cert.description}
+            </Text>
+          ) : null}
 
           {/* Lesson badges */}
-          <Text style={modalStyles.lessonsLabel}>Lessons completed</Text>
-          <View style={modalStyles.lessonsRow}>
-            {cert.lessons.map((lesson, i) => (
-              <View key={i} style={modalStyles.lessonBadge}>
-                <Text style={modalStyles.lessonBadgeText}>{lesson}</Text>
+          {cert.lessons.length > 0 && (
+            <>
+              <Text style={modalStyles.lessonsLabel}>Lessons completed</Text>
+              <View style={modalStyles.lessonsRow}>
+                {cert.lessons.map((lesson, i) => (
+                  <View key={i} style={modalStyles.lessonBadge}>
+                    <Text style={modalStyles.lessonBadgeText}>{lesson}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-
-          <View style={modalStyles.completionDate}>
-            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-            <Text style={modalStyles.completionDateText}>
-              Completed on {fmt(cert.issueDate)}
-            </Text>
-          </View>
+            </>
+          )}
         </View>
 
         {/* ── What's next card ── */}
@@ -267,21 +223,74 @@ function CertificateModal({
 
 // ── Main screen ────────────────────────────────────────
 export default function CertificatesScreen() {
+  const { user } = useAuth();
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
+
+  const studentName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Student";
+
+  const toCertificate = (course: CatalogueCourse): Certificate => ({
+    id: `CERT-${course.id}`,
+    title: course.title,
+    description: course.description,
+    studentName,
+    durationMinutes: course.duration_minutes,
+    completedLessons: course.completed_lessons ?? 0,
+    totalLessons: course.total_lessons,
+    lessons: (course.lessons ?? []).map((l) => l.title),
+  });
+
+  const loadData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const res = await getEnrolledCourses();
+      const passed = (res.data ?? []).filter(
+        (c) => c.total_lessons > 0 && (c.completed_lessons ?? 0) >= c.total_lessons,
+      );
+      setCertificates(passed.map(toCertificate));
+    } catch {
+      // failed to load certificates — keep current state
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentName]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRefresh = useCallback(() => {
+    loadData(true);
+  }, [loadData]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* Title */}
-      {/* <Text style={styles.title}>My Certificates</Text> */}
       <Text style={styles.subtitle}>
         View and download your earned certificates
       </Text>
 
       {/* Certificate cards */}
-      {CERTIFICATES.map((cert) => (
+      {certificates.map((cert) => (
         <View key={cert.id} style={styles.card}>
           {/* Header row */}
           <View style={styles.cardHeader}>
@@ -289,7 +298,7 @@ export default function CertificatesScreen() {
               <Ionicons name="checkmark-circle" size={28} color="#10B981" />
             </View>
             <View style={styles.cardHeaderText}>
-              <Text style={styles.certName}>{cert.name}</Text>
+              <Text style={styles.certName}>{cert.title}</Text>
               <Text style={styles.certId}>{cert.id}</Text>
             </View>
           </View>
@@ -297,16 +306,16 @@ export default function CertificatesScreen() {
           {/* Details */}
           <View style={styles.cardBody}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Course completed</Text>
-              <Text style={styles.detailValue}>{cert.courseName}</Text>
+              <Text style={styles.detailLabel}>Lessons completed</Text>
+              <Text style={styles.detailValue}>
+                {cert.completedLessons}/{cert.totalLessons}
+              </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Issue date</Text>
-              <Text style={styles.detailValue}>{fmt(cert.issueDate)}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Expiry date</Text>
-              <Text style={styles.detailValue}>{fmt(cert.expiryDate)}</Text>
+              <Text style={styles.detailLabel}>Duration</Text>
+              <Text style={styles.detailValue}>
+                {formatDuration(cert.durationMinutes)}
+              </Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Certificate ID</Text>
@@ -326,24 +335,37 @@ export default function CertificatesScreen() {
         </View>
       ))}
 
-      {/* Share achievements info */}
-      <View style={styles.infoCard}>
-        <View style={styles.infoIcon}>
-          <Ionicons
-            name="share-social-outline"
-            size={22}
-            color={Colors.brand}
-          />
-        </View>
-        <View style={styles.infoText}>
-          <Text style={styles.infoTitle}>Share your achievements</Text>
-          <Text style={styles.infoSub}>
-            Let your network know about your skills. Share your certificates on
-            LinkedIn, Twitter, or download them as PDF to include in your
-            professional portfolio.
+      {/* Empty state */}
+      {!loading && certificates.length === 0 && (
+        <View style={styles.emptyState}>
+          <Ionicons name="ribbon-outline" size={48} color="#D1D5DB" />
+          <Text style={styles.emptyTitle}>No certificates yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Complete a course to earn your first certificate.
           </Text>
         </View>
-      </View>
+      )}
+
+      {/* Share achievements info */}
+      {certificates.length > 0 && (
+        <View style={styles.infoCard}>
+          <View style={styles.infoIcon}>
+            <Ionicons
+              name="share-social-outline"
+              size={22}
+              color={Colors.brand}
+            />
+          </View>
+          <View style={styles.infoText}>
+            <Text style={styles.infoTitle}>Share your achievements</Text>
+            <Text style={styles.infoSub}>
+              Let your network know about your skills. Share your certificates
+              on LinkedIn, Twitter, or download them as PDF to include in your
+              professional portfolio.
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Modal */}
       <CertificateModal
@@ -364,6 +386,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingBottom: 48,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.white,
   },
 
   // Title / subtitle
@@ -461,6 +489,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.brand,
+  },
+
+  // Empty state
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: "#D1D5DB",
+    textAlign: "center",
   },
 
   // Info card
@@ -571,7 +617,6 @@ const modalStyles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     textAlign: "center",
-    marginBottom: 0,
   },
 
   certDivider: {
@@ -746,7 +791,6 @@ const modalStyles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginBottom: 14,
   },
   lessonBadge: {
     backgroundColor: "#ECFDF5",
@@ -758,17 +802,6 @@ const modalStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     color: "#065F46",
-  },
-
-  // Completion date
-  completionDate: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  completionDateText: {
-    fontSize: 13,
-    color: "#6B7280",
   },
 
   // ── What's next card ──

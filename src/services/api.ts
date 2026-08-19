@@ -12,6 +12,8 @@ interface ApiResponse<T = unknown> {
 interface LoginResponse {
   otp: string;
   uuid?: string;
+  email?: string;
+  phone?: string | null;
 }
 
 interface AuthUser {
@@ -120,17 +122,13 @@ export async function verifyPhone(
 }
 
 export async function verifyEmail(
-  contact: string,
-  coName: string,
-  coNumber: string
+  contact: string
 ): Promise<ApiResponse<VerifyEmailResponse>> {
   return request<VerifyEmailResponse>("/verify-email", {
     method: "POST",
     body: JSON.stringify({
       type: "email",
       contact,
-      co_name: coName,
-      co_number: coNumber,
     }),
   });
 }
@@ -290,8 +288,9 @@ export interface HomepageSection {
 }
 
 export interface CourseRecommendations {
-  courses: Course[];
-  homepage_sections: HomepageSection[];
+  courses?: Course[];
+  suggested_courses?: Course[];
+  homepage_sections?: HomepageSection[];
   suggested_tags: unknown;
   related_lessons: unknown[];
   profile_incomplete: boolean;

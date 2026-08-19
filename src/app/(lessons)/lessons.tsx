@@ -1,9 +1,10 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -27,23 +28,35 @@ export default function LessonsScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const loadCourse = useCallback(async (isRefresh = false) => {
     if (!slug) {
       setLoading(false);
       return;
     }
-
-    getCourse(slug)
-      .then((res) => setCourse(res.data))
-      .catch((e) =>
-        Alert.alert(
-          "Error",
-          e instanceof Error ? e.message : "Failed to load lessons.",
-        ),
-      )
-      .finally(() => setLoading(false));
+    if (isRefresh) setRefreshing(true);
+    try {
+      const res = await getCourse(slug);
+      setCourse(res.data);
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to load lessons.",
+      );
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
   }, [slug]);
+
+  useEffect(() => {
+    loadCourse();
+  }, [loadCourse]);
+
+  const handleRefresh = useCallback(() => {
+    loadCourse(true);
+  }, [loadCourse]);
 
   if (loading) {
     return (
@@ -103,6 +116,9 @@ export default function LessonsScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* Course title & subtitle */}
       <Text style={styles.courseTitle}>{course.title}</Text>
@@ -149,12 +165,22 @@ export default function LessonsScreen() {
             <Text style={styles.completedSubtitle}>Completed lessons</Text>
             <View style={styles.completedBadgesRow}>
               {completedLessons.map((lesson) => (
-                <View key={lesson.id} style={styles.completedBadge}>
+                <TouchableOpacity
+                  key={lesson.id}
+                  style={styles.completedBadge}
+                  activeOpacity={0.7}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(lesson)/lesson",
+                      params: { id: String(lesson.id) },
+                    })
+                  }
+                >
                   <Ionicons name="checkmark-circle" size={12} color="#059669" />
                   <Text style={styles.completedBadgeText} numberOfLines={1}>
                     {lesson.title}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>

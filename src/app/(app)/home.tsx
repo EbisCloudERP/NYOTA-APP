@@ -1,6 +1,9 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,7 +11,21 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
+import {
+  getCourseRecommendations,
+  getEnrolledCourses,
+  type CatalogueCourse,
+} from "../../services/api";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
+
+const courseProgress = (c: CatalogueCourse) => {
+  const total = c.total_lessons || 0;
+  const completed = c.completed_lessons ?? 0;
+  const progress =
+    total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+  return { total, completed, progress };
+};
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -16,11 +33,58 @@ export default function HomeScreen() {
   const isOnboarded = user?.is_onboarded;
   const county = user?.county;
 
+  const [enrolled, setEnrolled] = useState<CatalogueCourse[]>([]);
+  const [availableCount, setAvailableCount] = useState(0);
+  const [loadingLearning, setLoadingLearning] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const enrolledRes = await getEnrolledCourses();
+      setEnrolled(enrolledRes.data ?? []);
+    } catch {
+      // failed to load enrolled courses — keep empty state
+    }
+    try {
+      const uuid = (await getUuid()) ?? "";
+      if (uuid) {
+        const recsRes = await getCourseRecommendations(uuid);
+        setAvailableCount(recsRes.data?.suggested_courses?.length ?? 0);
+      }
+    } catch {
+      // failed to load recommendations — keep default
+    }
+    setLoadingLearning(false);
+    if (isRefresh) setRefreshing(false);
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRefresh = useCallback(() => {
+    loadData(true);
+  }, [loadData]);
+
+  const enrolledCount = enrolled.length;
+  const doneCount = enrolled.filter(
+    (c) => (c.completed_lessons ?? 0) >= (c.total_lessons || 0),
+  ).length;
+  const activeCourse =
+    enrolled.find(
+      (c) => (c.completed_lessons ?? 0) < (c.total_lessons || 0),
+    ) ?? enrolled[0];
+  const active = activeCourse ? courseProgress(activeCourse) : null;
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* Greeting */}
       <Text style={styles.greeting}>Welcome back, {firstName}! 👋</Text>
@@ -47,23 +111,6 @@ export default function HomeScreen() {
           </View>
         ) : null}
       </View>
-
-      {/* Next step */}
-      {!isOnboarded && (
-        <View style={styles.nextStepCard}>
-          <Text style={styles.nextStepTitle}>Your next step</Text>
-          <Text style={styles.nextStepText}>
-            Complete the eligibility questions to unlock courses and
-            opportunities matched to you.
-          </Text>
-          <TouchableOpacity
-            style={styles.nextStepButton}
-            onPress={() => router.push("/kyc")}
-          >
-            <Text style={styles.nextStepButtonText}>Complete profile</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* Quick Access */}
       <Text style={styles.sectionTitle}>Quick Access</Text>
@@ -107,60 +154,84 @@ export default function HomeScreen() {
       {/* Continue Learning */}
       <Text style={styles.sectionTitle}>Continue Learning</Text>
 
-      {/* Course Card */}
-      <View style={styles.courseCard}>
-        {/* Header */}
-        <View style={styles.courseHeader}>
-          <View>
-            <Text style={styles.courseTitle}>
-              Introduction to Public Procurement
+      {loadingLearning ? (
+        <View style={styles.courseCard}>
+          <ActivityIndicator color={Colors.brand} />
+        </View>
+      ) : activeCourse && active ? (
+        <View style={styles.courseCard}>
+          {/* Header */}
+          <View style={styles.courseHeader}>
+            <View>
+              <Text style={styles.courseTitle}>{activeCourse.title}</Text>
+              <Text style={styles.courseSubtitle}>
+                {active.completed}/{active.total} lessons completed
+              </Text>
+            </View>
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressBadgeText}>{active.progress}%</Text>
+            </View>
+          </View>
+
+          {/* Progress bar */}
+          <View style={styles.progressBar}>
+            <View
+              style={[styles.progressFill, { width: `${active.progress}%` }]}
+            />
+          </View>
+          <Text style={styles.progressLabel}>Overall progress</Text>
+
+          {/* Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{enrolledCount}</Text>
+              <Text style={styles.statLabel}>Enrolled</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{doneCount}</Text>
+              <Text style={styles.statLabel}>Done</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{availableCount}</Text>
+              <Text style={styles.statLabel}>Available</Text>
+            </View>
+          </View>
+
+          {/* Subtext */}
+          <View style={styles.recommendRow}>
+            <Ionicons name="book-outline" size={14} color="#6B7280" />
+            <Text style={styles.recommendText}>
+              {availableCount} recommended course
+              {availableCount !== 1 ? "s" : ""} available
             </Text>
-            <Text style={styles.courseSubtitle}>All lessons completed</Text>
           </View>
-          <View style={styles.progressBadge}>
-            <Text style={styles.progressBadgeText}>13%</Text>
-          </View>
-        </View>
 
-        {/* Progress bar */}
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: "13%" }]} />
+          {/* Continue button */}
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={() =>
+              router.push({
+                pathname: "/(lessons)/lessons",
+                params: { slug: activeCourse.slug },
+              })
+            }
+          >
+            <Text style={styles.continueButtonText}>Continue learning</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.progressLabel}>Overall progress</Text>
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Enrolled</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>4</Text>
-            <Text style={styles.statLabel}>Done</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>8</Text>
-            <Text style={styles.statLabel}>Available</Text>
-          </View>
+      ) : (
+        <View style={styles.courseCard}>
+          <Text style={styles.courseSubtitle}>No courses in progress.</Text>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={() => router.navigate("/my-learning")}
+          >
+            <Text style={styles.continueButtonText}>Browse courses</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-
-        {/* Subtext */}
-        <View style={styles.recommendRow}>
-          <Ionicons name="book-outline" size={14} color="#6B7280" />
-          <Text style={styles.recommendText}>
-            8 recommended courses • 100% on highlighted course
-          </Text>
-        </View>
-
-        {/* Continue button */}
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={() => router.navigate("/my-learning")}
-        >
-          <Text style={styles.continueButtonText}>Continue learning</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      )}
 
       {/* ── Announcements ── */}
       <Text style={styles.sectionTitle}>Announcements</Text>
@@ -406,37 +477,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     color: "#065F46",
-  },
-  nextStepCard: {
-    backgroundColor: "#F5F3FF",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#EDE9FE",
-    padding: 16,
-    marginBottom: 28,
-  },
-  nextStepTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#1F2937",
-    marginBottom: 6,
-  },
-  nextStepText: {
-    fontSize: 13,
-    color: "#6B7280",
-    lineHeight: 19,
-    marginBottom: 14,
-  },
-  nextStepButton: {
-    backgroundColor: Colors.brand,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  nextStepButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
   },
   // Quick Access
   quickGrid: {

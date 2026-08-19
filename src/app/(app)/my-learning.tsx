@@ -1,9 +1,10 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,8 +13,9 @@ import {
 } from "react-native";
 import {
   enrollCourse,
-  getCourseCatalogue,
+  getCourseRecommendations,
   getEnrolledCourses,
+  type Course as ApiCourse,
 } from "../../services/api";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
@@ -32,7 +34,6 @@ interface Course {
   totalLessons: number;
   completedLessons: number;
   isEnrolled: boolean;
-  isRecommended: boolean;
 }
 
 const capitalize = (value: string) =>
@@ -40,51 +41,74 @@ const capitalize = (value: string) =>
 
 export default function MyLearningScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadCourses = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const uuid = (await getUuid()) ?? "";
+      if (!uuid) {
+        setAllCourses([]);
+        setRecommendedCourses([]);
+        return;
+      }
+
+      const [recsRes, enrolledRes] = await Promise.all([
+        getCourseRecommendations(uuid),
+        getEnrolledCourses(),
+      ]);
+
+        const enrolledById = new Map(
+          (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
+        );
+
+      const toView = (c: ApiCourse): Course => {
+        const enrolled = enrolledById.get(String(c.id));
+        const progress = enrolled
+          ? Math.min(100, Math.max(0, enrolled.completed_lessons ?? 0))
+          : 0;
+        const completedLessons = enrolled
+          ? Math.round((progress / 100) * (c.total_lessons || 0))
+          : 0;
+
+        return {
+          id: String(c.id),
+          title: c.title,
+          slug: c.slug,
+          description: c.short_description || c.description || "",
+          category: c.category?.name ?? "",
+          level: capitalize(c.level),
+          pace: "Self-paced",
+          progress,
+          totalLessons: c.total_lessons,
+          completedLessons,
+          isEnrolled: Boolean(enrolled),
+        };
+      };
+
+        setAllCourses((recsRes.data.courses ?? []).map(toView));
+        setRecommendedCourses((recsRes.data.suggested_courses ?? []).map(toView));
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to load courses.",
+      );
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    Promise.all([getEnrolledCourses(), getCourseCatalogue()])
-      .then(([enrolledRes, catalogueRes]) => {
-        const enrolledById = new Map(
-          enrolledRes.data.map((c) => [String(c.id), c]),
-        );
+    loadCourses();
+  }, [loadCourses]);
 
-        setCourses(
-          catalogueRes.data.map((c) => {
-            const enrolled = enrolledById.get(String(c.id));
-            const progress = enrolled
-              ? Math.min(100, Math.max(0, enrolled.completed_lessons ?? 0))
-              : 0;
-            const completedLessons = enrolled
-              ? Math.round((progress / 100) * (c.total_lessons || 0))
-              : 0;
-
-            return {
-              id: String(c.id),
-              title: c.title,
-              slug: c.slug,
-              description: c.description,
-              category: c.category?.name ?? "",
-              level: capitalize(c.level),
-              pace: "Self-paced",
-              progress,
-              totalLessons: c.total_lessons,
-              completedLessons,
-              isEnrolled: Boolean(enrolled),
-              isRecommended: false,
-            };
-          }),
-        );
-      })
-      .catch((e) =>
-        Alert.alert(
-          "Error",
-          e instanceof Error ? e.message : "Failed to load courses.",
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const handleRefresh = useCallback(() => {
+    loadCourses(true);
+  }, [loadCourses]);
 
   const handleEnroll = (course: Course) => {
     Alert.alert(
@@ -98,7 +122,12 @@ export default function MyLearningScreen() {
             try {
               const uuid = (await getUuid()) ?? "";
               await enrollCourse(course.id, uuid);
-              setCourses((prev) =>
+              setAllCourses((prev) =>
+                prev.map((c) =>
+                  c.id === course.id ? { ...c, isEnrolled: true } : c,
+                ),
+              );
+              setRecommendedCourses((prev) =>
                 prev.map((c) =>
                   c.id === course.id ? { ...c, isEnrolled: true } : c,
                 ),
@@ -116,7 +145,7 @@ export default function MyLearningScreen() {
   };
 
   const filteredCourses =
-    activeTab === "all" ? courses : courses.filter((c) => c.isRecommended);
+    activeTab === "all" ? allCourses : recommendedCourses;
 
   if (loading) {
     return (
@@ -131,6 +160,9 @@ export default function MyLearningScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* ── Header ── */}
       <Text style={styles.title}>Your Learning Path</Text>
@@ -271,7 +303,7 @@ export default function MyLearningScreen() {
             onPress={() => {
               if (!course.isEnrolled) {
                 handleEnroll(course);
-              } else if (course.progress < 100) {
+              } else {
                 router.push({
                   pathname: "/(lessons)/lessons",
                   params: { slug: course.slug },

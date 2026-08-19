@@ -46,7 +46,8 @@ export default function LoginScreen() {
     try {
       const response = await login(trimmedContact, trimmedPassword);
       const otp = response.data.otp;
-      const isEmail = trimmedContact.includes("@");
+      const email = response.data.email ?? trimmedContact;
+      const phone = response.data.phone;
 
       if (response.data.uuid) {
         await setUuid(response.data.uuid);
@@ -54,10 +55,9 @@ export default function LoginScreen() {
 
       router.push("/otp-login");
 
-      if (isEmail) {
-        sendEmailOtp(trimmedContact, otp).catch(() => {});
-      } else {
-        const mobile = `254${trimmedContact.replace(/^\+|^0+/, "")}`;
+      sendEmailOtp(email, otp).catch(() => {});
+      if (phone) {
+        const mobile = `254${phone.replace(/^\+|^0+/, "")}`;
         sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
           () => {}
         );
