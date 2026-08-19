@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "nyota",
+    "name": "Nyota",
     "slug": "nyota",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -29,11 +29,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#4D2A7C",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
+          "backgroundColor": "#fff",
+          "image": "./assets/images/NYOTA.jpg",
+          "imageWidth": 220
         }
       ],
       "expo-secure-store",
