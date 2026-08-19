@@ -17,26 +17,17 @@ import { verifyEmail, sendEmailOtp } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
-  const [companyName, setCompanyName] = useState("");
-  const [companyNumber, setCompanyNumber] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const isFormValid =
-    companyName.trim() !== "" &&
-    companyNumber.trim() !== "" &&
-    email.trim() !== "";
+  const isFormValid = email.trim() !== "";
 
   const handleVerify = async () => {
     if (!isFormValid) return;
 
     setLoading(true);
     try {
-      const response = await verifyEmail(
-        email.trim(),
-        companyName.trim(),
-        companyNumber.trim()
-      );
+      const response = await verifyEmail(email.trim());
 
       if (response.data.exists) {
         Alert.alert(
@@ -83,31 +74,8 @@ export default function CreateAccountScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          {/* Company/Business Name */}
-          <Text style={styles.label}>Company/Business Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter company or business name"
-            placeholderTextColor="#9CA3AF"
-            autoCapitalize="words"
-            value={companyName}
-            onChangeText={setCompanyName}
-          />
-
-          {/* Company/Business Number */}
-          <Text style={[styles.label, { marginTop: 20 }]}>
-            Company/Business Number
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter company or business number"
-            placeholderTextColor="#9CA3AF"
-            value={companyNumber}
-            onChangeText={setCompanyNumber}
-          />
-
           {/* Email Field */}
-          <Text style={[styles.label, { marginTop: 20 }]}>Email</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your email"

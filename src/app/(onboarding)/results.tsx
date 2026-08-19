@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -20,6 +21,7 @@ export default function ResultsScreen() {
   const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
   const [uuid, setUuid] = useState<string>(paramUuid ?? "");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<CourseRecommendations | null>(null);
 
   useEffect(() => {
@@ -29,19 +31,36 @@ export default function ResultsScreen() {
     });
   }, [uuid]);
 
-  useEffect(() => {
+  const loadData = useCallback(async (isRefresh = false) => {
     if (!uuid) return;
-    getCourseRecommendations(uuid)
-      .then((res) => setData(res.data))
-      .catch(() => Alert.alert("Error", "Failed to load recommendations."))
-      .finally(() => setLoading(false));
+    if (isRefresh) setRefreshing(true);
+    try {
+      const res = await getCourseRecommendations(uuid);
+      setData(res.data);
+    } catch {
+      Alert.alert("Error", "Failed to load recommendations.");
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
   }, [uuid]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRefresh = useCallback(() => {
+    loadData(true);
+  }, [loadData]);
 
   return (
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         <Text style={styles.title}>Congratulations!</Text>
         <Text style={styles.subtitle}>

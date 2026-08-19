@@ -109,7 +109,7 @@ export default function OtpLoginScreen() {
         <LanguageSelector />
         <Text style={styles.title}>Enter verification code</Text>
         <Text style={styles.subtitle}>
-          We've sent a 6-digit code to your email
+          We've sent a 6-digit code to your email and phone
         </Text>
 
         <View style={styles.codeContainer}>
