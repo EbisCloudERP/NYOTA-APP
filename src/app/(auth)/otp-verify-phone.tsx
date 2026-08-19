@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -12,6 +11,7 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -30,6 +30,7 @@ export default function OtpVerifyPhoneScreen() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+  const { showToast } = useFeedback();
   const { otp: expectedOtp } = useLocalSearchParams<{
     phone: string;
     password: string;
@@ -80,7 +81,7 @@ export default function OtpVerifyPhoneScreen() {
 
     if (fullCode !== expectedOtp) {
       setLoading(false);
-      Alert.alert("Invalid Code", "The verification code you entered is incorrect. Please try again.");
+      showToast("The verification code you entered is incorrect. Please try again.", "error");
       return;
     }
 

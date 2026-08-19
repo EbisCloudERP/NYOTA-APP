@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { getCounties, registerUser, type County } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const PICKER_ITEM_HEIGHT = 48;
@@ -86,6 +86,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { email } = useLocalSearchParams<{ email: string }>();
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     getCounties()
@@ -141,19 +142,19 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim() || !nationalId.trim()) {
-      Alert.alert("Missing Fields", "Please fill in all personal information fields.");
+      showToast("Please fill in all personal information fields.", "error");
       return;
     }
     if (!selectedCounty || !selectedConstituency) {
-      Alert.alert("Missing Fields", "Please select your county and constituency.");
+      showToast("Please select your county and constituency.", "error");
       return;
     }
     if (!password || password.length < 8) {
-      Alert.alert("Weak Password", "Password must be at least 8 characters.");
+      showToast("Password must be at least 8 characters.", "error");
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert("Password Mismatch", "Passwords do not match.");
+      showToast("Passwords do not match.", "error");
       return;
     }
 
@@ -179,7 +180,7 @@ export default function RegisterScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Registration failed. Please try again.";
-      Alert.alert("Registration Failed", message);
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }

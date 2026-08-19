@@ -2,7 +2,6 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 type NotificationSettings = {
@@ -20,24 +20,25 @@ type NotificationSettings = {
 
 export default function SettingsScreen() {
   const { signOut } = useAuth();
+  const { confirm } = useFeedback();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     email: true,
     sms: false,
     push: true,
   });
 
-  const handleLogout = () => {
-    Alert.alert("Log out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          router.replace("/login");
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Log out",
+      message: "Are you sure you want to log out?",
+      confirmText: "Log out",
+      cancelText: "Cancel",
+      destructive: true,
+    });
+    if (ok) {
+      await signOut();
+      router.replace("/login");
+    }
   };
 
   const toggleNotification = (key: keyof NotificationSettings) => {

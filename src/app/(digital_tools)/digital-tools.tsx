@@ -1,12 +1,12 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import {
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 interface DigitalTool {
@@ -64,10 +64,12 @@ const TOOLS: DigitalTool[] = [
 ];
 
 function ToolCard({ tool }: { tool: DigitalTool }) {
+  const { showToast } = useFeedback();
+
   const handleOnboard = () => {
-    Alert.alert(
-      "Coming soon",
+    showToast(
       "This feature is not available in the app at the moment. Please visit our main website on your browser to get started.",
+      "info",
     );
   };
 
@@ -76,7 +78,7 @@ function ToolCard({ tool }: { tool: DigitalTool }) {
       {/* Header */}
       <View style={styles.cardHeader}>
         <View style={styles.cardIcon}>
-          <Ionicons name={tool.icon} size={20} color={Colors.brand} />
+          <Ionicons name={tool.icon as any} size={20} color={Colors.brand} />
         </View>
         <Text style={styles.cardTitle}>{tool.title}</Text>
       </View>

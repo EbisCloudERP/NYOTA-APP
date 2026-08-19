@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -14,16 +13,18 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { verifyPhone, sendSms } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function VerifyPhoneScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const { password } = useLocalSearchParams<{ password: string }>();
+  const { showToast } = useFeedback();
 
   const handleVerify = async () => {
     if (phone.trim().length < 9) {
-      Alert.alert("Invalid Number", "Please enter a valid phone number.");
+      showToast("Please enter a valid phone number.", "error");
       return;
     }
 
@@ -42,7 +43,7 @@ export default function VerifyPhoneScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Verification failed. Please try again.";
-      Alert.alert("Verification Failed", message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }

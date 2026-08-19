@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
   getEnrolledCourses,
   type Course as ApiCourse,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -45,6 +45,7 @@ export default function MyLearningScreen() {
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { showToast, confirm } = useFeedback();
 
   const loadCourses = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -92,9 +93,9 @@ export default function MyLearningScreen() {
         setAllCourses((recsRes.data.courses ?? []).map(toView));
         setRecommendedCourses((recsRes.data.suggested_courses ?? []).map(toView));
     } catch (e) {
-      Alert.alert(
-        "Error",
+      showToast(
         e instanceof Error ? e.message : "Failed to load courses.",
+        "error",
       );
     } finally {
       setLoading(false);
@@ -110,38 +111,34 @@ export default function MyLearningScreen() {
     loadCourses(true);
   }, [loadCourses]);
 
-  const handleEnroll = (course: Course) => {
-    Alert.alert(
-      "Enroll in Course",
-      `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Enroll",
-          onPress: async () => {
-            try {
-              const uuid = (await getUuid()) ?? "";
-              await enrollCourse(course.id, uuid);
-              setAllCourses((prev) =>
-                prev.map((c) =>
-                  c.id === course.id ? { ...c, isEnrolled: true } : c,
-                ),
-              );
-              setRecommendedCourses((prev) =>
-                prev.map((c) =>
-                  c.id === course.id ? { ...c, isEnrolled: true } : c,
-                ),
-              );
-            } catch (e) {
-              Alert.alert(
-                "Enroll Failed",
-                e instanceof Error ? e.message : "Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
+  const handleEnroll = async (course: Course) => {
+    const ok = await confirm({
+      title: "Enroll in Course",
+      message: `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
+      confirmText: "Enroll",
+      cancelText: "Cancel",
+    });
+    if (!ok) return;
+
+    try {
+      const uuid = (await getUuid()) ?? "";
+      await enrollCourse(course.id, uuid);
+      setAllCourses((prev) =>
+        prev.map((c) =>
+          c.id === course.id ? { ...c, isEnrolled: true } : c,
+        ),
+      );
+      setRecommendedCourses((prev) =>
+        prev.map((c) =>
+          c.id === course.id ? { ...c, isEnrolled: true } : c,
+        ),
+      );
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Please try again.",
+        "error",
+      );
+    }
   };
 
   const filteredCourses =

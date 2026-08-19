@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,6 +13,7 @@ import {
     submitEligibilityAnswers,
     type EligibilityQuestion,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -95,6 +95,7 @@ export default function KycScreen() {
   const [submitting, setSubmitting] = useState(false);
   const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
   const [uuid, setUuid] = useState<string>(paramUuid ?? "");
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (uuid) return;
@@ -106,7 +107,7 @@ export default function KycScreen() {
   useEffect(() => {
     getEligibilityQuestions()
       .then((res) => setQuestions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => Alert.alert("Error", "Failed to load questions. Please try again."))
+      .catch(() => showToast("Failed to load questions. Please try again.", "error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -121,7 +122,7 @@ export default function KycScreen() {
 
   const handleSubmit = async () => {
     if (!uuid) {
-      Alert.alert("Error", "Missing user UUID. Please log in again.");
+      showToast("Missing user UUID. Please log in again.", "error");
       return;
     }
 
@@ -136,7 +137,7 @@ export default function KycScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Submission failed. Please try again.";
-      Alert.alert("Error", message);
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
