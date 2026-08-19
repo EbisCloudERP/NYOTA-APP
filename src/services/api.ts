@@ -1,4 +1,5 @@
-import { getToken } from "./storage";
+import { router } from "expo-router";
+import { clearSession, getToken } from "./storage";
 
 const BASE_URL = "https://training-admin.ebisclouderp.com/api/v1";
 
@@ -55,6 +56,12 @@ async function request<T>(
   });
 
   const json = await response.json();
+
+  if (response.status === 401 || /unauthenticated/i.test(json.message || "")) {
+    await clearSession();
+    router.replace("/login");
+    throw new Error("Your session has expired. Please log in again.");
+  }
 
   if (!response.ok || !json.success) {
     const base =
