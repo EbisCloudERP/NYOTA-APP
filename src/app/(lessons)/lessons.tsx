@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { getCourse, type CourseDetail } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 type LessonStatus = "current" | "upcoming" | "completed";
@@ -29,6 +29,7 @@ export default function LessonsScreen() {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { showToast } = useFeedback();
 
   const loadCourse = useCallback(async (isRefresh = false) => {
     if (!slug) {
@@ -40,9 +41,9 @@ export default function LessonsScreen() {
       const res = await getCourse(slug);
       setCourse(res.data);
     } catch (e) {
-      Alert.alert(
-        "Error",
+      showToast(
         e instanceof Error ? e.message : "Failed to load lessons.",
+        "error",
       );
     } finally {
       setLoading(false);

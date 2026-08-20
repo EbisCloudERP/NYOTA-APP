@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -12,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -30,6 +30,7 @@ export default function OtpCreateAccountScreen() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+  const { showToast } = useFeedback();
   const { otp: expectedOtp, email } = useLocalSearchParams<{ email: string; otp: string }>();
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function OtpCreateAccountScreen() {
 
     if (fullCode !== expectedOtp) {
       setLoading(false);
-      Alert.alert("Invalid Code", "The verification code you entered is incorrect. Please try again.");
+      showToast("The verification code you entered is incorrect. Please try again.", "error");
       return;
     }
 

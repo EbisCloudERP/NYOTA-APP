@@ -1,7 +1,6 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
 import {
-    Alert,
     Platform,
     ScrollView,
     StyleSheet,
@@ -10,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 interface FormData {
@@ -75,6 +75,7 @@ export default function AssetFinancingScreen() {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const { showToast, confirm } = useFeedback();
 
   // File upload states
   const [taxCertificate, setTaxCertificate] = useState<string | null>(null);
@@ -96,14 +97,14 @@ export default function AssetFinancingScreen() {
     }
   };
 
-  const handleUpload = (label: string, setter: (v: string | null) => void) => {
-    Alert.alert(`Upload ${label}`, "This will open the file picker.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Select file",
-        onPress: () => setter("selected-file.pdf"),
-      },
-    ]);
+  const handleUpload = async (label: string, setter: (v: string | null) => void) => {
+    const ok = await confirm({
+      title: `Upload ${label}`,
+      message: "This will open the file picker.",
+      confirmText: "Select file",
+      cancelText: "Cancel",
+    });
+    if (ok) setter("selected-file.pdf");
   };
 
   const validate = (): boolean => {
@@ -162,25 +163,16 @@ export default function AssetFinancingScreen() {
 
   const handleSubmit = () => {
     if (!validate()) {
-      Alert.alert(
-        "Validation Error",
-        "Please fill in all required fields correctly.",
-      );
+      showToast("Please fill in all required fields correctly.", "error");
       return;
     }
 
     if (!declaration || !authorizeChecks || !approvalTerms || !agreeTerms) {
-      Alert.alert(
-        "Agreement Required",
-        "Please accept all declarations and terms before submitting.",
-      );
+      showToast("Please accept all declarations and terms before submitting.", "error");
       return;
     }
 
-    Alert.alert(
-      "Submitted",
-      "Your asset financing application has been submitted successfully.",
-    );
+    showToast("Your asset financing application has been submitted successfully.", "success");
   };
 
   return (

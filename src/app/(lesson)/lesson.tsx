@@ -4,7 +4,6 @@ import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { getLesson, completeLesson, type LessonDetail } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -33,6 +33,7 @@ export default function LessonScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (!id) {
@@ -43,9 +44,9 @@ export default function LessonScreen() {
     getLesson(id)
       .then((res) => setLesson(res.data))
       .catch((e) =>
-        Alert.alert(
-          "Error",
+        showToast(
           e instanceof Error ? e.message : "Failed to load lesson.",
+          "error",
         ),
       )
       .finally(() => setLoading(false));
@@ -91,7 +92,7 @@ export default function LessonScreen() {
       if (lesson.quizz?.length) {
         const courseId = lesson.course?.id;
         if (!courseId) {
-          Alert.alert("Error", "Course information is missing.");
+          showToast("Course information is missing.", "error");
           return;
         }
         router.push({
@@ -102,9 +103,9 @@ export default function LessonScreen() {
         setCompleted(true);
       }
     } catch (e) {
-      Alert.alert(
-        "Error",
+      showToast(
         e instanceof Error ? e.message : "Failed to complete lesson.",
+        "error",
       );
     } finally {
       setSubmitting(false);

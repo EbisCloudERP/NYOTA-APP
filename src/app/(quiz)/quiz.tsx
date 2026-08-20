@@ -4,7 +4,6 @@ import * as ScreenCapture from "expo-screen-capture";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   AppState,
   BackHandler,
   ScrollView,
@@ -19,6 +18,7 @@ import {
   submitExam,
   type ExamSubmissionResult,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -74,6 +74,7 @@ export default function QuizScreen() {
   const [result, setResult] = useState<ExamSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
+  const { showToast } = useFeedback();
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appStateRef = useRef(AppState.currentState);
@@ -104,9 +105,9 @@ export default function QuizScreen() {
         );
       })
       .catch((e) =>
-        Alert.alert(
-          "Error",
+        showToast(
           e instanceof Error ? e.message : "Failed to load exam.",
+          "error",
         ),
       )
       .finally(() => setLoading(false));
@@ -184,9 +185,9 @@ export default function QuizScreen() {
       setPhase("active");
       startTimer();
     } catch (e) {
-      Alert.alert(
-        "Error",
+      showToast(
         e instanceof Error ? e.message : "Failed to start exam.",
+        "error",
       );
     } finally {
       setStarting(false);
@@ -212,9 +213,9 @@ export default function QuizScreen() {
       setResult(res.data);
       setPhase("results");
     } catch (e) {
-      Alert.alert(
-        "Error",
+      showToast(
         e instanceof Error ? e.message : "Failed to submit exam.",
+        "error",
       );
     } finally {
       setSubmitting(false);

@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,11 +13,13 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { verifyEmail, sendEmailOtp } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast, confirm } = useFeedback();
 
   const isFormValid = email.trim() !== "";
 
@@ -30,11 +31,14 @@ export default function CreateAccountScreen() {
       const response = await verifyEmail(email.trim());
 
       if (response.data.exists) {
-        Alert.alert(
-          "Account Exists",
-          "An account with this email already exists. Please log in instead.",
-          [{ text: "OK", onPress: () => router.replace("/login") }]
-        );
+        const goLogin = await confirm({
+          title: "Account Exists",
+          message:
+            "An account with this email already exists. Please log in instead.",
+          confirmText: "Log in",
+          cancelText: "Cancel",
+        });
+        if (goLogin) router.replace("/login");
         return;
       }
 
@@ -48,7 +52,7 @@ export default function CreateAccountScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Verification failed. Please try again.";
-      Alert.alert("Verification Failed", message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }

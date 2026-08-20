@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -14,6 +13,7 @@ import {
     getCourseRecommendations,
     type CourseRecommendations,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -23,6 +23,7 @@ export default function ResultsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<CourseRecommendations | null>(null);
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (uuid) return;
@@ -38,7 +39,7 @@ export default function ResultsScreen() {
       const res = await getCourseRecommendations(uuid);
       setData(res.data);
     } catch {
-      Alert.alert("Error", "Failed to load recommendations.");
+      showToast("Failed to load recommendations.", "error");
     } finally {
       setLoading(false);
       if (isRefresh) setRefreshing(false);

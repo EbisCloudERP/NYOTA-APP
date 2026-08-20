@@ -1,8 +1,9 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, Tabs } from "expo-router";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 function HeaderLeft() {
@@ -27,19 +28,20 @@ function HeaderLeft() {
 
 function HeaderRight() {
   const { signOut } = useAuth();
+  const { confirm } = useFeedback();
 
-  const handleLogout = () => {
-    Alert.alert("Log out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          router.replace("/login");
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Log out",
+      message: "Are you sure you want to log out?",
+      confirmText: "Log out",
+      cancelText: "Cancel",
+      destructive: true,
+    });
+    if (ok) {
+      await signOut();
+      router.replace("/login");
+    }
   };
 
   return (
