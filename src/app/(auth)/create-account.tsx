@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,36 +13,32 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { verifyEmail, sendEmailOtp } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
-  const [companyName, setCompanyName] = useState("");
-  const [companyNumber, setCompanyNumber] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast, confirm } = useFeedback();
 
-  const isFormValid =
-    companyName.trim() !== "" &&
-    companyNumber.trim() !== "" &&
-    email.trim() !== "";
+  const isFormValid = email.trim() !== "";
 
   const handleVerify = async () => {
     if (!isFormValid) return;
 
     setLoading(true);
     try {
-      const response = await verifyEmail(
-        email.trim(),
-        companyName.trim(),
-        companyNumber.trim()
-      );
+      const response = await verifyEmail(email.trim());
 
       if (response.data.exists) {
-        Alert.alert(
-          "Account Exists",
-          "An account with this email already exists. Please log in instead.",
-          [{ text: "OK", onPress: () => router.replace("/login") }]
-        );
+        const goLogin = await confirm({
+          title: "Account Exists",
+          message:
+            "An account with this email already exists. Please log in instead.",
+          confirmText: "Log in",
+          cancelText: "Cancel",
+        });
+        if (goLogin) router.replace("/login");
         return;
       }
 
@@ -57,7 +52,7 @@ export default function CreateAccountScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Verification failed. Please try again.";
-      Alert.alert("Verification Failed", message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -83,31 +78,8 @@ export default function CreateAccountScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          {/* Company/Business Name */}
-          <Text style={styles.label}>Company/Business Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter company or business name"
-            placeholderTextColor="#9CA3AF"
-            autoCapitalize="words"
-            value={companyName}
-            onChangeText={setCompanyName}
-          />
-
-          {/* Company/Business Number */}
-          <Text style={[styles.label, { marginTop: 20 }]}>
-            Company/Business Number
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter company or business number"
-            placeholderTextColor="#9CA3AF"
-            value={companyNumber}
-            onChangeText={setCompanyNumber}
-          />
-
           {/* Email Field */}
-          <Text style={[styles.label, { marginTop: 20 }]}>Email</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your email"

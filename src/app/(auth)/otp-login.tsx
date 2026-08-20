@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -32,6 +32,7 @@ export default function OtpLoginScreen() {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const { signInWithOtp } = useAuth();
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -81,7 +82,7 @@ export default function OtpLoginScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Verification failed. Please try again.";
-      Alert.alert("Verification Failed", message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,7 @@ export default function OtpLoginScreen() {
         <LanguageSelector />
         <Text style={styles.title}>Enter verification code</Text>
         <Text style={styles.subtitle}>
-          We've sent a 6-digit code to your email
+          We've sent a 6-digit code to your email and phone
         </Text>
 
         <View style={styles.codeContainer}>

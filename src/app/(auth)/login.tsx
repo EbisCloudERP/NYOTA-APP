@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { login, sendEmailOtp, sendSms } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -24,6 +24,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const { showToast } = useFeedback();
 
   const isFormValid = contact.trim().length > 0 && password.trim().length > 0;
   const isLoginDisabled = showForm && !isFormValid;
@@ -38,7 +39,7 @@ export default function LoginScreen() {
     const trimmedPassword = password.trim();
 
     if (!trimmedContact || !trimmedPassword) {
-      Alert.alert("Error", "Please enter your email and password");
+      showToast("Please enter your email and password", "error");
       return;
     }
 
@@ -46,7 +47,8 @@ export default function LoginScreen() {
     try {
       const response = await login(trimmedContact, trimmedPassword);
       const otp = response.data.otp;
-      const isEmail = trimmedContact.includes("@");
+      const email = response.data.email ?? trimmedContact;
+      const phone = response.data.phone;
 
       if (response.data.uuid) {
         await setUuid(response.data.uuid);
@@ -54,10 +56,9 @@ export default function LoginScreen() {
 
       router.push("/otp-login");
 
-      if (isEmail) {
-        sendEmailOtp(trimmedContact, otp).catch(() => {});
-      } else {
-        const mobile = `254${trimmedContact.replace(/^\+|^0+/, "")}`;
+      sendEmailOtp(email, otp).catch(() => {});
+      if (phone) {
+        const mobile = `254${phone.replace(/^\+|^0+/, "")}`;
         sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
           () => {}
         );
@@ -65,7 +66,7 @@ export default function LoginScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Login failed. Please try again.";
-      Alert.alert("Login Failed", message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }

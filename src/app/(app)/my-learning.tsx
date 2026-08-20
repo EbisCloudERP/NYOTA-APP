@@ -1,145 +1,165 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  enrollCourse,
+  getCourseRecommendations,
+  getEnrolledCourses,
+  type Course as ApiCourse,
+} from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 type Tab = "all" | "recommended";
 
-type Level = "Beginner" | "Intermediate" | "Advanced";
-type Pace = "Self-paced" | "Instructor-led";
-
 interface Course {
   id: string;
   title: string;
+  slug: string;
   description: string;
   category: string;
-  level: Level;
-  pace: Pace;
+  level: string;
+  pace: string;
   progress: number; // 0–100
   totalLessons: number;
   completedLessons: number;
-  isRecommended: boolean;
+  isEnrolled: boolean;
 }
 
-const INITIAL_COURSES: Course[] = [
-  {
-    id: "1",
-    title: "Introduction to Public Procurement",
-    description:
-      "Learn the fundamentals of public procurement processes, legal frameworks, and best practices in Kenya.",
-    category: "Procurement",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 75,
-    totalLessons: 12,
-    completedLessons: 9,
-    isRecommended: true,
-  },
-  {
-    id: "2",
-    title: "AGPO Certification Guide",
-    description:
-      "Step-by-step guide to obtaining AGPO certification for youth, women, and PWD-owned businesses.",
-    category: "Certification",
-    level: "Intermediate",
-    pace: "Self-paced",
-    progress: 40,
-    totalLessons: 8,
-    completedLessons: 3,
-    isRecommended: true,
-  },
-  {
-    id: "3",
-    title: "Digital Literacy for Business",
-    description:
-      "Master essential digital tools and platforms to run and grow your business online.",
-    category: "Digital Skills",
-    level: "Beginner",
-    pace: "Instructor-led",
-    progress: 0,
-    totalLessons: 10,
-    completedLessons: 0,
-    isRecommended: false,
-  },
-  {
-    id: "4",
-    title: "Financial Management Basics",
-    description:
-      "Understand budgeting, cash flow, and financial reporting for small and medium enterprises.",
-    category: "Finance",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 100,
-    totalLessons: 6,
-    completedLessons: 6,
-    isRecommended: true,
-  },
-  {
-    id: "5",
-    title: "Tender Application Process",
-    description:
-      "Navigate the end-to-end tender application process including documentation, pricing, and submission.",
-    category: "Procurement",
-    level: "Advanced",
-    pace: "Instructor-led",
-    progress: 20,
-    totalLessons: 14,
-    completedLessons: 3,
-    isRecommended: false,
-  },
-  {
-    id: "6",
-    title: "Entrepreneurship Fundamentals",
-    description:
-      "Build a strong foundation in entrepreneurship covering ideation, validation, and go-to-market strategies.",
-    category: "Business",
-    level: "Beginner",
-    pace: "Self-paced",
-    progress: 0,
-    totalLessons: 16,
-    completedLessons: 0,
-    isRecommended: false,
-  },
-];
+const capitalize = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 export default function MyLearningScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { showToast, confirm } = useFeedback();
 
-  const handleEnroll = (course: Course) => {
-    Alert.alert(
-      "Enroll in Course",
-      `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Enroll",
-          onPress: () => {
-            setCourses((prev) =>
-              prev.map((c) => (c.id === course.id ? { ...c, progress: 1 } : c)),
-            );
-          },
-        },
-      ],
-    );
+  const loadCourses = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const uuid = (await getUuid()) ?? "";
+      if (!uuid) {
+        setAllCourses([]);
+        setRecommendedCourses([]);
+        return;
+      }
+
+      const [recsRes, enrolledRes] = await Promise.all([
+        getCourseRecommendations(uuid),
+        getEnrolledCourses(),
+      ]);
+
+        const enrolledById = new Map(
+          (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
+        );
+
+      const toView = (c: ApiCourse): Course => {
+        const enrolled = enrolledById.get(String(c.id));
+        const progress = enrolled
+          ? Math.min(100, Math.max(0, enrolled.completed_lessons ?? 0))
+          : 0;
+        const completedLessons = enrolled
+          ? Math.round((progress / 100) * (c.total_lessons || 0))
+          : 0;
+
+        return {
+          id: String(c.id),
+          title: c.title,
+          slug: c.slug,
+          description: c.short_description || c.description || "",
+          category: c.category?.name ?? "",
+          level: capitalize(c.level),
+          pace: "Self-paced",
+          progress,
+          totalLessons: c.total_lessons,
+          completedLessons,
+          isEnrolled: Boolean(enrolled),
+        };
+      };
+
+        setAllCourses((recsRes.data.courses ?? []).map(toView));
+        setRecommendedCourses((recsRes.data.suggested_courses ?? []).map(toView));
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Failed to load courses.",
+        "error",
+      );
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCourses();
+  }, [loadCourses]);
+
+  const handleRefresh = useCallback(() => {
+    loadCourses(true);
+  }, [loadCourses]);
+
+  const handleEnroll = async (course: Course) => {
+    const ok = await confirm({
+      title: "Enroll in Course",
+      message: `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
+      confirmText: "Enroll",
+      cancelText: "Cancel",
+    });
+    if (!ok) return;
+
+    try {
+      const uuid = (await getUuid()) ?? "";
+      await enrollCourse(course.id, uuid);
+      setAllCourses((prev) =>
+        prev.map((c) =>
+          c.id === course.id ? { ...c, isEnrolled: true } : c,
+        ),
+      );
+      setRecommendedCourses((prev) =>
+        prev.map((c) =>
+          c.id === course.id ? { ...c, isEnrolled: true } : c,
+        ),
+      );
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Please try again.",
+        "error",
+      );
+    }
   };
 
   const filteredCourses =
-    activeTab === "all" ? courses : courses.filter((c) => c.isRecommended);
+    activeTab === "all" ? allCourses : recommendedCourses;
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* ── Header ── */}
       <Text style={styles.title}>Your Learning Path</Text>
@@ -195,7 +215,7 @@ export default function MyLearningScreen() {
                 styles.enrollmentBadge,
                 course.progress === 100
                   ? styles.enrollmentBadgeCompleted
-                  : course.progress > 0
+                  : course.isEnrolled
                     ? styles.enrollmentBadgeEnrolled
                     : styles.enrollmentBadgeNotEnrolled,
               ]}
@@ -204,7 +224,7 @@ export default function MyLearningScreen() {
                 name={
                   course.progress === 100
                     ? "checkmark-circle"
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? "checkmark-circle"
                       : "close-circle-outline"
                 }
@@ -212,7 +232,7 @@ export default function MyLearningScreen() {
                 color={
                   course.progress === 100
                     ? Colors.brand
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? "#16A34A"
                       : "#9CA3AF"
                 }
@@ -222,14 +242,14 @@ export default function MyLearningScreen() {
                   styles.enrollmentBadgeText,
                   course.progress === 100
                     ? styles.enrollmentBadgeTextCompleted
-                    : course.progress > 0
+                    : course.isEnrolled
                       ? styles.enrollmentBadgeTextEnrolled
                       : styles.enrollmentBadgeTextNotEnrolled,
                 ]}
               >
                 {course.progress === 100
                   ? "Completed"
-                  : course.progress > 0
+                  : course.isEnrolled
                     ? "Enrolled"
                     : "Not enrolled"}
               </Text>
@@ -272,28 +292,31 @@ export default function MyLearningScreen() {
           <TouchableOpacity
             style={[
               styles.cardButton,
-              course.progress > 0 &&
+              course.isEnrolled &&
                 course.progress < 100 &&
                 styles.cardButtonOutline,
             ]}
             activeOpacity={0.7}
             onPress={() => {
-              if (course.progress === 0) {
+              if (!course.isEnrolled) {
                 handleEnroll(course);
-              } else if (course.progress < 100) {
-                router.push("/(lessons)/lessons");
+              } else {
+                router.push({
+                  pathname: "/(lessons)/lessons",
+                  params: { slug: course.slug },
+                });
               }
             }}
           >
             <Text
               style={[
                 styles.cardButtonText,
-                course.progress > 0 &&
+                course.isEnrolled &&
                   course.progress < 100 &&
                   styles.cardButtonTextOutline,
               ]}
             >
-              {course.progress === 0
+              {!course.isEnrolled
                 ? "Enroll now"
                 : course.progress === 100
                   ? "Review course"
@@ -303,7 +326,7 @@ export default function MyLearningScreen() {
               name="arrow-forward"
               size={16}
               color={
-                course.progress > 0 && course.progress < 100
+                course.isEnrolled && course.progress < 100
                   ? Colors.brand
                   : "#FFFFFF"
               }
@@ -337,6 +360,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 
   // ── Header ──

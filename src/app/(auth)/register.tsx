@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     KeyboardAvoidingView,
     Modal,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { getCounties, registerUser, type County } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const PICKER_ITEM_HEIGHT = 48;
@@ -75,17 +75,18 @@ export default function RegisterScreen() {
   const [lastName, setLastName] = useState("");
   const [nationalId, setNationalId] = useState("");
   const [selectedCounty, setSelectedCounty] = useState<{ label: string; value: string } | null>(null);
-  const [selectedSubCounty, setSelectedSubCounty] = useState<{ label: string; value: string } | null>(null);
+  const [selectedConstituency, setSelectedConstituency] = useState<{ label: string; value: string } | null>(null);
   const [selectedWard, setSelectedWard] = useState<{ label: string; value: string } | null>(null);
   const [counties, setCounties] = useState<County[]>([]);
   const [loadingCounties, setLoadingCounties] = useState(true);
   const [countyPickerVisible, setCountyPickerVisible] = useState(false);
-  const [subCountyPickerVisible, setSubCountyPickerVisible] = useState(false);
+  const [constituencyPickerVisible, setConstituencyPickerVisible] = useState(false);
   const [wardPickerVisible, setWardPickerVisible] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { email } = useLocalSearchParams<{ email: string }>();
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     getCounties()
@@ -99,7 +100,7 @@ export default function RegisterScreen() {
     [counties]
   );
 
-  const subCountyItems = useMemo(() => {
+  const constituencyItems = useMemo(() => {
     if (!selectedCounty) return [];
     const county = counties.find((c) => String(c.id) === selectedCounty.value);
     if (!county) return [];
@@ -115,13 +116,13 @@ export default function RegisterScreen() {
   }, [selectedCounty, counties]);
 
   const wardItems = useMemo(() => {
-    if (!selectedCounty || !selectedSubCounty) return [];
+    if (!selectedCounty || !selectedConstituency) return [];
     const county = counties.find((c) => String(c.id) === selectedCounty.value);
     if (!county) return [];
     return county.sub_counties
-      .filter((sc) => sc.constituency_name === selectedSubCounty.value)
+      .filter((sc) => sc.constituency_name === selectedConstituency.value)
       .map((sc) => ({ label: sc.ward, value: sc.ward }));
-  }, [selectedCounty, selectedSubCounty, counties]);
+  }, [selectedCounty, selectedConstituency, counties]);
 
   const passwordsMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
@@ -141,19 +142,19 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim() || !nationalId.trim()) {
-      Alert.alert("Missing Fields", "Please fill in all personal information fields.");
+      showToast("Please fill in all personal information fields.", "error");
       return;
     }
-    if (!selectedCounty || !selectedSubCounty) {
-      Alert.alert("Missing Fields", "Please select your county and sub-county.");
+    if (!selectedCounty || !selectedConstituency) {
+      showToast("Please select your county and constituency.", "error");
       return;
     }
     if (!password || password.length < 8) {
-      Alert.alert("Weak Password", "Password must be at least 8 characters.");
+      showToast("Password must be at least 8 characters.", "error");
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert("Password Mismatch", "Passwords do not match.");
+      showToast("Passwords do not match.", "error");
       return;
     }
 
@@ -167,7 +168,7 @@ export default function RegisterScreen() {
         type: "email",
         contact: email,
         county: selectedCounty.label,
-        sub_county: selectedSubCounty.value,
+        sub_county: selectedConstituency.value,
         password,
         password_confirmation: confirmPassword,
       });
@@ -179,7 +180,7 @@ export default function RegisterScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Registration failed. Please try again.";
-      Alert.alert("Registration Failed", message);
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -272,15 +273,15 @@ export default function RegisterScreen() {
             <Text style={styles.pickerChevron}>▼</Text>
           </TouchableOpacity>
 
-          {/* Sub-county */}
-          <Text style={styles.label}>Sub-county</Text>
+          {/* Constituency */}
+          <Text style={styles.label}>Constituency</Text>
           <TouchableOpacity
             style={[styles.pickerButton, !selectedCounty && styles.pickerButtonDisabled]}
-            onPress={() => selectedCounty && setSubCountyPickerVisible(true)}
+            onPress={() => selectedCounty && setConstituencyPickerVisible(true)}
             disabled={!selectedCounty}
           >
-            <Text style={selectedSubCounty ? styles.pickerText : styles.pickerPlaceholder}>
-              {selectedSubCounty?.label ?? "Select your sub-county"}
+            <Text style={selectedConstituency ? styles.pickerText : styles.pickerPlaceholder}>
+              {selectedConstituency?.label ?? "Select your constituency"}
             </Text>
             <Text style={styles.pickerChevron}>▼</Text>
           </TouchableOpacity>
@@ -288,9 +289,9 @@ export default function RegisterScreen() {
           {/* Ward */}
           <Text style={styles.label}>Ward</Text>
           <TouchableOpacity
-            style={[styles.pickerButton, !selectedSubCounty && styles.pickerButtonDisabled]}
-            onPress={() => selectedSubCounty && setWardPickerVisible(true)}
-            disabled={!selectedSubCounty}
+            style={[styles.pickerButton, !selectedConstituency && styles.pickerButtonDisabled]}
+            onPress={() => selectedConstituency && setWardPickerVisible(true)}
+            disabled={!selectedConstituency}
           >
             <Text style={selectedWard ? styles.pickerText : styles.pickerPlaceholder}>
               {selectedWard?.label ?? "Select your ward"}
@@ -391,21 +392,21 @@ export default function RegisterScreen() {
         items={countyItems}
         onSelect={(item) => {
           setSelectedCounty(item);
-          setSelectedSubCounty(null);
+          setSelectedConstituency(null);
           setSelectedWard(null);
         }}
         onClose={() => setCountyPickerVisible(false)}
       />
 
       <PickerModal
-        visible={subCountyPickerVisible}
-        label="Select Sub-county"
-        items={subCountyItems}
+        visible={constituencyPickerVisible}
+        label="Select Constituency"
+        items={constituencyItems}
         onSelect={(item) => {
-          setSelectedSubCounty(item);
+          setSelectedConstituency(item);
           setSelectedWard(null);
         }}
-        onClose={() => setSubCountyPickerVisible(false)}
+        onClose={() => setConstituencyPickerVisible(false)}
       />
 
       <PickerModal

@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -12,17 +11,19 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { showToast } = useFeedback();
 
   const handleResetPassword = () => {
     // TODO: implement password reset logic
     router.replace("/login");
     setTimeout(() => {
-      Alert.alert("Success", "Login with your new credentials");
+      showToast("Login with your new credentials", "success");
     }, 300);
   };
 

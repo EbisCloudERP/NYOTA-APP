@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,8 +13,79 @@ import {
     submitEligibilityAnswers,
     type EligibilityQuestion,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
+
+interface LikertMetadata {
+  min?: number;
+  max?: number;
+  icon?: string;
+  scale_labels?: Record<string, string>;
+}
+
+function LikertScale({
+  question,
+  selectedValue,
+  onSelect,
+}: {
+  question: EligibilityQuestion;
+  selectedValue?: string | string[];
+  onSelect: (value: string) => void;
+}) {
+  const meta = (question.metadata ?? {}) as LikertMetadata;
+  const min = meta.min ?? 1;
+  const max = meta.max ?? 5;
+  const labels = meta.scale_labels ?? {};
+
+  const values: number[] = [];
+  for (let v = min; v <= max; v += 1) {
+    values.push(v);
+  }
+
+  return (
+    <View style={styles.likertContainer}>
+      <View style={styles.likertRow}>
+        {values.map((value) => {
+          const key = String(value);
+          const isSelected = key === selectedValue;
+          return (
+            <TouchableOpacity
+              key={key}
+              style={styles.likertPoint}
+              activeOpacity={0.7}
+              onPress={() => onSelect(key)}
+            >
+              <View
+                style={[
+                  styles.likertCircle,
+                  isSelected && styles.likertCircleSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.likertNumber,
+                    isSelected && styles.likertNumberSelected,
+                  ]}
+                >
+                  {value}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.likertValueLabel,
+                  isSelected && styles.likertValueLabelSelected,
+                ]}
+              >
+                {labels[key] ?? ""}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export default function KycScreen() {
   const [questions, setQuestions] = useState<EligibilityQuestion[]>([]);
@@ -25,6 +95,7 @@ export default function KycScreen() {
   const [submitting, setSubmitting] = useState(false);
   const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
   const [uuid, setUuid] = useState<string>(paramUuid ?? "");
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (uuid) return;
@@ -36,7 +107,7 @@ export default function KycScreen() {
   useEffect(() => {
     getEligibilityQuestions()
       .then((res) => setQuestions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => Alert.alert("Error", "Failed to load questions. Please try again."))
+      .catch(() => showToast("Failed to load questions. Please try again.", "error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -51,7 +122,7 @@ export default function KycScreen() {
 
   const handleSubmit = async () => {
     if (!uuid) {
-      Alert.alert("Error", "Missing user UUID. Please log in again.");
+      showToast("Missing user UUID. Please log in again.", "error");
       return;
     }
 
@@ -66,7 +137,7 @@ export default function KycScreen() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Submission failed. Please try again.";
-      Alert.alert("Error", message);
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -133,27 +204,35 @@ export default function KycScreen() {
                   </View>
                   {isAnswered && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <View style={styles.optionsList}>
-                  {(q.q_options ?? []).map((option) => {
-                    const selected = answers[q.key] === option.value;
-                    return (
-                      <TouchableOpacity
-                        key={option.id}
-                        style={[styles.option, selected && styles.optionSelected]}
-                        onPress={() => handleSelect(q.key, option.value)}
-                      >
-                        <View style={styles.radio}>
-                          {selected && <View style={styles.radioFill} />}
-                        </View>
-                        <Text
-                          style={[styles.optionText, selected && styles.optionTextSelected]}
+                {q.type?.toLowerCase() === "likert_scale" ? (
+                  <LikertScale
+                    question={q}
+                    selectedValue={answers[q.key]}
+                    onSelect={(value) => handleSelect(q.key, value)}
+                  />
+                ) : (
+                  <View style={styles.optionsList}>
+                    {(q.q_options ?? []).map((option) => {
+                      const selected = answers[q.key] === option.value;
+                      return (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={[styles.option, selected && styles.optionSelected]}
+                          onPress={() => handleSelect(q.key, option.value)}
                         >
-                          {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                          <View style={styles.radio}>
+                            {selected && <View style={styles.radioFill} />}
+                          </View>
+                          <Text
+                            style={[styles.optionText, selected && styles.optionTextSelected]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
                 </View>
               );
             })}
@@ -229,6 +308,34 @@ const styles = StyleSheet.create({
   radioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.brand },
   optionText: { flex: 1, fontSize: 14, color: "#374151", lineHeight: 20 },
   optionTextSelected: { fontWeight: "500", color: Colors.brand },
+  likertContainer: { marginTop: 8, marginBottom: 4 },
+  likertRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  likertPoint: { flex: 1, alignItems: "center", paddingHorizontal: 4 },
+  likertCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  likertCircleSelected: { borderColor: Colors.brand, backgroundColor: Colors.brand },
+  likertNumber: { fontSize: 16, fontWeight: "600", color: "#374151" },
+  likertNumberSelected: { color: "#FFFFFF" },
+  likertValueLabel: {
+    marginTop: 6,
+    fontSize: 10,
+    color: "#6B7280",
+    lineHeight: 13,
+    textAlign: "center",
+  },
+  likertValueLabelSelected: { color: Colors.brand, fontWeight: "600" },
   submitButton: {
     width: "100%", height: 50, backgroundColor: Colors.brand, borderRadius: 12,
     alignItems: "center", justifyContent: "center", marginBottom: 12,

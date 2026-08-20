@@ -1,7 +1,6 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
 import {
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -9,6 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function ProfileScreen() {
@@ -27,13 +27,14 @@ export default function ProfileScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showWhyInfo, setShowWhyInfo] = useState(false);
+  const { showToast } = useFeedback();
 
   const handleSave = () => {
     if (password && password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      showToast("Passwords do not match.", "error");
       return;
     }
-    Alert.alert("Saved", "Your profile has been updated successfully.");
+    showToast("Your profile has been updated successfully.", "success");
   };
 
   return (
