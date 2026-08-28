@@ -1,6 +1,8 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     Platform,
     ScrollView,
     StyleSheet,
@@ -9,6 +11,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { submitIbsInquiry } from "../../services/api";
+import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
@@ -16,6 +20,7 @@ interface FormData {
   // Company Info
   companyName: string;
   phoneNumber: string;
+  email: string;
   contactPerson: string;
   companyAddress: string;
   registrationNumber: string;
@@ -32,6 +37,7 @@ interface FormData {
 interface FormErrors {
   companyName?: string;
   phoneNumber?: string;
+  email?: string;
   contactPerson?: string;
   companyAddress?: string;
   registrationNumber?: string;
@@ -44,10 +50,18 @@ interface FormErrors {
 }
 
 export default function LpoFinancingScreen() {
+  const { bankSlug, bankName, providerType } = useLocalSearchParams<{
+    bankSlug?: string;
+    bankName?: string;
+    providerType?: string;
+  }>();
+  const { user } = useAuth();
+
   const [form, setForm] = useState<FormData>({
     companyName: "",
-    phoneNumber: "",
-    contactPerson: "",
+    phoneNumber: user?.phone ?? "",
+    email: user?.email ?? "",
+    contactPerson: [user?.first_name, user?.last_name].filter(Boolean).join(" "),
     companyAddress: "",
     registrationNumber: "",
     vatNumber: "",
@@ -59,6 +73,7 @@ export default function LpoFinancingScreen() {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
   const { showToast, confirm } = useFeedback();
 
   // File upload states (store filename to show selection)
@@ -97,6 +112,11 @@ export default function LpoFinancingScreen() {
 
     if (!form.companyName.trim()) e.companyName = "Company name is required";
     if (!form.phoneNumber.trim()) e.phoneNumber = "Phone number is required";
+    if (!form.email.trim()) {
+      e.email = "Email address is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      e.email = "Enter a valid email address";
+    }
     if (!form.contactPerson.trim())
       e.contactPerson = "Contact person is required";
     if (!form.companyAddress.trim())
@@ -123,7 +143,7 @@ export default function LpoFinancingScreen() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) {
       showToast("Please fill in all required fields correctly.", "error");
       return;
@@ -134,7 +154,49 @@ export default function LpoFinancingScreen() {
       return;
     }
 
-    showToast("Your LPO financing application has been submitted successfully.", "success");
+    if (!bankSlug) {
+      showToast("No bank selected. Please go back and choose a funding provider.", "error");
+      return;
+    }
+
+    const description = [
+      `LPO Number: ${form.lpoNumber}`,
+      `LPO Amount (KES): ${form.lpoAmount}`,
+      `LPO Date: ${form.lpoDate}`,
+      `Buyer: ${form.buyerName}`,
+    ].join("\n");
+
+    setSubmitting(true);
+    try {
+      await submitIbsInquiry({
+        service: "LPO Financing",
+        bank_slug: bankSlug,
+        category: providerType === "government" ? "government_services" : "bank_service",
+        requester_name: form.contactPerson.trim(),
+        company_name: form.companyName.trim(),
+        email: form.email.trim(),
+        phone: form.phoneNumber.trim(),
+        description,
+        receipient: form.buyerName.trim() || undefined,
+        requested_amount: form.requestedAmount.trim() || undefined,
+        company: {
+          contact_name: form.contactPerson.trim(),
+          email: form.email.trim(),
+          phone: form.phoneNumber.trim(),
+          address: form.companyAddress.trim() || undefined,
+          registration_number: form.registrationNumber.trim() || undefined,
+          vat_number: form.vatNumber.trim() || undefined,
+        },
+      });
+      showToast("Your LPO financing application has been submitted successfully.", "success");
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Submission failed. Please try again.",
+        "error",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -155,6 +217,16 @@ export default function LpoFinancingScreen() {
         All fields marked with <Text style={styles.asterisk}>*</Text> are
         required
       </Text>
+
+      {/* Selected provider */}
+      {bankName ? (
+        <View style={styles.providerBanner}>
+          <Ionicons name="business-outline" size={18} color={Colors.brand} />
+          <Text style={styles.providerBannerText}>
+            Applying to <Text style={styles.providerBannerBold}>{bankName}</Text>
+          </Text>
+        </View>
+      ) : null}
 
       {/* ── Company Information ── */}
       <Text style={styles.sectionTitle}>Company Information</Text>
@@ -189,6 +261,24 @@ export default function LpoFinancingScreen() {
         />
         {errors.phoneNumber && (
           <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+        )}
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          Email Address <Text style={styles.asterisk}>*</Text>
+        </Text>
+        <TextInput
+          style={[styles.input, errors.email && styles.inputError]}
+          placeholder="e.g. name@company.co.ke"
+          placeholderTextColor="#9CA3AF"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={form.email}
+          onChangeText={(v) => updateField("email", v)}
+        />
+        {errors.email && (
+          <Text style={styles.errorText}>{errors.email}</Text>
         )}
       </View>
 
@@ -504,12 +594,19 @@ export default function LpoFinancingScreen() {
 
       {/* ── Submit Button ── */}
       <TouchableOpacity
-        style={styles.submitButton}
+        style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
         activeOpacity={0.7}
         onPress={handleSubmit}
+        disabled={submitting}
       >
-        <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-        <Text style={styles.submitButtonText}>Submit Application</Text>
+        {submitting ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
+        )}
+        <Text style={styles.submitButtonText}>
+          {submitting ? "Submitting..." : "Submit Application"}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.bottomSpacer} />
@@ -543,6 +640,27 @@ const styles = StyleSheet.create({
   },
   asterisk: {
     color: "#EF4444",
+  },
+
+  // Provider banner
+  providerBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F5F3FF",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  providerBannerText: {
+    fontSize: 14,
+    color: "#4B5563",
+    flex: 1,
+  },
+  providerBannerBold: {
+    fontWeight: "700",
+    color: Colors.brand,
   },
 
   // Section
@@ -659,6 +777,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
     marginBottom: 12,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
   submitButtonText: {
     fontSize: 16,

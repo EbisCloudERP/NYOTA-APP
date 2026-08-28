@@ -94,7 +94,7 @@ export default function HomeScreen() {
       const uuid = (await getUuid()) ?? "";
       if (uuid) {
         const recsRes = await getCourseRecommendations(uuid);
-        setAvailableCount(recsRes.data?.suggested_courses?.length ?? 0);
+        setAvailableCount(recsRes.data?.courses?.length ?? 0);
       }
     } catch {
       // failed to load recommendations — keep default
@@ -311,7 +311,7 @@ export default function HomeScreen() {
           <View style={styles.recommendRow}>
             <Ionicons name="book-outline" size={14} color="#6B7280" />
             <Text style={styles.recommendText}>
-              {availableCount} recommended course
+              {availableCount} course
               {availableCount !== 1 ? "s" : ""} available
             </Text>
           </View>
