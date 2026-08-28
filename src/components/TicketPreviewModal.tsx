@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -11,134 +12,214 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import {
+    getFeedbackTicket,
+    replyFeedbackTicket,
+    type FeedbackTicket,
+} from "../services/api";
+import { useAuth } from "../services/AuthContext";
+import { useFeedback } from "../services/FeedbackContext";
 import { Colors } from "../theme/colors";
 
 // ── Types ──
 interface ChatMessage {
   id: number;
   sender: "user" | "support";
+  name: string;
   message: string;
   time: string;
 }
 
-interface Ticket {
-  id: string;
-  subject: string;
-  module: string;
-  priority: "Low" | "Medium" | "High" | "Critical";
-  status: "Open" | "Ongoing" | "Resolved" | "Closed";
-  date: string;
-}
-
 interface TicketPreviewModalProps {
   visible: boolean;
-  ticket: Ticket | null;
+  ticketId: number | null;
   onClose: () => void;
 }
 
 // ── Helpers ──
-const priorityColor = (p: Ticket["priority"]): string => {
-  switch (p) {
-    case "Critical":
+const priorityColor = (p: string): string => {
+  switch (p.toLowerCase()) {
+    case "urgent":
+    case "critical":
       return "#DC2626";
-    case "High":
+    case "high":
       return "#EA580C";
-    case "Medium":
+    case "medium":
       return "#CA8A04";
-    case "Low":
+    case "low":
       return "#16A34A";
-  }
-};
-
-const statusColor = (s: Ticket["status"]): string => {
-  switch (s) {
-    case "Open":
-      return "#2563EB";
-    case "Ongoing":
-      return "#9333EA";
-    case "Resolved":
-      return "#16A34A";
-    case "Closed":
+    default:
       return "#6B7280";
   }
 };
 
-// ── Dummy chat data ──
-const dummyMessages: ChatMessage[] = [
-  {
-    id: 1,
-    sender: "user",
-    message:
-      "Hi, I'm unable to access the course materials for the Advanced React module. It keeps showing a loading spinner.",
-    time: "10:30 AM",
-  },
-  {
-    id: 2,
-    sender: "support",
-    message:
-      "Hello! Thank you for reaching out. I'll look into this right away. Could you confirm which browser you're using?",
-    time: "10:32 AM",
-  },
-  {
-    id: 3,
-    sender: "user",
-    message: "I'm using Chrome on my laptop, version 120.",
-    time: "10:33 AM",
-  },
-  {
-    id: 4,
-    sender: "support",
-    message:
-      "Thanks for confirming. We've identified the issue — it's related to a recent update. Our team is deploying a fix now. It should be resolved within the hour.",
-    time: "10:35 AM",
-  },
-  {
-    id: 5,
-    sender: "user",
-    message: "Okay, thank you! I'll check back later.",
-    time: "10:36 AM",
-  },
-  {
-    id: 6,
-    sender: "support",
-    message:
-      "You're welcome! Feel free to reach out if you need anything else. We'll also send you an email once the fix is live.",
-    time: "10:37 AM",
-  },
-];
+const statusColor = (s: string): string => {
+  switch (s.toLowerCase()) {
+    case "open":
+      return "#2563EB";
+    case "in_progress":
+    case "ongoing":
+      return "#9333EA";
+    case "resolved":
+      return "#16A34A";
+    case "closed":
+      return "#6B7280";
+    default:
+      return "#6B7280";
+  }
+};
+
+const priorityLabel = (p: string): string =>
+  p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+
+const statusLabel = (s: string): string => {
+  switch (s.toLowerCase()) {
+    case "in_progress":
+    case "ongoing":
+      return "In Progress";
+    case "open":
+      return "Open";
+    case "resolved":
+      return "Resolved";
+    case "closed":
+      return "Closed";
+    default:
+      return s;
+  }
+};
+
+const categoryLabel = (c: string): string =>
+  c.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+const formatDate = (value: string): string => {
+  const d = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return value.slice(0, 10);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const formatTime = (value: string): string => {
+  const d = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 // ── Component ──
 export default function TicketPreviewModal({
   visible,
-  ticket,
+  ticketId,
   onClose,
 }: TicketPreviewModalProps) {
+  const { user } = useAuth();
+  const { showToast } = useFeedback();
+  const [ticket, setTicket] = useState<FeedbackTicket | null>(null);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] =
-    useState<ChatMessage[]>(dummyMessages);
+  const [sending, setSending] = useState(false);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    const newMsg: ChatMessage = {
-      id: chatMessages.length + 1,
-      sender: "user",
-      message: message.trim(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-    setChatMessages((prev) => [...prev, newMsg]);
-    setMessage("");
+  const loadTicket = useCallback(
+    async (id: number) => {
+      setLoading(true);
+      setTicket(null);
+      try {
+        const res = await getFeedbackTicket(id);
+        setTicket(res.data ?? null);
+      } catch (e) {
+        showToast(
+          e instanceof Error ? e.message : "Failed to load ticket.",
+          "error",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showToast],
+  );
+
+  useEffect(() => {
+    if (visible && ticketId != null) {
+      loadTicket(ticketId);
+      setMessage("");
+    }
+  }, [visible, ticketId, loadTicket]);
+
+  const messages: ChatMessage[] = ticket
+    ? [
+        ...(ticket.description
+          ? [
+              {
+                id: -1,
+                sender: "user" as const,
+                name: "You",
+                message: ticket.description,
+                time: formatTime(ticket.created_at),
+              },
+            ]
+          : []),
+        ...(ticket.replies ?? []).map((r) => ({
+          id: r.id,
+          sender: r.is_admin_reply ? ("support" as const) : ("user" as const),
+          name: r.is_admin_reply ? r.user_name : "You",
+          message: r.message,
+          time: formatTime(r.created_at),
+        })),
+      ]
+    : [];
+
+  const handleSend = async () => {
+    const text = message.trim();
+    if (!text || sending || ticketId == null) return;
+    setSending(true);
+    try {
+      const uuid = user?.uuid ?? "";
+      if (!uuid) {
+        showToast(
+          "Unable to identify your account. Please log in again.",
+          "error",
+        );
+        return;
+      }
+      await replyFeedbackTicket(ticketId, text, uuid);
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              replies: [
+                ...(prev.replies ?? []),
+                {
+                  id: Date.now(),
+                  message: text,
+                  is_admin_reply: false,
+                  user_name: "You",
+                  created_at: new Date().toISOString(),
+                },
+              ],
+            }
+          : prev,
+      );
+      setMessage("");
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Failed to send reply.",
+        "error",
+      );
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleClose = () => {
     setMessage("");
-    setChatMessages(dummyMessages);
     onClose();
   };
-
-  if (!ticket) return null;
 
   return (
     <Modal
@@ -150,152 +231,172 @@ export default function TicketPreviewModal({
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
             <Ionicons name="close" size={24} color="#111827" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{ticket.id}</Text>
+          <Text style={styles.headerTitle}>
+            {ticket?.ticket_number ?? "Ticket"}
+          </Text>
           <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView
-          style={styles.body}
-          contentContainerStyle={styles.bodyContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* ── Ticket Info Card ── */}
-          <View style={styles.infoCard}>
-            <Text style={styles.subject}>{ticket.subject}</Text>
-            <Text style={styles.meta}>
-              {ticket.id} &bull; {ticket.date}
-            </Text>
-
-            {/* Badges */}
-            <View style={styles.badgesRow}>
-              <View style={[styles.badge, styles.badgeModule]}>
-                <Text style={styles.badgeModuleText}>{ticket.module}</Text>
-              </View>
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: priorityColor(ticket.priority) + "1A" },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.badgeDot,
-                    { backgroundColor: priorityColor(ticket.priority) },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.badgeText,
-                    { color: priorityColor(ticket.priority) },
-                  ]}
-                >
-                  {ticket.priority}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: statusColor(ticket.status) + "1A" },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.badgeDot,
-                    { backgroundColor: statusColor(ticket.status) },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.badgeText,
-                    { color: statusColor(ticket.status) },
-                  ]}
-                >
-                  {ticket.status}
-                </Text>
-              </View>
-            </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.brand} />
           </View>
-
-          {/* ── Chat Section ── */}
-          <Text style={styles.chatHeading}>Conversation</Text>
-
-          {chatMessages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.chatBubble,
-                msg.sender === "user"
-                  ? styles.chatBubbleUser
-                  : styles.chatBubbleSupport,
-              ]}
+        ) : (
+          <>
+            <ScrollView
+              style={styles.body}
+              contentContainerStyle={styles.bodyContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              <View style={styles.chatBubbleHeader}>
-                <Text
-                  style={
+              {/* ── Ticket Info Card ── */}
+              {ticket && (
+                <View style={styles.infoCard}>
+                  <Text style={styles.subject}>{ticket.subject}</Text>
+                  <Text style={styles.meta}>
+                    {ticket.ticket_number} &bull; {formatDate(ticket.created_at)}
+                  </Text>
+
+                  {/* Badges */}
+                  <View style={styles.badgesRow}>
+                    <View style={[styles.badge, styles.badgeModule]}>
+                      <Text style={styles.badgeModuleText}>
+                        {categoryLabel(ticket.category)}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.badge,
+                        { backgroundColor: priorityColor(ticket.priority) + "1A" },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.badgeDot,
+                          { backgroundColor: priorityColor(ticket.priority) },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          { color: priorityColor(ticket.priority) },
+                        ]}
+                      >
+                        {priorityLabel(ticket.priority)}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.badge,
+                        { backgroundColor: statusColor(ticket.status) + "1A" },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.badgeDot,
+                          { backgroundColor: statusColor(ticket.status) },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          { color: statusColor(ticket.status) },
+                        ]}
+                      >
+                        {statusLabel(ticket.status)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* ── Chat Section ── */}
+              <Text style={styles.chatHeading}>Conversation</Text>
+
+              {messages.map((msg) => (
+                <View
+                  key={msg.id}
+                  style={[
+                    styles.chatBubble,
                     msg.sender === "user"
-                      ? styles.chatSenderUser
-                      : styles.chatSenderSupport
-                  }
+                      ? styles.chatBubbleUser
+                      : styles.chatBubbleSupport,
+                  ]}
                 >
-                  {msg.sender === "user" ? "You" : "Support Team"}
-                </Text>
-                <Text
-                  style={
-                    msg.sender === "user"
-                      ? styles.chatTimeUser
-                      : styles.chatTimeSupport
-                  }
-                >
-                  {msg.time}
-                </Text>
-              </View>
-              <Text
-                style={
-                  msg.sender === "user"
-                    ? styles.chatMessageUser
-                    : styles.chatMessageSupport
-                }
+                  <View style={styles.chatBubbleHeader}>
+                    <Text
+                      style={
+                        msg.sender === "user"
+                          ? styles.chatSenderUser
+                          : styles.chatSenderSupport
+                      }
+                    >
+                      {msg.name}
+                    </Text>
+                    <Text
+                      style={
+                        msg.sender === "user"
+                          ? styles.chatTimeUser
+                          : styles.chatTimeSupport
+                      }
+                    >
+                      {msg.time}
+                    </Text>
+                  </View>
+                  <Text
+                    style={
+                      msg.sender === "user"
+                        ? styles.chatMessageUser
+                        : styles.chatMessageSupport
+                    }
+                  >
+                    {msg.message}
+                  </Text>
+                </View>
+              ))}
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
+
+            {/* ── Message Input ── */}
+            <View style={styles.inputBar}>
+              <TextInput
+                style={styles.messageInput}
+                placeholder="Type your message..."
+                placeholderTextColor="#9CA3AF"
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendBtn,
+                  (!message.trim() || sending) && styles.sendBtnDisabled,
+                ]}
+                activeOpacity={0.7}
+                onPress={handleSend}
+                disabled={!message.trim() || sending}
               >
-                {msg.message}
-              </Text>
+                {sending ? (
+                  <ActivityIndicator color={Colors.white} size="small" />
+                ) : (
+                  <Ionicons
+                    name="send"
+                    size={18}
+                    color={message.trim() ? Colors.white : "#9CA3AF"}
+                  />
+                )}
+              </TouchableOpacity>
             </View>
-          ))}
-
-          <View style={{ height: 20 }} />
-        </ScrollView>
-
-        {/* ── Message Input ── */}
-        <View style={styles.inputBar}>
-          <TextInput
-            style={styles.messageInput}
-            placeholder="Type your message..."
-            placeholderTextColor="#9CA3AF"
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[styles.sendBtn, !message.trim() && styles.sendBtnDisabled]}
-            activeOpacity={0.7}
-            onPress={handleSend}
-            disabled={!message.trim()}
-          >
-            <Ionicons
-              name="send"
-              size={18}
-              color={message.trim() ? Colors.white : "#9CA3AF"}
-            />
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -306,6 +407,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   // Header

@@ -1,7 +1,8 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
@@ -11,6 +12,8 @@ import {
   View
 } from "react-native";
 import { WebView } from "react-native-webview";
+import { getFundProviders, type FundProvider } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 type Tab = "opportunities" | "funding";
@@ -22,13 +25,33 @@ export default function OpportunitiesScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("opportunities");
   const [fundingView, setFundingView] = useState<FundingView>(null);
   const [applyModalType, setApplyModalType] = useState<ApplyModalType>(null);
+  const [providers, setProviders] = useState<FundProvider[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(true);
+  const [selectedProvider, setSelectedProvider] = useState<FundProvider | null>(null);
+  const { showToast } = useFeedback();
+
+  useEffect(() => {
+    getFundProviders()
+      .then((res) => setProviders(res.data ?? []))
+      .catch((e) =>
+        showToast(
+          e instanceof Error ? e.message : "Failed to load funding options.",
+          "error",
+        ),
+      )
+      .finally(() => setLoadingProviders(false));
+  }, []);
+
+  const governmentProviders = providers.filter((p) => p.type === "government");
+  const bankProviders = providers.filter((p) => p.type === "bank");
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setFundingView(null);
   };
 
-  const handleApplyNow = (type: "government" | "external") => {
+  const handleApplyNow = (type: "government" | "external", provider: FundProvider) => {
+    setSelectedProvider(provider);
     setApplyModalType(type);
   };
 
@@ -36,7 +59,14 @@ export default function OpportunitiesScreen() {
     setApplyModalType(null);
     // Small delay so the modal dismiss animation finishes before pushing
     setTimeout(() => {
-      router.push(`/(financing)/${route}`);
+      router.push({
+        pathname: `/(financing)/${route}`,
+        params: {
+          bankSlug: selectedProvider?.slug ?? "",
+          bankName: selectedProvider?.name ?? "",
+          providerType: selectedProvider?.type ?? "",
+        },
+      });
     }, 200);
   };
 
@@ -199,54 +229,37 @@ export default function OpportunitiesScreen() {
             programs
           </Text>
 
-          {/* Women Enterprise Fund */}
-          <View style={styles.fundOptionCard}>
-            <View style={styles.fundOptionHeader}>
-              <Image
-                source={require("../../../assets/images/wef.png")}
-                style={styles.fundOptionImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.fundOptionTitle}>Women Enterprise Fund</Text>
+          {loadingProviders ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color={Colors.brand} />
             </View>
-            <Text style={styles.fundOptionSubtext}>
-              The Women Enterprise Fund agency offers a range of products and
-              services to help empower women in the society and improve their
-              income.
-            </Text>
-            <TouchableOpacity
-              style={styles.applyButton}
-              activeOpacity={0.7}
-              onPress={() => handleApplyNow("government")}
-            >
-              <Text style={styles.applyButtonText}>Apply now</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Youth Enterprise Fund */}
-          <View style={styles.fundOptionCard}>
-            <View style={styles.fundOptionHeader}>
-              <Image
-                source={require("../../../assets/images/yedp.png")}
-                style={styles.fundOptionImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.fundOptionTitle}>Youth Enterprise Fund</Text>
-            </View>
-            <Text style={styles.fundOptionSubtext}>
-              A state corporation mandated to provide financial and business
-              development support services to youth owned enterprises.
-            </Text>
-            <TouchableOpacity
-              style={styles.applyButton}
-              activeOpacity={0.7}
-              onPress={() => handleApplyNow("government")}
-            >
-              <Text style={styles.applyButtonText}>Apply now</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+          ) : (
+            governmentProviders.map((provider) => (
+              <View key={provider.id} style={styles.fundOptionCard}>
+                <View style={styles.fundOptionHeader}>
+                  <View style={styles.fundOptionIcon}>
+                    <Ionicons
+                      name="business-outline"
+                      size={20}
+                      color={Colors.brand}
+                    />
+                  </View>
+                  <Text style={styles.fundOptionTitle}>{provider.name}</Text>
+                </View>
+                <Text style={styles.fundOptionSubtext}>
+                  {provider.description || "Government funding opportunity."}
+                </Text>
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  activeOpacity={0.7}
+                  onPress={() => handleApplyNow("government", provider)}
+                >
+                  <Text style={styles.applyButtonText}>Apply now</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
         </>
       )}
 
@@ -395,56 +408,37 @@ export default function OpportunitiesScreen() {
             banks
           </Text>
 
-          {/* Co-operative Bank */}
-          <View style={styles.fundOptionCard}>
-            <View style={styles.fundOptionHeader}>
-              <Image
-                source={require("../../../assets/images/coop-bank-logo.png")}
-                style={styles.fundOptionImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.fundOptionTitle}>Co-operative Bank</Text>
+          {loadingProviders ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color={Colors.brand} />
             </View>
-            <Text style={styles.fundOptionSubtext}>
-              Co-operative Bank offers a range of financial products and
-              services, including loans, savings accounts, and business banking
-              solutions to support individuals and businesses in achieving their
-              financial goals.
-            </Text>
-            <TouchableOpacity
-              style={styles.applyButton}
-              activeOpacity={0.7}
-              onPress={() => handleApplyNow("external")}
-            >
-              <Text style={styles.applyButtonText}>Apply now</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Equity Bank */}
-          <View style={styles.fundOptionCard}>
-            <View style={styles.fundOptionHeader}>
-              <Image
-                source={require("../../../assets/images/Equity_Bank_Logo.png")}
-                style={styles.fundOptionImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.fundOptionTitle}>Equity Bank</Text>
-            </View>
-            <Text style={styles.fundOptionSubtext}>
-              Equity Bank provides a wide range of financial services, including
-              personal and business banking, loans, and investment products to
-              support the financial needs of individuals and businesses.
-            </Text>
-            <TouchableOpacity
-              style={styles.applyButton}
-              activeOpacity={0.7}
-              onPress={() => handleApplyNow("external")}
-            >
-              <Text style={styles.applyButtonText}>Apply now</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+          ) : (
+            bankProviders.map((provider) => (
+              <View key={provider.id} style={styles.fundOptionCard}>
+                <View style={styles.fundOptionHeader}>
+                  <View style={styles.fundOptionIcon}>
+                    <Ionicons
+                      name="business-outline"
+                      size={20}
+                      color={Colors.brand}
+                    />
+                  </View>
+                  <Text style={styles.fundOptionTitle}>{provider.name}</Text>
+                </View>
+                <Text style={styles.fundOptionSubtext}>
+                  {provider.description || "Bank funding opportunity."}
+                </Text>
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  activeOpacity={0.7}
+                  onPress={() => handleApplyNow("external", provider)}
+                >
+                  <Text style={styles.applyButtonText}>Apply now</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
         </>
       )}
 
@@ -638,6 +632,10 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     padding: 16,
     marginBottom: 12,
+  },
+  loadingWrap: {
+    alignItems: "center",
+    paddingVertical: 32,
   },
   fundOptionHeader: {
     flexDirection: "row",

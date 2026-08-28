@@ -303,7 +303,10 @@ export interface CourseRecommendations {
   courses?: Course[];
   suggested_courses?: Course[];
   homepage_sections?: HomepageSection[];
-  suggested_tags: unknown;
+  suggested_tags: {
+    suggested_courses?: Course[];
+    [key: string]: unknown;
+  } | null;
   related_lessons: unknown[];
   profile_incomplete: boolean;
 }
@@ -761,6 +764,153 @@ export interface WebinarFaqsData {
 
 export async function getWebinarFaqs(): Promise<ApiResponse<WebinarFaqsData>> {
   return request<WebinarFaqsData>("/webinars/faqs");
+}
+
+export interface FeedbackTicketReply {
+  id: number;
+  message: string;
+  is_admin_reply: boolean;
+  user_name: string;
+  created_at: string;
+}
+
+export interface FeedbackTicket {
+  id: number;
+  ticket_number: string;
+  subject: string;
+  category: string;
+  description: string;
+  priority: string;
+  status: string;
+  replies: FeedbackTicketReply[];
+  attachments: unknown[];
+  closed_at: string | null;
+  resolved_at: string | null;
+  satisfaction_rating: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getFeedbackTickets(
+  uuid: string,
+): Promise<ApiResponse<FeedbackTicket[]>> {
+  return request<FeedbackTicket[]>(
+    `/feedback-tickets/user/${encodeURIComponent(uuid)}`,
+  );
+}
+
+export async function getFeedbackTicket(
+  ticketId: string | number,
+): Promise<ApiResponse<FeedbackTicket>> {
+  return request<FeedbackTicket>(
+    `/feedback-tickets/user/ticket/${encodeURIComponent(String(ticketId))}`,
+  );
+}
+
+export async function replyFeedbackTicket(
+  ticketId: string | number,
+  message: string,
+  uuid: string,
+): Promise<ApiResponse<unknown>> {
+  return request(
+    `/feedback-tickets/${encodeURIComponent(String(ticketId))}/reply`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message, uuid }),
+    },
+  );
+}
+
+export interface CreateFeedbackTicketPayload {
+  subject: string;
+  category: string;
+  description: string;
+  priority: string;
+}
+
+export async function createFeedbackTicket(
+  payload: CreateFeedbackTicketPayload,
+): Promise<ApiResponse<unknown>> {
+  return request("/feedback-tickets", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface FundProvider {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  code: string;
+  type: string;
+  branch: string | null;
+  contact_person: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export async function getFundProviders(): Promise<ApiResponse<FundProvider[]>> {
+  return request<FundProvider[]>("/fund-providers");
+}
+
+export interface IbsInquiryCompany {
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  county?: string;
+  postal_code?: string;
+  tax_number?: string;
+  registration_number?: string;
+  vat_number?: string;
+  tax_cert_expiry?: string;
+  notes?: string;
+}
+
+export interface IbsInquiryDocument {
+  name: string;
+  type: string;
+  notes?: string;
+  expiry_date?: string;
+}
+
+export interface IbsInquiryPayload {
+  service: string;
+  sub_service?: string;
+  bank_slug: string;
+  category: string;
+  priority?: string;
+  requester_name: string;
+  company_name?: string;
+  email: string;
+  phone?: string;
+  description: string;
+  receipient?: string;
+  receipient_branch?: string;
+  receipient_contact?: string;
+  receipient_email?: string;
+  requested_amount?: string;
+  repayment_period?: string;
+  company?: IbsInquiryCompany;
+  documents?: IbsInquiryDocument[];
+}
+
+export async function submitIbsInquiry(
+  payload: IbsInquiryPayload,
+): Promise<ApiResponse<unknown>> {
+  return request("/ibs-inquiries", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";

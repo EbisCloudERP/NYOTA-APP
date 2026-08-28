@@ -14,26 +14,32 @@ import {
 import { Colors } from "../theme/colors";
 
 // ── Types ──
-const MODULES = [
-  "My Learning",
-  "Billing",
-  "Webinars",
-  "Profile",
-  "Authentication",
-  "Opportunities",
+const CATEGORIES = [
+  "bug",
+  "feature_request",
+  "general_inquiry",
+  "technical_support",
+  "billing",
+  "other",
 ] as const;
 
-const PRIORITIES = ["Low", "Medium", "High", "Critical"] as const;
+const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 
-type Module = (typeof MODULES)[number];
+type Category = (typeof CATEGORIES)[number];
 type Priority = (typeof PRIORITIES)[number];
+
+const categoryLabel = (c: string): string =>
+  c.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+const priorityLabel = (p: string): string =>
+  p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
 
 interface NewTicketModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (ticket: {
     subject: string;
-    module: Module;
+    category: Category;
     priority: Priority;
     description: string;
   }) => void;
@@ -45,13 +51,16 @@ function Dropdown<T extends string>({
   options,
   placeholder,
   onSelect,
+  formatLabel,
 }: {
   value: T | "";
   options: readonly T[];
   placeholder: string;
   onSelect: (v: T) => void;
+  formatLabel?: (v: string) => string;
 }) {
   const [open, setOpen] = useState(false);
+  const fmt = formatLabel ?? ((v: string) => v);
 
   return (
     <View style={dropdownStyles.wrapper}>
@@ -66,7 +75,7 @@ function Dropdown<T extends string>({
             !value && dropdownStyles.placeholder,
           ]}
         >
-          {value || placeholder}
+          {value ? fmt(value) : placeholder}
         </Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
@@ -96,7 +105,7 @@ function Dropdown<T extends string>({
                     value === opt && dropdownStyles.optionTextSelected,
                   ]}
                 >
-                  {opt}
+                  {fmt(opt)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -168,13 +177,13 @@ export default function NewTicketModal({
   onSubmit,
 }: NewTicketModalProps) {
   const [subject, setSubject] = useState("");
-  const [module, setModule] = useState<Module | "">("");
+  const [category, setCategory] = useState<Category | "">("");
   const [priority, setPriority] = useState<Priority | "">("");
   const [description, setDescription] = useState("");
 
   const isFormValid =
     subject.trim() !== "" &&
-    module !== "" &&
+    category !== "" &&
     priority !== "" &&
     description.trim() !== "";
 
@@ -182,20 +191,20 @@ export default function NewTicketModal({
     if (!isFormValid) return;
     onSubmit({
       subject: subject.trim(),
-      module: module as Module,
+      category: category as Category,
       priority: priority as Priority,
       description: description.trim(),
     });
     // Reset form
     setSubject("");
-    setModule("");
+    setCategory("");
     setPriority("");
     setDescription("");
   };
 
   const handleClose = () => {
     setSubject("");
-    setModule("");
+    setCategory("");
     setPriority("");
     setDescription("");
     onClose();
@@ -238,13 +247,14 @@ export default function NewTicketModal({
             onChangeText={setSubject}
           />
 
-          {/* Module */}
-          <Text style={styles.label}>Module</Text>
+          {/* Category */}
+          <Text style={styles.label}>Category</Text>
           <Dropdown
-            value={module}
-            options={MODULES}
-            placeholder="Select module"
-            onSelect={setModule}
+            value={category}
+            options={CATEGORIES}
+            placeholder="Select category"
+            onSelect={setCategory}
+            formatLabel={categoryLabel}
           />
 
           {/* Priority */}
@@ -254,6 +264,7 @@ export default function NewTicketModal({
             options={PRIORITIES}
             placeholder="Select priority"
             onSelect={setPriority}
+            formatLabel={priorityLabel}
           />
 
           {/* Description */}

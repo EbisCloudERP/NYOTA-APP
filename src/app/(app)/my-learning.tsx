@@ -40,7 +40,7 @@ const capitalize = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1);
 
 export default function MyLearningScreen() {
-  const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [activeTab, setActiveTab] = useState<Tab>("recommended");
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +91,9 @@ export default function MyLearningScreen() {
       };
 
         setAllCourses((recsRes.data.courses ?? []).map(toView));
-        setRecommendedCourses((recsRes.data.suggested_courses ?? []).map(toView));
+        setRecommendedCourses(
+          (recsRes.data.suggested_tags?.suggested_courses ?? []).map(toView),
+        );
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Failed to load courses.",
@@ -170,20 +172,6 @@ export default function MyLearningScreen() {
       {/* ── Tabs ── */}
       <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "all" && styles.tabActive]}
-          onPress={() => setActiveTab("all")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "all" && styles.tabTextActive,
-            ]}
-          >
-            All courses
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === "recommended" && styles.tabActive]}
           onPress={() => setActiveTab("recommended")}
           activeOpacity={0.7}
@@ -195,6 +183,20 @@ export default function MyLearningScreen() {
             ]}
           >
             Recommended for you
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "all" && styles.tabActive]}
+          onPress={() => setActiveTab("all")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "all" && styles.tabTextActive,
+            ]}
+          >
+            All courses
           </Text>
         </TouchableOpacity>
       </View>

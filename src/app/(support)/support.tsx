@@ -1,8 +1,10 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+    ActivityIndicator,
     FlatList,
     Linking,
+    RefreshControl,
     StyleSheet,
     Text,
     TextInput,
@@ -11,115 +13,204 @@ import {
 } from "react-native";
 import NewTicketModal from "../../components/NewTicketModal";
 import TicketPreviewModal from "../../components/TicketPreviewModal";
+import {
+    createFeedbackTicket,
+    getFeedbackTickets,
+    type FeedbackTicket,
+} from "../../services/api";
+import { useAuth } from "../../services/AuthContext";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
-// ── Types ──
-type FilterOption = "All Modules" | "All Status" | "All Priority";
-
-interface Ticket {
-  id: string;
-  subject: string;
-  module: string;
-  priority: "Low" | "Medium" | "High" | "Critical";
-  status: "Open" | "Ongoing" | "Resolved" | "Closed";
-  date: string;
-}
-
-// ── Dummy data ──
-const dummyTickets: Ticket[] = [
-  {
-    id: "TKT-001",
-    subject: "Unable to access course materials",
-    module: "My Learning",
-    priority: "High",
-    status: "Open",
-    date: "12 Aug 2026",
-  },
-  {
-    id: "TKT-002",
-    subject: "Payment not reflecting in account",
-    module: "Billing",
-    priority: "Critical",
-    status: "Ongoing",
-    date: "11 Aug 2026",
-  },
-  {
-    id: "TKT-003",
-    subject: "Webinar registration confirmation not received",
-    module: "Webinars",
-    priority: "Medium",
-    status: "Open",
-    date: "10 Aug 2026",
-  },
-  {
-    id: "TKT-004",
-    subject: "Profile picture upload failing",
-    module: "Profile",
-    priority: "Low",
-    status: "Resolved",
-    date: "09 Aug 2026",
-  },
-  {
-    id: "TKT-005",
-    subject: "Certificate download issue",
-    module: "My Learning",
-    priority: "Medium",
-    status: "Closed",
-    date: "08 Aug 2026",
-  },
-];
-
 // ── Helpers ──
-const priorityColor = (p: Ticket["priority"]): string => {
-  switch (p) {
-    case "Critical":
+const priorityColor = (p: string): string => {
+  switch (p.toLowerCase()) {
+    case "urgent":
+    case "critical":
       return "#DC2626";
-    case "High":
+    case "high":
       return "#EA580C";
-    case "Medium":
+    case "medium":
       return "#CA8A04";
-    case "Low":
+    case "low":
       return "#16A34A";
-  }
-};
-
-const statusColor = (s: Ticket["status"]): string => {
-  switch (s) {
-    case "Open":
-      return "#2563EB";
-    case "Ongoing":
-      return "#9333EA";
-    case "Resolved":
-      return "#16A34A";
-    case "Closed":
+    default:
       return "#6B7280";
   }
 };
 
+const statusColor = (s: string): string => {
+  switch (s.toLowerCase()) {
+    case "open":
+      return "#2563EB";
+    case "in_progress":
+    case "ongoing":
+      return "#9333EA";
+    case "resolved":
+      return "#16A34A";
+    case "closed":
+      return "#6B7280";
+    default:
+      return "#6B7280";
+  }
+};
+
+const priorityLabel = (p: string): string =>
+  p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+
+const statusLabel = (s: string): string => {
+  switch (s.toLowerCase()) {
+    case "in_progress":
+    case "ongoing":
+      return "In Progress";
+    case "open":
+      return "Open";
+    case "resolved":
+      return "Resolved";
+    case "closed":
+      return "Closed";
+    default:
+      return s;
+  }
+};
+
+const categoryLabel = (c: string): string =>
+  c
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+const formatDate = (value: string): string => {
+  const d = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return value.slice(0, 10);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 // ── Component ──
 export default function SupportScreen() {
+  const { user } = useAuth();
+  const { showToast } = useFeedback();
+  const [tickets, setTickets] = useState<FeedbackTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
-  const [moduleFilter, setModuleFilter] = useState("All Modules");
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [priorityFilter, setPriorityFilter] = useState("All Priority");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const [showNewTicket, setShowNewTicket] = useState(false);
-  const [previewTicket, setPreviewTicket] = useState<Ticket | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+
+  const loadTickets = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+      try {
+        const uuid = user?.uuid ?? "";
+        if (!uuid) return;
+        const res = await getFeedbackTickets(uuid);
+        const raw = (res as { data?: unknown })?.data;
+        const list: FeedbackTicket[] = Array.isArray(raw)
+          ? (raw as FeedbackTicket[])
+          : raw && typeof raw === "object" && Array.isArray((raw as { data?: unknown }).data)
+            ? ((raw as { data: FeedbackTicket[] }).data)
+            : [];
+        setTickets(list);
+      } catch (e) {
+        showToast(
+          e instanceof Error ? e.message : "Failed to load tickets.",
+          "error",
+        );
+      } finally {
+        setLoading(false);
+        if (isRefresh) setRefreshing(false);
+      }
+    },
+    [user?.uuid, showToast],
+  );
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
+
+  const handleRefresh = useCallback(() => {
+    loadTickets(true);
+  }, [loadTickets]);
+
+  const categories = useMemo(
+    () =>
+      Array.from(
+        new Set((tickets ?? []).map((t) => t.category).filter(Boolean)),
+      ),
+    [tickets],
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (tickets ?? []).filter((t) => {
+      if (
+        q &&
+        !`${t.subject} ${t.ticket_number}`.toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+      if (categoryFilter !== "all" && t.category !== categoryFilter) {
+        return false;
+      }
+      if (statusFilter !== "all" && t.status.toLowerCase() !== statusFilter) {
+        return false;
+      }
+      if (priorityFilter !== "all" && t.priority.toLowerCase() !== priorityFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [tickets, search, categoryFilter, statusFilter, priorityFilter]);
 
   const handleCall = () => Linking.openURL("tel:+254700000000");
   const handleEmail = () => Linking.openURL("mailto:support@nyota.com");
   const handleWhatsApp = () => Linking.openURL("https://wa.me/254700000000");
 
-  const renderTicket = ({ item }: { item: Ticket }) => (
+  const handleCreateTicket = async (ticket: {
+    subject: string;
+    category: string;
+    priority: string;
+    description: string;
+  }) => {
+    setShowNewTicket(false);
+    setCreating(true);
+    try {
+      await createFeedbackTicket({
+        subject: ticket.subject,
+        category: ticket.category,
+        description: ticket.description,
+        priority: ticket.priority,
+      });
+      showToast("Ticket created successfully.", "success");
+      loadTickets();
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Failed to create ticket.",
+        "error",
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const renderTicket = ({ item }: { item: FeedbackTicket }) => (
     <TouchableOpacity
       style={styles.ticketRow}
       activeOpacity={0.7}
-      onPress={() => setPreviewTicket(item)}
+      onPress={() => setSelectedTicketId(item.id)}
     >
-      <Text style={[styles.cell, styles.cellId]}>{item.id}</Text>
+      <Text style={[styles.cell, styles.cellId]}>{item.ticket_number}</Text>
       <Text style={[styles.cell, styles.cellSubject]} numberOfLines={2}>
         {item.subject}
       </Text>
-      <Text style={[styles.cell, styles.cellModule]}>{item.module}</Text>
+      <Text style={[styles.cell, styles.cellModule]}>{categoryLabel(item.category)}</Text>
       <View style={styles.cellBadge}>
         <View
           style={[
@@ -136,7 +227,7 @@ export default function SupportScreen() {
           <Text
             style={[styles.badgeText, { color: priorityColor(item.priority) }]}
           >
-            {item.priority}
+            {priorityLabel(item.priority)}
           </Text>
         </View>
       </View>
@@ -154,26 +245,36 @@ export default function SupportScreen() {
             ]}
           />
           <Text style={[styles.badgeText, { color: statusColor(item.status) }]}>
-            {item.status}
+            {statusLabel(item.status)}
           </Text>
         </View>
       </View>
-      <Text style={[styles.cell, styles.cellDate]}>{item.date}</Text>
+      <Text style={[styles.cell, styles.cellDate]}>{formatDate(item.created_at)}</Text>
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={dummyTickets}
-        keyExtractor={(item) => item.id}
+        data={filtered}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderTicket}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListHeaderComponent={
           <View>
             {/* ── Title & Subtitle ── */}
-            {/* <Text style={styles.title}>Support</Text> */}
             <Text style={styles.subtitle}>
               Get in touch with our support team for assistance
             </Text>
@@ -227,36 +328,26 @@ export default function SupportScreen() {
 
             <View style={styles.filtersRow}>
               <FilterChip
-                label={moduleFilter}
-                options={[
-                  "All Modules",
-                  "My Learning",
-                  "Billing",
-                  "Webinars",
-                  "Profile",
-                  "Authentication",
-                  "Opportunities",
-                ]}
-                selected={moduleFilter}
-                onSelect={setModuleFilter}
+                options={["all", ...categories]}
+                selected={categoryFilter}
+                onSelect={setCategoryFilter}
+                displayLabel={(v) =>
+                  v === "all" ? "All Categories" : categoryLabel(v)
+                }
               />
               <FilterChip
-                label={statusFilter}
-                options={[
-                  "All Status",
-                  "Open",
-                  "Ongoing",
-                  "Resolved",
-                  "Closed",
-                ]}
+                options={["all", "open", "in_progress", "resolved", "closed"]}
                 selected={statusFilter}
                 onSelect={setStatusFilter}
+                displayLabel={(v) => (v === "all" ? "All Status" : statusLabel(v))}
               />
               <FilterChip
-                label={priorityFilter}
-                options={["All Priority", "Critical", "High", "Medium", "Low"]}
+                options={["all", "urgent", "high", "medium", "low"]}
                 selected={priorityFilter}
                 onSelect={setPriorityFilter}
+                displayLabel={(v) =>
+                  v === "all" ? "All Priority" : priorityLabel(v)
+                }
               />
             </View>
 
@@ -265,13 +356,20 @@ export default function SupportScreen() {
               style={styles.newTicketBtn}
               activeOpacity={0.7}
               onPress={() => setShowNewTicket(true)}
+              disabled={creating}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={20}
-                color={Colors.white}
-              />
-              <Text style={styles.newTicketText}>New ticket</Text>
+              {creating ? (
+                <ActivityIndicator color={Colors.white} size="small" />
+              ) : (
+                <Ionicons
+                  name="add-circle-outline"
+                  size={20}
+                  color={Colors.white}
+                />
+              )}
+              <Text style={styles.newTicketText}>
+                {creating ? "Creating..." : "New ticket"}
+              </Text>
             </TouchableOpacity>
 
             {/* ── Table header ── */}
@@ -280,7 +378,7 @@ export default function SupportScreen() {
               <Text style={[styles.headerCell, styles.cellSubject]}>
                 Subject
               </Text>
-              <Text style={[styles.headerCell, styles.cellModule]}>M/DL</Text>
+              <Text style={[styles.headerCell, styles.cellModule]}>Category</Text>
               <Text style={[styles.headerCell, styles.cellBadge]}>
                 Priority
               </Text>
@@ -289,20 +387,25 @@ export default function SupportScreen() {
             </View>
           </View>
         }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="ticket-outline" size={48} color="#D1D5DB" />
+            <Text style={styles.emptyTitle}>No tickets found</Text>
+            <Text style={styles.emptySubtitle}>
+              Create a new ticket to get help from our team.
+            </Text>
+          </View>
+        }
       />
       <NewTicketModal
         visible={showNewTicket}
         onClose={() => setShowNewTicket(false)}
-        onSubmit={(ticket) => {
-          setShowNewTicket(false);
-          // TODO: submit ticket to API
-          console.log("New ticket:", ticket);
-        }}
+        onSubmit={handleCreateTicket}
       />
       <TicketPreviewModal
-        visible={previewTicket !== null}
-        ticket={previewTicket}
-        onClose={() => setPreviewTicket(null)}
+        visible={selectedTicketId !== null}
+        ticketId={selectedTicketId}
+        onClose={() => setSelectedTicketId(null)}
       />
     </View>
   );
@@ -310,17 +413,18 @@ export default function SupportScreen() {
 
 // ── Filter Chip Component ──
 function FilterChip({
-  label,
   options,
   selected,
   onSelect,
+  displayLabel,
 }: {
-  label: string;
   options: string[];
   selected: string;
   onSelect: (v: string) => void;
+  displayLabel?: (v: string) => string;
 }) {
   const [open, setOpen] = useState(false);
+  const fmt = displayLabel ?? ((v: string) => v);
 
   return (
     <View style={styles.filterWrapper}>
@@ -330,7 +434,7 @@ function FilterChip({
         onPress={() => setOpen(!open)}
       >
         <Text style={styles.filterChipText} numberOfLines={1}>
-          {selected}
+          {fmt(selected)}
         </Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
@@ -359,7 +463,7 @@ function FilterChip({
                   selected === opt && styles.filterOptionTextSelected,
                 ]}
               >
-                {opt}
+                {fmt(opt)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -379,14 +483,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.white,
+  },
 
   // Title & subtitle
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#111827",
-    marginTop: 24,
-  },
   subtitle: {
     fontSize: 15,
     color: "#6B7280",
@@ -593,5 +697,23 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "600",
+  },
+
+  // Empty state
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: "#D1D5DB",
+    textAlign: "center",
   },
 });
