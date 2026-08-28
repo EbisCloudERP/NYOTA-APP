@@ -763,6 +763,77 @@ export async function getWebinarFaqs(): Promise<ApiResponse<WebinarFaqsData>> {
   return request<WebinarFaqsData>("/webinars/faqs");
 }
 
+export interface FeedbackTicketReply {
+  id: number;
+  message: string;
+  is_admin_reply: boolean;
+  user_name: string;
+  created_at: string;
+}
+
+export interface FeedbackTicket {
+  id: number;
+  ticket_number: string;
+  subject: string;
+  category: string;
+  description: string;
+  priority: string;
+  status: string;
+  replies: FeedbackTicketReply[];
+  attachments: unknown[];
+  closed_at: string | null;
+  resolved_at: string | null;
+  satisfaction_rating: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getFeedbackTickets(
+  uuid: string,
+): Promise<ApiResponse<FeedbackTicket[]>> {
+  return request<FeedbackTicket[]>(
+    `/feedback-tickets/user/${encodeURIComponent(uuid)}`,
+  );
+}
+
+export async function getFeedbackTicket(
+  ticketId: string | number,
+): Promise<ApiResponse<FeedbackTicket>> {
+  return request<FeedbackTicket>(
+    `/feedback-tickets/user/ticket/${encodeURIComponent(String(ticketId))}`,
+  );
+}
+
+export async function replyFeedbackTicket(
+  ticketId: string | number,
+  message: string,
+  uuid: string,
+): Promise<ApiResponse<unknown>> {
+  return request(
+    `/feedback-tickets/${encodeURIComponent(String(ticketId))}/reply`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message, uuid }),
+    },
+  );
+}
+
+export interface CreateFeedbackTicketPayload {
+  subject: string;
+  category: string;
+  description: string;
+  priority: string;
+}
+
+export async function createFeedbackTicket(
+  payload: CreateFeedbackTicketPayload,
+): Promise<ApiResponse<unknown>> {
+  return request("/feedback-tickets", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";
 
 interface EmailParams {
