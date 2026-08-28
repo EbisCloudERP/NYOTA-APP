@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,10 +13,20 @@ import {
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
 import {
+  getAnnouncements,
   getCourseRecommendations,
   getEnrolledCourses,
+  getWebinarFaqs,
+  getWebinarRecordings,
+  getWebinars,
+  rsvpWebinar,
+  type Announcement,
   type CatalogueCourse,
+  type Faq,
+  type Webinar,
+  type WebinarRecording,
 } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -25,6 +36,33 @@ const courseProgress = (c: CatalogueCourse) => {
   const progress =
     total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
   return { total, completed, progress };
+};
+
+const webinarStatus = (status: string) => {
+  const s = status.toLowerCase();
+  if (s === "live" || s === "ongoing" || s === "in_progress") return "live";
+  if (s === "ended" || s === "completed" || s === "past" || s === "cancelled") {
+    return "past";
+  }
+  return "upcoming";
+};
+
+const formatWebinarDate = (value: string) => {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const formatWebinarTime = (value: string) => {
+  const [h, m] = value.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return value;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
 };
 
 export default function HomeScreen() {
@@ -37,6 +75,12 @@ export default function HomeScreen() {
   const [availableCount, setAvailableCount] = useState(0);
   const [loadingLearning, setLoadingLearning] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [recordings, setRecordings] = useState<WebinarRecording[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [rsvpingId, setRsvpingId] = useState<number | null>(null);
+  const { showToast } = useFeedback();
 
   const loadData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -55,6 +99,33 @@ export default function HomeScreen() {
     } catch {
       // failed to load recommendations — keep default
     }
+    try {
+      const [webinarsRes, recordingsRes] = await Promise.all([
+        getWebinars(),
+        getWebinarRecordings(),
+      ]);
+      setWebinars(webinarsRes.data ?? []);
+      setRecordings(recordingsRes.data ?? []);
+    } catch {
+      // failed to load webinars — keep empty state
+    }
+    try {
+      const announcementsRes = await getAnnouncements();
+      setAnnouncements(announcementsRes.data ?? []);
+    } catch {
+      // failed to load announcements — keep empty state
+    }
+    try {
+      const faqsRes = await getWebinarFaqs();
+      const industries = faqsRes.data?.industries ?? [];
+      setFaqs(
+        industries.flatMap((ind) =>
+          (ind.webinars ?? []).flatMap((w) => w.faqs ?? []),
+        ),
+      );
+    } catch {
+      // failed to load faqs — keep empty state
+    }
     setLoadingLearning(false);
     if (isRefresh) setRefreshing(false);
   }, []);
@@ -67,6 +138,39 @@ export default function HomeScreen() {
     loadData(true);
   }, [loadData]);
 
+  const openUrl = async (url: string | null) => {
+    if (!url) return;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      showToast("Unable to open the link.", "error");
+    }
+  };
+
+  const handleRsvp = async (webinar: Webinar) => {
+    if (webinar.is_rsvped || rsvpingId !== null) return;
+    setRsvpingId(webinar.id);
+    try {
+      const uuid = (await getUuid()) ?? "";
+      await rsvpWebinar(webinar.id, uuid);
+      setWebinars((prev) =>
+        prev.map((w) =>
+          w.id === webinar.id
+            ? { ...w, is_rsvped: true, rsvp_count: w.rsvp_count + 1 }
+            : w,
+        ),
+      );
+      showToast("You're registered for this webinar.", "success");
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Unable to register. Please try again.",
+        "error",
+      );
+    } finally {
+      setRsvpingId(null);
+    }
+  };
+
   const enrolledCount = enrolled.length;
   const doneCount = enrolled.filter(
     (c) => (c.completed_lessons ?? 0) >= (c.total_lessons || 0),
@@ -76,6 +180,12 @@ export default function HomeScreen() {
       (c) => (c.completed_lessons ?? 0) < (c.total_lessons || 0),
     ) ?? enrolled[0];
   const active = activeCourse ? courseProgress(activeCourse) : null;
+
+  const liveWebinar = webinars.find((w) => webinarStatus(w.status) === "live");
+  const upcomingWebinar = webinars.find(
+    (w) => webinarStatus(w.status) === "upcoming",
+  );
+  const pastRecording = recordings[0];
 
   return (
     <ScrollView
@@ -235,116 +345,142 @@ export default function HomeScreen() {
 
       {/* ── Announcements ── */}
       <Text style={styles.sectionTitle}>Announcements</Text>
-      <View style={styles.announcementCard}>
-        <Text style={styles.announceTitle}>
-          New funding opportunities available
-        </Text>
-        <Text style={styles.announceSub}>
-          AGPO and CIDC tenders are now open for applications. Eligible youth,
-          women, and PWDs are encouraged to apply before the deadlines.
-        </Text>
-        <View style={styles.announceFooter}>
-          <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.announceTime}>Posted 2 days ago</Text>
+      {announcements.map((item) => (
+        <View key={item.id} style={styles.announcementCard}>
+          <Text style={styles.announceTitle}>{item.title}</Text>
+          <Text style={styles.announceSub}>{item.description}</Text>
+          <View style={styles.announceFooter}>
+            <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.announceTime}>
+              {formatWebinarDate(item.published_at?.split(/\s+/)[0] ?? "")}
+            </Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.announcementCard}>
-        <Text style={styles.announceTitle}>
-          System maintenance this weekend
-        </Text>
-        <Text style={styles.announceSub}>
-          The platform will undergo scheduled maintenance on Saturday from 2 AM
-          to 6 AM EAT. Some features may be temporarily unavailable.
-        </Text>
-        <View style={styles.announceFooter}>
-          <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.announceTime}>Posted 5 days ago</Text>
+      ))}
+      {announcements.length === 0 && (
+        <View style={styles.announcementCard}>
+          <Text style={styles.announceSub}>No announcements right now.</Text>
         </View>
-      </View>
+      )}
 
       {/* ── Webinars ── */}
       <Text style={styles.sectionTitle}>Webinars</Text>
 
       {/* Live */}
-      <View style={styles.webinarCard}>
-        <View style={styles.webinarHeader}>
-          <View style={[styles.webinarBadge, styles.webinarBadgeLive]}>
-            <Text style={styles.webinarBadgeText}>● Live</Text>
+      {liveWebinar ? (
+        <View style={styles.webinarCard}>
+          <View style={styles.webinarHeader}>
+            <View style={[styles.webinarBadge, styles.webinarBadgeLive]}>
+              <Text style={styles.webinarBadgeText}>● Live</Text>
+            </View>
+          </View>
+          <Text style={styles.webinarTitle}>{liveWebinar.title}</Text>
+          <Text style={styles.webinarHost}>
+            Hosted by {liveWebinar.speaker ?? liveWebinar.speakers[0]?.name ?? "Host"} •{" "}
+            {liveWebinar.rsvp_count} attending
+          </Text>
+          <View style={styles.webinarMeta}>
+            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+            <Text style={styles.webinarMetaText}>
+              {formatWebinarDate(liveWebinar.scheduled_date)} •{" "}
+              {formatWebinarTime(liveWebinar.scheduled_time)}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.webinarWatchButton}
+            onPress={() => openUrl(liveWebinar.meeting_url)}
+          >
+            <Ionicons name="videocam-outline" size={18} color={Colors.brand} />
+            <Text style={styles.webinarWatchButtonText}>Join meeting</Text>
+          </TouchableOpacity>
+          <View style={styles.webinarLinkRow}>
+            <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.webinarLinkText}>Meeting link available</Text>
           </View>
         </View>
-        <Text style={styles.webinarTitle}>
-          Understanding AGPO Registration Process
-        </Text>
-        <Text style={styles.webinarHost}>
-          Hosted by Jane Muthoni • 45 attending
-        </Text>
-        <View style={styles.webinarMeta}>
-          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-          <Text style={styles.webinarMetaText}>Aug 15, 2026 • 2:00 PM</Text>
-        </View>
-        <TouchableOpacity style={styles.webinarWatchButton}>
-          <Ionicons name="videocam-outline" size={18} color={Colors.brand} />
-          <Text style={styles.webinarWatchButtonText}>Join meeting</Text>
-        </TouchableOpacity>
-        <View style={styles.webinarLinkRow}>
-          <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.webinarLinkText}>Meeting link available</Text>
-        </View>
-      </View>
+      ) : null}
 
       {/* Upcoming */}
-      <View style={styles.webinarCard}>
-        <View style={styles.webinarHeader}>
-          <View style={[styles.webinarBadge, styles.webinarBadgeUpcoming]}>
-            <Text style={styles.webinarBadgeTextUpcoming}>Upcoming</Text>
+      {upcomingWebinar ? (
+        <View style={styles.webinarCard}>
+          <View style={styles.webinarHeader}>
+            <View style={[styles.webinarBadge, styles.webinarBadgeUpcoming]}>
+              <Text style={styles.webinarBadgeTextUpcoming}>Upcoming</Text>
+            </View>
+          </View>
+          <Text style={styles.webinarTitle}>{upcomingWebinar.title}</Text>
+          <Text style={styles.webinarHost}>
+            Hosted by {upcomingWebinar.speaker ?? upcomingWebinar.speakers[0]?.name ?? "Host"} •{" "}
+            {upcomingWebinar.rsvp_count} attending
+          </Text>
+          <View style={styles.webinarMeta}>
+            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+            <Text style={styles.webinarMetaText}>
+              {formatWebinarDate(upcomingWebinar.scheduled_date)} •{" "}
+              {formatWebinarTime(upcomingWebinar.scheduled_time)}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.webinarWatchButton}
+            disabled={upcomingWebinar.is_rsvped || rsvpingId === upcomingWebinar.id}
+            onPress={() => handleRsvp(upcomingWebinar)}
+          >
+            {rsvpingId === upcomingWebinar.id ? (
+              <ActivityIndicator color={Colors.brand} size="small" />
+            ) : (
+              <Ionicons
+                name={upcomingWebinar.is_rsvped ? "checkmark-circle" : "calendar-outline"}
+                size={18}
+                color={upcomingWebinar.is_rsvped ? "#16A34A" : Colors.brand}
+              />
+            )}
+            <Text style={styles.webinarWatchButtonText}>
+              {upcomingWebinar.is_rsvped ? "Registered" : "RSVP now"}
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.webinarLinkRow}>
+            <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.webinarLinkText}>Meeting link available</Text>
           </View>
         </View>
-        <Text style={styles.webinarTitle}>
-          CIDC Tender Application Workshop
-        </Text>
-        <Text style={styles.webinarHost}>
-          Hosted by Peter Kimani • 0 attendees
-        </Text>
-        <View style={styles.webinarMeta}>
-          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-          <Text style={styles.webinarMetaText}>Aug 22, 2026 • 11:00 AM</Text>
-        </View>
-        <TouchableOpacity style={styles.webinarWatchButton}>
-          <Ionicons name="calendar-outline" size={18} color={Colors.brand} />
-          <Text style={styles.webinarWatchButtonText}>Mark attendance</Text>
-        </TouchableOpacity>
-        <View style={styles.webinarLinkRow}>
-          <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.webinarLinkText}>Meeting link available</Text>
-        </View>
-      </View>
+      ) : null}
 
       {/* Past */}
-      <View style={styles.webinarCard}>
-        <View style={styles.webinarHeader}>
-          <View style={[styles.webinarBadge, styles.webinarBadgePast]}>
-            <Text style={styles.webinarBadgeTextPast}>Past</Text>
+      {pastRecording ? (
+        <View style={styles.webinarCard}>
+          <View style={styles.webinarHeader}>
+            <View style={[styles.webinarBadge, styles.webinarBadgePast]}>
+              <Text style={styles.webinarBadgeTextPast}>Past</Text>
+            </View>
+          </View>
+          <Text style={styles.webinarTitle}>{pastRecording.title}</Text>
+          <Text style={styles.webinarHost}>
+            Hosted by {pastRecording.speakers[0]?.name ?? "Host"}
+          </Text>
+          <View style={styles.webinarMeta}>
+            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+            <Text style={styles.webinarMetaText}>
+              {formatWebinarDate(pastRecording.scheduled_at?.split(/\s+/)[0] ?? "")}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.webinarWatchButton}
+            disabled={!pastRecording.vod_url}
+            onPress={() => openUrl(pastRecording.vod_url)}
+          >
+            <Ionicons name="play-circle-outline" size={18} color={Colors.brand} />
+            <Text style={styles.webinarWatchButtonText}>
+              {pastRecording.vod_url ? "Watch recording" : "No recording"}
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.webinarLinkRow}>
+            <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.webinarLinkText}>
+              {pastRecording.vod_url ? "Recording available" : "No link available"}
+            </Text>
           </View>
         </View>
-        <Text style={styles.webinarTitle}>
-          Introduction to Government Procurement
-        </Text>
-        <Text style={styles.webinarHost}>
-          Hosted by Sarah Wanjiku • 120 attended
-        </Text>
-        <View style={styles.webinarMeta}>
-          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-          <Text style={styles.webinarMetaText}>Jul 30, 2026 • 3:00 PM</Text>
-        </View>
-        <TouchableOpacity style={styles.webinarWatchButton}>
-          <Ionicons name="play-circle-outline" size={18} color={Colors.brand} />
-          <Text style={styles.webinarWatchButtonText}>Watch recording</Text>
-        </TouchableOpacity>
-        <View style={styles.webinarLinkRow}>
-          <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.webinarLinkText}>Meeting link available</Text>
-        </View>
-      </View>
+      ) : null}
 
       {/* Browse all */}
       <TouchableOpacity
@@ -369,70 +505,52 @@ export default function HomeScreen() {
       {/* FAQ Card */}
       <View style={styles.faqCard}>
         <Text style={styles.faqCardTitle}>Frequently Asked Questions</Text>
-        <Text style={styles.faqCardSubtitle}>Construction Related</Text>
-        {[
-          {
-            q: "What are the AGPO requirements for construction tenders?",
-            a: "You must be registered with AGPO as a youth, woman, or PWD-owned enterprise. Your business must have a valid registration certificate and meet the turnover threshold for the specific tender category.",
-          },
-          {
-            q: "How do I register as a contractor with NCA?",
-            a: "Visit the NCA portal, submit your company details, pay the registration fee, and provide proof of qualifications. Categories range from NCA 1 to NCA 8 based on project value capacity.",
-          },
-          {
-            q: "What safety certifications are required for site work?",
-            a: "You need OSHA compliance certification, fire safety clearance, first aid training for site supervisors, and personal protective equipment (PPE) compliance documentation.",
-          },
-          {
-            q: "How are construction bids evaluated and awarded?",
-            a: "Bids are evaluated based on technical capacity, financial capability, past experience, and bid price. AGPO tenders prioritize registered enterprises with a preference margin of up to 15%.",
-          },
-        ].map((item, i) => (
-          <View key={i} style={styles.faqItem}>
+        <Text style={styles.faqCardSubtitle}>Webinar FAQs</Text>
+        {faqs.map((item) => (
+          <View key={item.id} style={styles.faqItem}>
             <Ionicons name="help-circle-outline" size={16} color="#6B7280" />
             <View style={styles.faqContent}>
-              <Text style={styles.faqText}>{item.q}</Text>
-              <Text style={styles.faqAnswer}>{item.a}</Text>
+              <Text style={styles.faqText}>{item.question}</Text>
+              <Text style={styles.faqAnswer}>{item.answer}</Text>
             </View>
           </View>
         ))}
+        {faqs.length === 0 && (
+          <Text style={styles.faqAnswer}>No FAQs available yet.</Text>
+        )}
       </View>
 
       {/* Pre‑recorded Webinars Card */}
       <View style={styles.prerecordCard}>
         <Text style={styles.prerecordTitle}>Pre-recorded Webinars</Text>
-        <Text style={styles.prerecordSubtitle}>Construction Specific</Text>
-        {[
-          {
-            title: "Site Safety & Compliance Basics",
-            date: "Aug 5, 2026 • 1:30 PM",
-          },
-          {
-            title: "Understanding NCA Registration",
-            date: "Jul 28, 2026 • 10:00 AM",
-          },
-          {
-            title: "Tender Document Preparation",
-            date: "Jul 20, 2026 • 2:00 PM",
-          },
-          {
-            title: "Project Cost Estimation 101",
-            date: "Jul 12, 2026 • 11:00 AM",
-          },
-        ].map((item, i) => (
-          <View key={i} style={styles.prerecordItem}>
+        <Text style={styles.prerecordSubtitle}>Recorded sessions</Text>
+        {recordings.map((item) => (
+          <View key={item.id} style={styles.prerecordItem}>
             <View style={styles.prerecordInfo}>
               <Text style={styles.prerecordItemTitle}>{item.title}</Text>
               <View style={styles.webinarMeta}>
                 <Ionicons name="calendar-outline" size={13} color="#9CA3AF" />
-                <Text style={styles.prerecordDate}>{item.date}</Text>
+                <Text style={styles.prerecordDate}>
+                  {formatWebinarDate(item.scheduled_at?.split(/\s+/)[0] ?? "")}
+                </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.playButton}>
-              <Ionicons name="play-circle" size={28} color={Colors.brand} />
+            <TouchableOpacity
+              style={styles.playButton}
+              disabled={!item.vod_url}
+              onPress={() => openUrl(item.vod_url)}
+            >
+              <Ionicons
+                name="play-circle"
+                size={28}
+                color={item.vod_url ? Colors.brand : "#D1D5DB"}
+              />
             </TouchableOpacity>
           </View>
         ))}
+        {recordings.length === 0 && (
+          <Text style={styles.courseSubtitle}>No recorded sessions yet.</Text>
+        )}
       </View>
     </ScrollView>
   );

@@ -1,123 +1,201 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Linking,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  getWebinarRecordings,
+  getWebinars,
+  rsvpWebinar,
+  type Webinar,
+  type WebinarRecording,
+} from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
+import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 type Tab = "live" | "upcoming" | "past";
 
-interface Webinar {
-  id: string;
+interface DisplayWebinar {
+  id: number;
   title: string;
-  description: string;
-  organizer: string;
-  attendees: number;
-  date: string;
-  time: string;
-  linkType: string;
+  description: string | null;
+  speaker: string;
+  dateLabel: string;
+  timeLabel: string;
+  rsvpCount: number;
+  isRsvped: boolean;
+  meetingUrl: string | null;
+  vodUrl: string | null;
   tab: Tab;
 }
 
-const WEBINARS: Webinar[] = [
-  {
-    id: "1",
-    title: "Understanding AGPO Registration Process",
-    description:
-      "Learn the step-by-step process of registering for AGPO certification and how it benefits youth, women, and PWD-owned businesses.",
-    organizer: "Jane Muthoni",
-    attendees: 45,
-    date: "Aug 15, 2026",
-    time: "2:00 PM",
-    linkType: "Google Meet",
-    tab: "live",
-  },
-  {
-    id: "2",
-    title: "CIDC Tender Application Workshop",
-    description:
-      "A practical workshop on preparing competitive tender applications for CIDC opportunities, including documentation and pricing tips.",
-    organizer: "Peter Kimani",
-    attendees: 0,
-    date: "Aug 22, 2026",
-    time: "11:00 AM",
-    linkType: "Zoom",
-    tab: "upcoming",
-  },
-  {
-    id: "3",
-    title: "Introduction to Government Procurement",
-    description:
-      "An overview of Kenya's public procurement system covering legal frameworks, key players, and how SMEs can participate effectively.",
-    organizer: "Sarah Wanjiku",
-    attendees: 120,
-    date: "Jul 30, 2026",
-    time: "3:00 PM",
-    linkType: "Google Meet",
+const mapStatus = (status: string): Tab => {
+  const s = status.toLowerCase();
+  if (s === "live" || s === "ongoing" || s === "in_progress") return "live";
+  if (s === "ended" || s === "completed" || s === "past" || s === "cancelled") {
+    return "past";
+  }
+  return "upcoming";
+};
+
+const formatDate = (value: string) => {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const formatTime = (value: string) => {
+  const [h, m] = value.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return value;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+};
+
+const toDisplay = (w: Webinar): DisplayWebinar => ({
+  id: w.id,
+  title: w.title,
+  description: w.description,
+  speaker: w.speaker ?? w.speakers[0]?.name ?? "Host",
+  dateLabel: formatDate(w.scheduled_date),
+  timeLabel: formatTime(w.scheduled_time),
+  rsvpCount: w.rsvp_count,
+  isRsvped: w.is_rsvped,
+  meetingUrl: w.meeting_url,
+  vodUrl: w.vod_url,
+  tab: mapStatus(w.status),
+});
+
+const toRecordingDisplay = (r: WebinarRecording): DisplayWebinar => {
+  const [datePart, timePart] = (r.scheduled_at ?? "").split(/\s+/);
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    speaker: r.speakers[0]?.name ?? "Host",
+    dateLabel: formatDate(datePart ?? ""),
+    timeLabel: timePart ? formatTime(timePart) : "",
+    rsvpCount: 0,
+    isRsvped: false,
+    meetingUrl: null,
+    vodUrl: r.vod_url,
     tab: "past",
-  },
-];
+  };
+};
 
 export default function WebinarsScreen() {
-  const [activeTab, setActiveTab] = useState<Tab>("live");
+  const [activeTab, setActiveTab] = useState<Tab>("upcoming");
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [recordings, setRecordings] = useState<WebinarRecording[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [rsvpingId, setRsvpingId] = useState<number | null>(null);
+  const { showToast } = useFeedback();
 
-  const filteredWebinars = WEBINARS.filter((w) => w.tab === activeTab);
+  const loadWebinars = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const [webinarsRes, recordingsRes] = await Promise.all([
+        getWebinars(),
+        getWebinarRecordings(),
+      ]);
+      setWebinars(webinarsRes.data ?? []);
+      setRecordings(recordingsRes.data ?? []);
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Failed to load webinars.",
+        "error",
+      );
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
+  }, [showToast]);
 
-  const getBadge = (tab: Tab) => {
-    switch (tab) {
-      case "live":
-        return {
-          label: "● Live",
-          style: styles.badgeLive,
-          textStyle: styles.badgeTextLive,
-        };
-      case "upcoming":
-        return {
-          label: "Upcoming",
-          style: styles.badgeUpcoming,
-          textStyle: styles.badgeTextUpcoming,
-        };
-      case "past":
-        return {
-          label: "Ended",
-          style: styles.badgePast,
-          textStyle: styles.badgeTextPast,
-        };
+  useEffect(() => {
+    loadWebinars();
+  }, [loadWebinars]);
+
+  const handleRefresh = useCallback(() => {
+    loadWebinars(true);
+  }, [loadWebinars]);
+
+  const handleRsvp = async (webinar: DisplayWebinar) => {
+    if (webinar.isRsvped || rsvpingId !== null) return;
+    setRsvpingId(webinar.id);
+    try {
+      const uuid = (await getUuid()) ?? "";
+      if (!uuid) {
+        showToast(
+          "Unable to identify your account. Please log in again.",
+          "error",
+        );
+        return;
+      }
+      await rsvpWebinar(webinar.id, uuid);
+      setWebinars((prev) =>
+        prev.map((w) =>
+          w.id === webinar.id
+            ? { ...w, is_rsvped: true, rsvp_count: w.rsvp_count + 1 }
+            : w,
+        ),
+      );
+      showToast("You're registered for this webinar.", "success");
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Unable to register. Please try again.",
+        "error",
+      );
+    } finally {
+      setRsvpingId(null);
     }
   };
 
-  const getButton = (tab: Tab) => {
-    switch (tab) {
-      case "live":
-        return {
-          label: "Join meeting",
-          icon: "videocam-outline",
-          style: styles.joinButton,
-        };
-      case "upcoming":
-        return {
-          label: "Enroll now",
-          icon: "calendar-outline",
-          style: styles.outlineButton,
-        };
-      case "past":
-        return {
-          label: "Watch recording",
-          icon: "play-circle-outline",
-          style: styles.outlineButton,
-        };
+  const openUrl = async (url: string | null) => {
+    if (!url) return;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      showToast("Unable to open the link.", "error");
     }
   };
+
+  const liveUpcoming = webinars.map(toDisplay);
+  const past = recordings.map(toRecordingDisplay);
+
+  const filtered =
+    activeTab === "past"
+      ? past
+      : liveUpcoming.filter((w) => w.tab === activeTab);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
     >
       {/* ── Header ── */}
       <Text style={styles.title}>Webinars</Text>
@@ -127,7 +205,7 @@ export default function WebinarsScreen() {
 
       {/* ── Tabs ── */}
       <View style={styles.tabBar}>
-        {(["live", "upcoming", "past"] as Tab[]).map((tab) => (
+        {(["upcoming", "live", "past"] as Tab[]).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.tabActive]}
@@ -151,67 +229,148 @@ export default function WebinarsScreen() {
       </View>
 
       {/* ── Webinar Cards ── */}
-      {filteredWebinars.map((webinar) => {
-        const badge = getBadge(webinar.tab);
-        const button = getButton(webinar.tab);
+      {filtered.map((webinar) => {
+        const isPast = webinar.tab === "past";
+        const isLive = webinar.tab === "live";
+        const hasVod = Boolean(webinar.vodUrl);
 
         return (
           <View key={webinar.id} style={styles.card}>
             {/* Badge */}
-            <View style={[styles.badge, badge.style]}>
-              <Text style={badge.textStyle}>{badge.label}</Text>
+            <View
+              style={[
+                styles.badge,
+                isLive
+                  ? styles.badgeLive
+                  : isPast
+                    ? styles.badgePast
+                    : styles.badgeUpcoming,
+              ]}
+            >
+              <Text
+                style={
+                  isLive
+                    ? styles.badgeTextLive
+                    : isPast
+                      ? styles.badgeTextPast
+                      : styles.badgeTextUpcoming
+                }
+              >
+                {isLive ? "● Live" : isPast ? "Ended" : "Upcoming"}
+              </Text>
             </View>
 
             {/* Title & description */}
             <Text style={styles.cardTitle}>{webinar.title}</Text>
-            <Text style={styles.cardDescription} numberOfLines={3}>
-              {webinar.description}
-            </Text>
+            {webinar.description ? (
+              <Text style={styles.cardDescription} numberOfLines={3}>
+                {webinar.description}
+              </Text>
+            ) : null}
 
-            {/* Organizer & attendees */}
+            {/* Speaker & attendees */}
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
                 <Ionicons name="person-outline" size={14} color="#6B7280" />
-                <Text style={styles.infoText}>{webinar.organizer}</Text>
+                <Text style={styles.infoText}>{webinar.speaker}</Text>
               </View>
-              <View style={styles.infoItem}>
-                <Ionicons name="people-outline" size={14} color="#6B7280" />
-                <Text style={styles.infoText}>
-                  {webinar.attendees} attending
-                </Text>
-              </View>
+              {!isPast && (
+                <View style={styles.infoItem}>
+                  <Ionicons name="people-outline" size={14} color="#6B7280" />
+                  <Text style={styles.infoText}>
+                    {webinar.rsvpCount} attending
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Date & time */}
             <View style={styles.dateRow}>
               <Ionicons name="calendar-outline" size={14} color="#6B7280" />
               <Text style={styles.dateText}>
-                {webinar.date} • {webinar.time}
+                {webinar.dateLabel}
+                {webinar.timeLabel ? ` • ${webinar.timeLabel}` : ""}
               </Text>
             </View>
 
             {/* Action button */}
-            <TouchableOpacity style={button.style} activeOpacity={0.7}>
-              <Ionicons
-                name={button.icon as any}
-                size={18}
-                color={webinar.tab === "live" ? "#FFFFFF" : Colors.brand}
-              />
-              <Text
-                style={[
-                  styles.buttonText,
-                  webinar.tab !== "live" && styles.buttonTextOutline,
-                ]}
+            {isLive ? (
+              <TouchableOpacity
+                style={styles.joinButton}
+                activeOpacity={0.7}
+                onPress={() => openUrl(webinar.meetingUrl)}
               >
-                {button.label}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons name="videocam-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.buttonText}>Join meeting</Text>
+              </TouchableOpacity>
+            ) : isPast ? (
+              <TouchableOpacity
+                style={[
+                  styles.outlineButton,
+                  !hasVod && styles.buttonDisabled,
+                ]}
+                activeOpacity={0.7}
+                disabled={!hasVod}
+                onPress={() => openUrl(webinar.vodUrl)}
+              >
+                <Ionicons
+                  name="play-circle-outline"
+                  size={18}
+                  color={hasVod ? Colors.brand : "#9CA3AF"}
+                />
+                <Text
+                  style={[
+                    styles.buttonTextOutline,
+                    !hasVod && styles.buttonTextOutlineDisabled,
+                  ]}
+                >
+                  {hasVod ? "Watch recording" : "No recording"}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.outlineButton,
+                  (webinar.isRsvped || rsvpingId === webinar.id) &&
+                    styles.buttonDisabled,
+                ]}
+                activeOpacity={0.7}
+                disabled={webinar.isRsvped || rsvpingId === webinar.id}
+                onPress={() => handleRsvp(webinar)}
+              >
+                {rsvpingId === webinar.id ? (
+                  <ActivityIndicator color={Colors.brand} size="small" />
+                ) : (
+                  <Ionicons
+                    name={
+                      webinar.isRsvped
+                        ? "checkmark-circle"
+                        : "calendar-outline"
+                    }
+                    size={18}
+                    color={webinar.isRsvped ? "#16A34A" : Colors.brand}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.buttonTextOutline,
+                    webinar.isRsvped && styles.buttonTextRegistered,
+                  ]}
+                >
+                  {webinar.isRsvped ? "Registered" : "RSVP now"}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            {/* Link type */}
+            {/* Platform / link */}
             <View style={styles.linkRow}>
               <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
               <Text style={styles.linkText}>
-                {webinar.linkType} link available
+                {webinar.meetingUrl
+                  ? "Meeting link available"
+                  : webinar.vodUrl
+                    ? "Recording available"
+                    : "No link available"}
               </Text>
             </View>
           </View>
@@ -219,7 +378,7 @@ export default function WebinarsScreen() {
       })}
 
       {/* Empty state */}
-      {filteredWebinars.length === 0 && (
+      {filtered.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="tv-outline" size={48} color="#D1D5DB" />
           <Text style={styles.emptyTitle}>No webinars found</Text>
@@ -242,6 +401,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 
   // ── Header ──
@@ -346,7 +511,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  // ── Organizer & attendees ──
+  // ── Speaker & attendees ──
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -397,13 +562,24 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     marginBottom: 8,
   },
+  buttonDisabled: {
+    borderColor: "#E5E7EB",
+  },
   buttonText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },
   buttonTextOutline: {
+    fontSize: 14,
+    fontWeight: "600",
     color: Colors.brand,
+  },
+  buttonTextOutlineDisabled: {
+    color: "#9CA3AF",
+  },
+  buttonTextRegistered: {
+    color: "#16A34A",
   },
 
   // ── Link type ──

@@ -148,6 +148,18 @@ export async function verifyCreateAccountOtp(
   });
 }
 
+export async function resetPassword(
+  type: string,
+  contact: string,
+  password: string,
+  password_confirmation: string
+): Promise<ApiResponse<unknown>> {
+  return request("/password_reset", {
+    method: "POST",
+    body: JSON.stringify({ type, contact, password, password_confirmation }),
+  });
+}
+
 export interface SubCounty {
   id: number;
   county_id: number;
@@ -580,6 +592,175 @@ export async function enrollCourse(
     method: "POST",
     body: JSON.stringify({ course_id, uuid }),
   });
+}
+
+export interface WebinarSpeaker {
+  id: number;
+  name: string;
+  title: string | null;
+  role: string;
+  bio: string | null;
+  avatar: string | null;
+  contact_email: string | null;
+  order: number;
+}
+
+export interface WebinarFaq {
+  id: number;
+  question: string;
+  answer: string;
+  order: number;
+}
+
+export interface WebinarRsvp {
+  id: number;
+  user_id: number;
+  user_name: string;
+  status: string;
+  registered_at: string | null;
+  joined_at: string | null;
+  cancelled_at: string | null;
+}
+
+export interface Webinar {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  tags: string | null;
+  industry: string | null;
+  faqs: WebinarFaq[];
+  scheduled_at: string;
+  scheduled_date: string;
+  scheduled_time: string;
+  duration_minutes: number;
+  timezone: string | null;
+  platform: string | null;
+  meeting_url: string | null;
+  meeting_id: string | null;
+  meeting_password: string | null;
+  joining_instructions: string | null;
+  is_public: boolean;
+  max_attendees: number | null;
+  rsvp_count: number;
+  allow_guests: boolean;
+  status: string;
+  vod_status: string | null;
+  vod_url: string | null;
+  vod_platform: string | null;
+  vod_id: string | null;
+  vod_published_at: string | null;
+  cancellation_reason: string | null;
+  cancelled_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+  updated_at: string;
+  is_rsvped: boolean;
+  speaker: string | null;
+  speaker_title: string | null;
+  speakers: WebinarSpeaker[];
+  rsvps: WebinarRsvp[];
+}
+
+export async function getWebinars(): Promise<ApiResponse<Webinar[]>> {
+  return request<Webinar[]>("/webinars");
+}
+
+export async function rsvpWebinar(
+  id: string | number,
+  uuid: string
+): Promise<ApiResponse<unknown>> {
+  return request(`/webinars/${encodeURIComponent(String(id))}/rsvp`, {
+    method: "POST",
+    body: JSON.stringify({ uuid }),
+  });
+}
+
+export interface WebinarRecordingSpeaker {
+  id: number;
+  name: string;
+  title: string | null;
+}
+
+export interface WebinarRecording {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  industry: string | null;
+  category: string | null;
+  thumbnail_url: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
+  platform: string | null;
+  vod_url: string | null;
+  vod_platform: string | null;
+  vod_id: string | null;
+  vod_published_at: string | null;
+  speakers: WebinarRecordingSpeaker[];
+}
+
+export interface WebinarRecordingsResponse {
+  success: boolean;
+  message?: string;
+  data: WebinarRecording[];
+  meta?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export async function getWebinarRecordings(): Promise<WebinarRecordingsResponse> {
+  return request<WebinarRecording[]>("/webinars/recordings");
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  description: string;
+  published_at: string;
+}
+
+export async function getAnnouncements(): Promise<ApiResponse<Announcement[]>> {
+  return request<Announcement[]>("/announcements");
+}
+
+export interface Faq {
+  id: number;
+  question: string;
+  answer: string;
+  order: number;
+}
+
+export interface FaqWebinar {
+  webinar_id: number;
+  title: string;
+  slug: string;
+  industry: string | null;
+  faqs: Faq[];
+}
+
+export interface FaqIndustry {
+  industry: string | null;
+  faqs_count: number;
+  webinars: FaqWebinar[];
+}
+
+export interface WebinarFaqsData {
+  filters: {
+    category: string | null;
+    industry: string | null;
+    webinar_id: number | null;
+  };
+  total_faqs: number;
+  industries: FaqIndustry[];
+}
+
+export async function getWebinarFaqs(): Promise<ApiResponse<WebinarFaqsData>> {
+  return request<WebinarFaqsData>("/webinars/faqs");
 }
 
 const EMAIL_BASE_URL = "https://ebis.ebisclouderp.com/api/general-email";

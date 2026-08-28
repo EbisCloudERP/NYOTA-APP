@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +11,8 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { sendEmailOtp, sendSms } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const FORGOT_PW_IMAGE = require("../../../assets/images/nyotapic_girl.jpeg");
@@ -17,9 +20,37 @@ const FORGOT_PW_IMAGE = require("../../../assets/images/nyotapic_girl.jpeg");
 export default function ForgotPasswordScreen() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useFeedback();
 
-  const handleVerify = () => {
-    router.push("/otp-reset-pass");
+  const handleVerify = async () => {
+    const contact = emailOrPhone.trim();
+    if (!contact) {
+      showToast("Please enter your email or phone number", "error");
+      return;
+    }
+    const type = contact.includes("@") ? "email" : "phone";
+
+    setLoading(true);
+    try {
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+      router.push({
+        pathname: "/otp-reset-pass",
+        params: { contact, type, otp },
+      });
+
+      if (type === "email") {
+        sendEmailOtp(contact, otp).catch(() => {});
+      } else {
+        const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
+        sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
+          () => {}
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,8 +102,16 @@ export default function ForgotPasswordScreen() {
           </Text>
 
           {/* Verify Button */}
-          <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-            <Text style={styles.verifyButtonText}>Verify</Text>
+          <TouchableOpacity
+            style={[styles.verifyButton, loading && { opacity: 0.6 }]}
+            onPress={handleVerify}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.verifyButtonText}>Verify</Text>
+            )}
           </TouchableOpacity>
 
           {/* Login Link */}

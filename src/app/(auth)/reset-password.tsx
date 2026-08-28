@@ -1,6 +1,7 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -11,20 +12,50 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { resetPassword } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { showToast } = useFeedback();
+  const { contact: contactParam, type: typeParam } = useLocalSearchParams<{
+    contact?: string;
+    type?: string;
+  }>();
+  const contact = contactParam ?? "";
+  const type = typeParam ?? (contact.includes("@") ? "email" : "phone");
 
-  const handleResetPassword = () => {
-    // TODO: implement password reset logic
-    router.replace("/login");
-    setTimeout(() => {
-      showToast("Login with your new credentials", "success");
-    }, 300);
+  const handleResetPassword = async () => {
+    if (!contact) {
+      showToast("Missing account details. Please start over.", "error");
+      return;
+    }
+    if (!password || password.length < 8) {
+      showToast("Password must be at least 8 characters.", "error");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showToast("Passwords do not match.", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPassword(type, contact, password, confirmPassword);
+      router.replace("/login");
+      setTimeout(() => {
+        showToast("Password reset successfully. Please log in.", "success");
+      }, 300);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Reset failed. Please try again.";
+      showToast(message, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,10 +100,15 @@ export default function ResetPasswordScreen() {
 
           {/* Reset Password Button */}
           <TouchableOpacity
-            style={styles.resetButton}
+            style={[styles.resetButton, loading && { opacity: 0.6 }]}
             onPress={handleResetPassword}
+            disabled={loading}
           >
-            <Text style={styles.resetButtonText}>Reset password</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.resetButtonText}>Reset password</Text>
+            )}
           </TouchableOpacity>
 
           {/* Login Link */}

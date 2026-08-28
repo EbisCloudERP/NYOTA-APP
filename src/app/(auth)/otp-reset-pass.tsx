@@ -1,6 +1,7 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -10,6 +11,8 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { sendEmailOtp, sendSms } from "../../services/api";
+import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -26,6 +29,14 @@ export default function OtpResetPassScreen() {
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const { showToast } = useFeedback();
+  const { contact, type, otp: expectedOtp } = useLocalSearchParams<{
+    contact?: string;
+    type?: string;
+    otp?: string;
+  }>();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -63,17 +74,38 @@ export default function OtpResetPassScreen() {
     }
   };
 
-  const handleVerify = (fullCode: string) => {
-    // TODO: verify OTP for password reset
-    console.log("Verify reset code", { code: fullCode });
-    setTimeout(() => {
-      router.push("/reset-password");
-    }, 250);
+  const handleVerify = async (fullCode: string) => {
+    if (verified || loading) return;
+    setLoading(true);
+
+    if (fullCode !== expectedOtp) {
+      setLoading(false);
+      showToast(
+        "The verification code you entered is incorrect. Please try again.",
+        "error"
+      );
+      return;
+    }
+
+    setVerified(true);
+    setLoading(false);
+    router.push({
+      pathname: "/reset-password",
+      params: { contact: contact ?? "", type: type ?? "" },
+    });
   };
 
   const handleResend = () => {
     setTimeLeft(RESEND_COOLDOWN);
-    console.log("Resend code");
+    if (!expectedOtp) return;
+    if (type === "email" && contact) {
+      sendEmailOtp(contact, expectedOtp).catch(() => {});
+    } else if (contact) {
+      const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
+      sendSms(mobile, `Your NYOTA verification code is: ${expectedOtp}`).catch(
+        () => {}
+      );
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -110,6 +142,10 @@ export default function OtpResetPassScreen() {
             </View>
           ))}
         </View>
+
+        {loading && (
+          <ActivityIndicator color={Colors.brand} style={styles.loader} />
+        )}
 
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
@@ -196,6 +232,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginBottom: 24,
+  },
+  loader: {
+    marginBottom: 16,
   },
   codeInput: {
     width: 48,
