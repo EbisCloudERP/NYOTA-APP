@@ -2,15 +2,16 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
 import { getEnrolledCourses, type CatalogueCourse } from "../../services/api";
@@ -23,6 +24,7 @@ interface Certificate {
   description: string;
   studentName: string;
   durationMinutes: number;
+  completedDate: string;
   completedLessons: number;
   totalLessons: number;
   lessons: string[];
@@ -35,6 +37,17 @@ function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m ? `${h}h ${m}m` : `${h} hours`;
+}
+
+const SERIF = Platform.OS === "ios" ? "Georgia" : "serif";
+const SCRIPT = Platform.OS === "ios" ? "Snell Roundhand" : "cursive";
+
+function formatCertificateDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 // ── Certificate detail modal ───────────────────────────
@@ -65,75 +78,96 @@ function CertificateModal({
           <Ionicons name="close" size={24} color="#6B7280" />
         </TouchableOpacity>
 
-        {/* ── Congrats card ── */}
-        <View style={modalStyles.congratsCard}>
-          <View style={modalStyles.verifiedBadge}>
-            <Ionicons name="shield-checkmark" size={14} color="#065F46" />
-            <Text style={modalStyles.verifiedBadgeText}>
-              Verified Certificate
+        {/* ── Certificate ── */}
+        <View style={modalStyles.certOuter}>
+          {/* Header above the gold frame */}
+          <View style={modalStyles.certHeaderRow}>
+            <Text style={modalStyles.yourCertificateLabel}>
+              Your Certificate:
             </Text>
+            <Text style={modalStyles.certNumber}>{cert.id}</Text>
           </View>
 
-          <Image
-            source={require("../../../assets/images/NYOTA.jpg")}
-            style={modalStyles.nyotaImage}
-            resizeMode="cover"
-          />
+          {/* Gold frame */}
+          <View style={modalStyles.goldFrame}>
+            <View style={modalStyles.certInner}>
+              {/* Kenyan flag corner ribbons */}
+              <Image
+                source={require("../../../assets/images/cert_wavy_lines.png")}
+                style={modalStyles.wavyTopRight}
+                resizeMode="stretch"
+              />
+              <Image
+                source={require("../../../assets/images/cert_wavy_lines.png")}
+                style={modalStyles.wavyBottomLeft}
+                resizeMode="stretch"
+              />
 
-          <Text style={modalStyles.congratsTitle}>Congratulations!</Text>
-          <Text style={modalStyles.congratsSubtitle}>
-            Your certificate is ready to download and share.
-          </Text>
-        </View>
+              {/* Coat of arms */}
+              <Image
+                source={require("../../../assets/images/arms.png")}
+                style={modalStyles.arms}
+                resizeMode="contain"
+              />
 
-        {/* ── Certificate card (with border) ── */}
-        <View style={modalStyles.certCard}>
-          <Image
-            source={require("../../../assets/images/NYOTA.jpg")}
-            style={modalStyles.certNyotaImage}
-            resizeMode="cover"
-          />
-          <View style={modalStyles.completionBadge}>
-            <Ionicons name="shield-checkmark" size={16} color={Colors.brand} />
-          </View>
-          <Text style={modalStyles.completionTitle}>
-            CERTIFICATE OF COMPLETION
-          </Text>
+              <Text style={modalStyles.republicText}>REPUBLIC OF KENYA</Text>
 
-          <View style={modalStyles.certDivider} />
+              <Text style={modalStyles.ministryText}>
+                MINISTRY OF COOPERATIVES AND MICRO, SMALL AND MEDIUM
+              </Text>
+              <Text style={modalStyles.ministryText}>
+                ENTERPRISES DEVELOPMENT
+              </Text>
 
-          <Text style={modalStyles.awardedTo}>
-            This certificate is awarded to
-          </Text>
-          <Text style={modalStyles.studentName}>{cert.studentName}</Text>
+              <Text style={modalStyles.programText}>
+                NATIONAL YOUTH OPPORTUNITIES TOWARDS ADVANCEMENT
+              </Text>
 
-          <Text style={modalStyles.forCompleting}>
-            for successfully completing
-          </Text>
-          <Text style={modalStyles.courseName}>{cert.title}</Text>
+              <Image
+                source={require("../../../assets/images/NYOTA.jpg")}
+                style={modalStyles.nyotaLogo}
+                resizeMode="contain"
+              />
 
-          {/* Certificate details */}
-          <View style={modalStyles.metaRow}>
-            <View style={modalStyles.metaItem}>
-              <Ionicons name="school-outline" size={16} color="#6B7280" />
-              <Text style={modalStyles.metaLabel}>Lessons</Text>
-              <Text style={modalStyles.metaValue}>
-                {cert.completedLessons}/{cert.totalLessons}
+              <Text style={modalStyles.certificateTitle}>CERTIFICATE</Text>
+              <Text style={modalStyles.ofCompletion}>OF COMPLETION</Text>
+
+              <Text style={modalStyles.certifyLabel}>
+                This is to certify that
+              </Text>
+              <Text style={modalStyles.studentName}>{cert.studentName}</Text>
+
+              <Text style={modalStyles.completedTrainingLabel}>
+                Has successfully completed the training for:
+              </Text>
+              <Text style={modalStyles.courseTitle}>
+                {cert.title.toUpperCase()}
+              </Text>
+
+              <Text style={modalStyles.heldOn}>
+                Held on {cert.completedDate}
+              </Text>
+
+              {/* Signatures */}
+              <View style={modalStyles.signatureRow}>
+                <View style={modalStyles.signatureCol}>
+                  <View style={modalStyles.signatureLine} />
+                  <Text style={modalStyles.signatureLabel}>DIRECTOR</Text>
+                </View>
+                <View style={modalStyles.signatureCol}>
+                  <View style={modalStyles.signatureLine} />
+                  <Text style={modalStyles.signatureLabel}>SIGNATURE</Text>
+                </View>
+                <View style={modalStyles.signatureCol}>
+                  <View style={modalStyles.signatureLine} />
+                  <Text style={modalStyles.signatureLabel}>DATE</Text>
+                </View>
+              </View>
+
+              <Text style={modalStyles.disclaimer}>
+                This is not an AGPO certificate
               </Text>
             </View>
-            <View style={modalStyles.metaItem}>
-              <Ionicons name="time-outline" size={16} color="#6B7280" />
-              <Text style={modalStyles.metaLabel}>Duration</Text>
-              <Text style={modalStyles.metaValue}>
-                {formatDuration(cert.durationMinutes)}
-              </Text>
-            </View>
-          </View>
-
-          {/* Certificate ID */}
-          <View style={modalStyles.certIdContainer}>
-            <Text style={modalStyles.certIdLabel}>Certificate ID</Text>
-            <Text style={modalStyles.certIdValue}>{cert.id}</Text>
           </View>
         </View>
 
@@ -233,32 +267,38 @@ export default function CertificatesScreen() {
     [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Student";
 
   const toCertificate = (course: CatalogueCourse): Certificate => ({
-    id: `CERT-${course.id}`,
+    id: `DT-${new Date().getFullYear()}-${String(course.id).padStart(5, "0")}`,
     title: course.title,
     description: course.description,
     studentName,
     durationMinutes: course.duration_minutes,
+    completedDate: formatCertificateDate(new Date()),
     completedLessons: course.completed_lessons ?? 0,
     totalLessons: course.total_lessons,
     lessons: (course.lessons ?? []).map((l) => l.title),
   });
 
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    try {
-      const res = await getEnrolledCourses();
-      const passed = (res.data ?? []).filter(
-        (c) => c.total_lessons > 0 && (c.completed_lessons ?? 0) >= c.total_lessons,
-      );
-      setCertificates(passed.map(toCertificate));
-    } catch {
-      // failed to load certificates — keep current state
-    } finally {
-      setLoading(false);
-      if (isRefresh) setRefreshing(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentName]);
+  const loadData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+      try {
+        const res = await getEnrolledCourses();
+        const passed = (res.data ?? []).filter(
+          (c) =>
+            c.total_lessons > 0 &&
+            (c.completed_lessons ?? 0) >= c.total_lessons,
+        );
+        setCertificates(passed.map(toCertificate));
+      } catch {
+        // failed to load certificates — keep current state
+      } finally {
+        setLoading(false);
+        if (isRefresh) setRefreshing(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [studentName],
+  );
 
   useEffect(() => {
     loadData();
@@ -561,162 +601,177 @@ const modalStyles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // ── Congrats card ──
-  congratsCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 20,
-    alignItems: "center",
+  // ── Certificate (full layout) ──
+  certOuter: {
     marginBottom: 16,
   },
-  certCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.brand,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-
-  // Verified badge
-  verifiedBadge: {
+  certHeaderRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
-  verifiedBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#065F46",
-  },
-
-  // Nyota image
-  nyotaImage: {
-    width: 150,
-    height: 96,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     marginBottom: 8,
-    borderRadius: 16,
   },
-
-  // Congrats
-  congratsTitle: {
-    fontSize: 22,
+  yourCertificateLabel: {
+    fontSize: 15,
     fontWeight: "700",
-    color: Colors.brand,
-    marginBottom: 4,
+    color: "#111827",
   },
-  congratsSubtitle: {
+  certNumber: {
     fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
+    fontWeight: "600",
+    color: "#374151",
+    fontFamily: "monospace",
   },
-
-  certDivider: {
-    width: "80%",
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginBottom: 16,
+  goldFrame: {
+    borderWidth: 6,
+    borderColor: "#C9A227",
+    borderRadius: 4,
+    backgroundColor: "#FFFDF5",
+    padding: 6,
   },
-
-  // Cert Nyota + completion
-  certNyotaImage: {
-    width: 120,
-    height: 80,
-    marginBottom: 10,
-    borderRadius: 14,
-  },
-  completionBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#EDE9FE",
+  certInner: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#C9A227",
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 18,
     alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  // Kenyan flag corner ribbons
+  wavyTopRight: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 140,
+    height: 49,
+  },
+  wavyBottomLeft: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: 140,
+    height: 49,
+    transform: [{ rotate: "180deg" }],
+  },
+
+  arms: {
+    width: 64,
+    height: 64,
     marginBottom: 6,
   },
-  completionTitle: {
+  republicText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#1E3A8A",
+    letterSpacing: 2,
+    textAlign: "center",
+  },
+  ministryText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1E3A8A",
+    textAlign: "center",
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  programText: {
     fontSize: 13,
     fontWeight: "700",
-    color: Colors.brand,
-    letterSpacing: 1.5,
-    marginBottom: 12,
+    color: "#1E3A8A",
+    textAlign: "center",
+    marginTop: 6,
+    marginBottom: 8,
   },
 
-  // Student / course
-  awardedTo: {
+  nyotaLogo: {
+    width: 120,
+    height: 77,
+    marginBottom: 6,
+  },
+  certificateTitle: {
+    fontFamily: SERIF,
+    fontSize: 30,
+    fontWeight: "700",
+    color: "#A67C00",
+    letterSpacing: 4,
+    textAlign: "center",
+  },
+  ofCompletion: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1E3A8A",
+    letterSpacing: 8,
+    textAlign: "center",
+    marginTop: 2,
+    marginBottom: 14,
+  },
+
+  certifyLabel: {
+    fontFamily: SERIF,
     fontSize: 14,
-    color: "#6B7280",
+    color: "#111827",
     marginBottom: 4,
   },
   studentName: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontFamily: SCRIPT,
+    fontSize: 30,
     color: "#111827",
-    marginBottom: 8,
     textAlign: "center",
-  },
-  forCompleting: {
-    fontSize: 14,
-    color: "#6B7280",
     marginBottom: 4,
   },
-  courseName: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: Colors.brand,
+  completedTrainingLabel: {
+    fontFamily: SERIF,
+    fontSize: 13,
+    color: "#374151",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 4,
   },
-
-  // Meta info
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
+  courseTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E3A8A",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  heldOn: {
+    fontFamily: SERIF,
+    fontSize: 13,
+    color: "#374151",
     marginBottom: 16,
   },
-  metaItem: {
-    alignItems: "center",
-    gap: 2,
-  },
-  metaLabel: {
-    fontSize: 11,
-    color: "#9CA3AF",
-    textTransform: "uppercase",
-    marginTop: 2,
-  },
-  metaValue: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#374151",
-  },
 
-  // Certificate ID
-  certIdContainer: {
+  // Signatures
+  signatureRow: {
+    flexDirection: "row",
+    width: "100%",
+    marginBottom: 12,
+    gap: 12,
+  },
+  signatureCol: {
+    flex: 1,
     alignItems: "center",
-    backgroundColor: "#EDE9FE",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
   },
-  certIdLabel: {
+  signatureLine: {
+    width: "100%",
+    borderBottomWidth: 1,
+    borderStyle: "dotted",
+    borderColor: "#6B7280",
+    marginBottom: 4,
+  },
+  signatureLabel: {
     fontSize: 11,
-    color: "#7C3AED",
-    textTransform: "uppercase",
-    marginBottom: 2,
+    fontWeight: "700",
+    color: "#111827",
+    letterSpacing: 1,
   },
-  certIdValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.brand,
+  disclaimer: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: "#B91C1C",
+    textAlign: "center",
   },
 
   // Download button
