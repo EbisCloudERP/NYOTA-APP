@@ -3,15 +3,20 @@ import { router, useLocalSearchParams } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { getLesson, completeLesson, type LessonDetail } from "../../services/api";
+import {
+    completeLesson,
+    getLesson,
+    type LessonDetail,
+} from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -34,6 +39,7 @@ export default function LessonScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!id) {
@@ -45,7 +51,7 @@ export default function LessonScreen() {
       .then((res) => setLesson(res.data))
       .catch((e) =>
         showToast(
-          e instanceof Error ? e.message : "Failed to load lesson.",
+          e instanceof Error ? e.message : t("lesson.failedLoad"),
           "error",
         ),
       )
@@ -63,7 +69,7 @@ export default function LessonScreen() {
   if (!lesson) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.emptyText}>Lesson not found.</Text>
+        <Text style={styles.emptyText}>{t("lesson.notFound")}</Text>
       </View>
     );
   }
@@ -92,7 +98,7 @@ export default function LessonScreen() {
       if (lesson.quizz?.length) {
         const courseId = lesson.course?.id;
         if (!courseId) {
-          showToast("Course information is missing.", "error");
+          showToast(t("lesson.missingCourse"), "error");
           return;
         }
         router.push({
@@ -104,7 +110,7 @@ export default function LessonScreen() {
       }
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to complete lesson.",
+        e instanceof Error ? e.message : t("lesson.failedComplete"),
         "error",
       );
     } finally {
@@ -126,13 +132,13 @@ export default function LessonScreen() {
           <View style={styles.objectiveRow}>
             <View style={styles.objectiveLeft}>
               <Ionicons name="bulb" size={20} color={Colors.brand} />
-              <Text style={styles.objectiveLabel}>About this lesson</Text>
+              <Text style={styles.objectiveLabel}>{t("lesson.about")}</Text>
             </View>
             {lesson.duration_minutes > 0 && (
               <View style={styles.durationBadge}>
                 <Ionicons name="time-outline" size={12} color="#6B7280" />
                 <Text style={styles.durationBadgeText}>
-                  {lesson.duration_minutes} min
+                  {lesson.duration_minutes} {t("common.min")}
                 </Text>
               </View>
             )}
@@ -149,7 +155,7 @@ export default function LessonScreen() {
       {/* Lesson content */}
       {contentText ? (
         <View style={styles.contentCard}>
-          <Text style={styles.contentTitle}>Lesson Content</Text>
+          <Text style={styles.contentTitle}>{t("lesson.content")}</Text>
           <Text style={styles.contentText}>{contentText}</Text>
         </View>
       ) : null}
@@ -158,10 +164,8 @@ export default function LessonScreen() {
       {completed || isAlreadyCompleted ? (
         <View style={styles.completedCard}>
           <Ionicons name="checkmark-circle" size={32} color="#059669" />
-          <Text style={styles.completedTitle}>Lesson completed!</Text>
-          <Text style={styles.completedText}>
-            Great job! The next lesson is now unlocked.
-          </Text>
+          <Text style={styles.completedTitle}>{t("lesson.completed")}</Text>
+          <Text style={styles.completedText}>{t("lesson.completedText")}</Text>
           {nextLesson ? (
             <TouchableOpacity
               style={styles.primaryButton}
@@ -174,7 +178,7 @@ export default function LessonScreen() {
               }
             >
               <Text style={styles.primaryButtonText}>
-                Continue to next lesson
+                {t("lesson.nextLesson")}
               </Text>
               <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
             </TouchableOpacity>
@@ -184,7 +188,9 @@ export default function LessonScreen() {
               activeOpacity={0.7}
               onPress={() => router.back()}
             >
-              <Text style={styles.primaryButtonText}>Back to lessons</Text>
+              <Text style={styles.primaryButtonText}>
+                {t("lesson.backToLessons")}
+              </Text>
               <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           )}
@@ -209,7 +215,7 @@ export default function LessonScreen() {
             />
           )}
           <Text style={styles.completeButtonText}>
-            {submitting ? "Completing..." : "Mark as complete"}
+            {submitting ? t("lesson.completing") : t("lesson.markComplete")}
           </Text>
         </TouchableOpacity>
       )}

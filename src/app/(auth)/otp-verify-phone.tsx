@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -31,6 +32,7 @@ export default function OtpVerifyPhoneScreen() {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
   const { otp: expectedOtp } = useLocalSearchParams<{
     phone: string;
     password: string;
@@ -81,7 +83,7 @@ export default function OtpVerifyPhoneScreen() {
 
     if (fullCode !== expectedOtp) {
       setLoading(false);
-      showToast("The verification code you entered is incorrect. Please try again.", "error");
+      showToast(t("otp.incorrectCode"), "error");
       return;
     }
 
@@ -111,10 +113,8 @@ export default function OtpVerifyPhoneScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <LanguageSelector />
-        <Text style={styles.title}>Enter verification code</Text>
-        <Text style={styles.subtitle}>
-          We've sent a 6-digit code to your phone number
-        </Text>
+        <Text style={styles.title}>{t("otp.title")}</Text>
+        <Text style={styles.subtitle}>{t("otp.subtitlePhone")}</Text>
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
@@ -137,17 +137,17 @@ export default function OtpVerifyPhoneScreen() {
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
           <Text style={styles.timerText}>
-            Code expire in: {formatTime(timeLeft)}
+            {t("otp.expiresIn", { time: formatTime(timeLeft) })}
           </Text>
         </View>
 
         {timeLeft > 0 ? (
           <Text style={styles.waitText}>
-            Didn't receive the code? Wait: {formatTime(timeLeft)} to resend
+            {t("otp.waitResend", { time: formatTime(timeLeft) })}
           </Text>
         ) : (
           <TouchableOpacity onPress={handleResend}>
-            <Text style={styles.resendLink}>Resend code</Text>
+            <Text style={styles.resendLink}>{t("otp.resend")}</Text>
           </TouchableOpacity>
         )}
 
@@ -155,7 +155,7 @@ export default function OtpVerifyPhoneScreen() {
           style={styles.goBackContainer}
           onPress={() => router.back()}
         >
-          <Text style={styles.goBackText}>Wrong details? Go back</Text>
+          <Text style={styles.goBackText}>{t("otp.wrongDetails")}</Text>
         </TouchableOpacity>
       </ScrollView>
 

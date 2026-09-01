@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useLanguage } from "../services/LanguageContext";
 import { Colors } from "../theme/colors";
 
 // ── Types ──
@@ -180,6 +181,7 @@ export default function NewTicketModal({
   const [category, setCategory] = useState<Category | "">("");
   const [priority, setPriority] = useState<Priority | "">("");
   const [description, setDescription] = useState("");
+  const { t } = useLanguage();
 
   const isFormValid =
     subject.trim() !== "" &&
@@ -226,7 +228,7 @@ export default function NewTicketModal({
           <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
             <Ionicons name="close" size={24} color="#111827" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Create New Ticket</Text>
+          <Text style={styles.headerTitle}>{t("newTicket.title")}</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -238,40 +240,40 @@ export default function NewTicketModal({
           showsVerticalScrollIndicator={false}
         >
           {/* Subject */}
-          <Text style={styles.label}>Subject</Text>
+          <Text style={styles.label}>{t("newTicket.subject")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter ticket subject"
+            placeholder={t("newTicket.subjectPlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={subject}
             onChangeText={setSubject}
           />
 
           {/* Category */}
-          <Text style={styles.label}>Category</Text>
+          <Text style={styles.label}>{t("newTicket.category")}</Text>
           <Dropdown
             value={category}
             options={CATEGORIES}
-            placeholder="Select category"
+            placeholder={t("newTicket.selectCategory")}
             onSelect={setCategory}
             formatLabel={categoryLabel}
           />
 
           {/* Priority */}
-          <Text style={styles.label}>Priority</Text>
+          <Text style={styles.label}>{t("newTicket.priority")}</Text>
           <Dropdown
             value={priority}
             options={PRIORITIES}
-            placeholder="Select priority"
+            placeholder={t("newTicket.selectPriority")}
             onSelect={setPriority}
             formatLabel={priorityLabel}
           />
 
           {/* Description */}
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{t("newTicket.description")}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Describe your issue in detail..."
+            placeholder={t("newTicket.descriptionPlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={description}
             onChangeText={setDescription}
@@ -295,7 +297,7 @@ export default function NewTicketModal({
                 !isFormValid && styles.submitBtnTextDisabled,
               ]}
             >
-              Submit Ticket
+              {t("newTicket.submit")}
             </Text>
           </TouchableOpacity>
         </View>

@@ -2,21 +2,22 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  enrollCourse,
-  getCourseRecommendations,
-  getEnrolledCourses,
-  type Course as ApiCourse,
+    enrollCourse,
+    getCourseRecommendations,
+    getEnrolledCourses,
+    type Course as ApiCourse,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -46,6 +47,7 @@ export default function MyLearningScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { showToast, confirm } = useFeedback();
+  const { t } = useLanguage();
 
   const loadCourses = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -62,9 +64,9 @@ export default function MyLearningScreen() {
         getEnrolledCourses(),
       ]);
 
-        const enrolledById = new Map(
-          (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
-        );
+      const enrolledById = new Map(
+        (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
+      );
 
       const toView = (c: ApiCourse): Course => {
         const enrolled = enrolledById.get(String(c.id));
@@ -82,7 +84,7 @@ export default function MyLearningScreen() {
           description: c.short_description || c.description || "",
           category: c.category?.name ?? "",
           level: capitalize(c.level),
-          pace: "Self-paced",
+          pace: t("learning.selfPaced"),
           progress,
           totalLessons: c.total_lessons,
           completedLessons,
@@ -90,13 +92,13 @@ export default function MyLearningScreen() {
         };
       };
 
-        setAllCourses((recsRes.data.courses ?? []).map(toView));
-        setRecommendedCourses(
-          (recsRes.data.suggested_tags?.suggested_courses ?? []).map(toView),
-        );
+      setAllCourses((recsRes.data.courses ?? []).map(toView));
+      setRecommendedCourses(
+        (recsRes.data.suggested_tags?.suggested_courses ?? []).map(toView),
+      );
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to load courses.",
+        e instanceof Error ? e.message : t("learning.failedLoad"),
         "error",
       );
     } finally {
@@ -115,10 +117,10 @@ export default function MyLearningScreen() {
 
   const handleEnroll = async (course: Course) => {
     const ok = await confirm({
-      title: "Enroll in Course",
-      message: `You are about to enroll in "${course.title}". Are you sure you want to continue?`,
-      confirmText: "Enroll",
-      cancelText: "Cancel",
+      title: t("learning.enrollTitle"),
+      message: t("learning.enrollMessage", { title: course.title }),
+      confirmText: t("learning.enroll"),
+      cancelText: t("common.cancel"),
     });
     if (!ok) return;
 
@@ -126,25 +128,20 @@ export default function MyLearningScreen() {
       const uuid = (await getUuid()) ?? "";
       await enrollCourse(course.id, uuid);
       setAllCourses((prev) =>
-        prev.map((c) =>
-          c.id === course.id ? { ...c, isEnrolled: true } : c,
-        ),
+        prev.map((c) => (c.id === course.id ? { ...c, isEnrolled: true } : c)),
       );
       setRecommendedCourses((prev) =>
-        prev.map((c) =>
-          c.id === course.id ? { ...c, isEnrolled: true } : c,
-        ),
+        prev.map((c) => (c.id === course.id ? { ...c, isEnrolled: true } : c)),
       );
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Please try again.",
+        e instanceof Error ? e.message : t("learning.tryAgain"),
         "error",
       );
     }
   };
 
-  const filteredCourses =
-    activeTab === "all" ? allCourses : recommendedCourses;
+  const filteredCourses = activeTab === "all" ? allCourses : recommendedCourses;
 
   if (loading) {
     return (
@@ -164,10 +161,8 @@ export default function MyLearningScreen() {
       }
     >
       {/* ── Header ── */}
-      <Text style={styles.title}>Your Learning Path</Text>
-      <Text style={styles.subtitle}>
-        Complete courses to earn certificates and unlock opportunities
-      </Text>
+      <Text style={styles.title}>{t("learning.title")}</Text>
+      <Text style={styles.subtitle}>{t("learning.subtitle")}</Text>
 
       {/* ── Tabs ── */}
       <View style={styles.tabBar}>
@@ -182,7 +177,7 @@ export default function MyLearningScreen() {
               activeTab === "recommended" && styles.tabTextActive,
             ]}
           >
-            Recommended for you
+            {t("learning.recommended")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -196,7 +191,7 @@ export default function MyLearningScreen() {
               activeTab === "all" && styles.tabTextActive,
             ]}
           >
-            All courses
+            {t("learning.allCourses")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -250,10 +245,10 @@ export default function MyLearningScreen() {
                 ]}
               >
                 {course.progress === 100
-                  ? "Completed"
+                  ? t("learning.completed")
                   : course.isEnrolled
-                    ? "Enrolled"
-                    : "Not enrolled"}
+                    ? t("learning.enrolled")
+                    : t("learning.notEnrolled")}
               </Text>
             </View>
           </View>
@@ -278,7 +273,10 @@ export default function MyLearningScreen() {
           <View style={styles.lessonsRow}>
             <Ionicons name="document-text-outline" size={14} color="#6B7280" />
             <Text style={styles.lessonsText}>
-              {course.completedLessons}/{course.totalLessons} lessons
+              {t("learning.lessonsCount", {
+                completed: course.completedLessons,
+                total: course.totalLessons,
+              })}
             </Text>
             <View style={styles.badgesRow}>
               <View style={styles.levelBadge}>
@@ -319,10 +317,10 @@ export default function MyLearningScreen() {
               ]}
             >
               {!course.isEnrolled
-                ? "Enroll now"
+                ? t("learning.enrollNow")
                 : course.progress === 100
-                  ? "Review course"
-                  : "Go to lessons"}
+                  ? t("learning.reviewCourse")
+                  : t("learning.goToLessons")}
             </Text>
             <Ionicons
               name="arrow-forward"
@@ -341,10 +339,8 @@ export default function MyLearningScreen() {
       {filteredCourses.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="book-outline" size={48} color="#D1D5DB" />
-          <Text style={styles.emptyTitle}>No courses found</Text>
-          <Text style={styles.emptySubtitle}>
-            Check back later for new recommendations.
-          </Text>
+          <Text style={styles.emptyTitle}>{t("learning.noCourses")}</Text>
+          <Text style={styles.emptySubtitle}>{t("learning.checkBack")}</Text>
         </View>
       )}
 

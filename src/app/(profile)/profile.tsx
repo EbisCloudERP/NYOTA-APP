@@ -8,10 +8,12 @@ import {
     View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showWhyInfo, setShowWhyInfo] = useState(false);
 
   return (
@@ -21,17 +23,15 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <Text style={styles.subtitle}>
-        Update your personal information and account settings
-      </Text>
+      <Text style={styles.subtitle}>{t("profile.subtitle")}</Text>
 
       {/* ── Personal Information ── */}
-      <Text style={styles.sectionHeading}>Personal Information</Text>
+      <Text style={styles.sectionHeading}>{t("profile.personalInfo")}</Text>
 
       <View style={styles.card}>
         {/* First Name */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>First name</Text>
+          <Text style={styles.label}>{t("profile.firstName")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.first_name ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
 
         {/* Middle Name */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Middle name</Text>
+          <Text style={styles.label}>{t("profile.middleName")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.middle_name ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -49,7 +49,7 @@ export default function ProfileScreen() {
 
         {/* Last Name */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Last name</Text>
+          <Text style={styles.label}>{t("profile.lastName")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.last_name ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -58,7 +58,7 @@ export default function ProfileScreen() {
 
         {/* Email */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Email address</Text>
+          <Text style={styles.label}>{t("profile.email")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.email ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -67,7 +67,7 @@ export default function ProfileScreen() {
 
         {/* Phone */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Phone number</Text>
+          <Text style={styles.label}>{t("profile.phone")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.phone ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
         {/* County */}
         <View style={styles.fieldGroupLast}>
-          <Text style={styles.label}>County</Text>
+          <Text style={styles.label}>{t("profile.county")}</Text>
           <View style={styles.readonlyInput}>
             <Text style={styles.readonlyText}>{user?.county ?? ""}</Text>
             <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
@@ -97,7 +97,7 @@ export default function ProfileScreen() {
               size={20}
               color={Colors.brand}
             />
-            <Text style={styles.whyTitle}>Why we need this information</Text>
+            <Text style={styles.whyTitle}>{t("profile.whyInfo")}</Text>
           </View>
           <Ionicons
             name={showWhyInfo ? "chevron-up" : "chevron-down"}
@@ -106,13 +106,7 @@ export default function ProfileScreen() {
           />
         </View>
         {showWhyInfo && (
-          <Text style={styles.whyText}>
-            We collect this information to personalize your learning experience,
-            match you with relevant opportunities in your region, and ensure
-            compliance with procurement eligibility requirements. Your county
-            details help us surface tenders and training programs available in
-            your area.
-          </Text>
+          <Text style={styles.whyText}>{t("profile.whyInfoText")}</Text>
         )}
       </TouchableOpacity>
 

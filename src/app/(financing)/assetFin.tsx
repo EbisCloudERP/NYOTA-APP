@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 interface FormData {
@@ -76,6 +77,7 @@ export default function AssetFinancingScreen() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const { showToast, confirm } = useFeedback();
+  const { t } = useLanguage();
 
   // File upload states
   const [taxCertificate, setTaxCertificate] = useState<string | null>(null);
@@ -97,12 +99,15 @@ export default function AssetFinancingScreen() {
     }
   };
 
-  const handleUpload = async (label: string, setter: (v: string | null) => void) => {
+  const handleUpload = async (
+    label: string,
+    setter: (v: string | null) => void,
+  ) => {
     const ok = await confirm({
       title: `Upload ${label}`,
-      message: "This will open the file picker.",
-      confirmText: "Select file",
-      cancelText: "Cancel",
+      message: t("common.filePickerMessage"),
+      confirmText: t("common.selectFile"),
+      cancelText: t("common.cancel"),
     });
     if (ok) setter("selected-file.pdf");
   };
@@ -111,51 +116,54 @@ export default function AssetFinancingScreen() {
     const e: FormErrors = {};
 
     // Company Info
-    if (!form.companyName.trim()) e.companyName = "Company name is required";
-    if (!form.phoneNumber.trim()) e.phoneNumber = "Phone number is required";
+    if (!form.companyName.trim())
+      e.companyName = t("financing.companyNameRequired");
+    if (!form.phoneNumber.trim()) e.phoneNumber = t("financing.phoneRequired");
     if (!form.contactPerson.trim())
-      e.contactPerson = "Contact person is required";
+      e.contactPerson = t("financing.contactPersonRequired");
     if (!form.registrationNumber.trim())
-      e.registrationNumber = "Registration number is required";
+      e.registrationNumber = t("financing.registrationRequired");
     if (!form.companyAddress.trim())
-      e.companyAddress = "Company address is required";
+      e.companyAddress = t("financing.addressRequired");
 
     // Asset Details
-    if (!form.assetType.trim()) e.assetType = "Asset type is required";
+    if (!form.assetType.trim()) e.assetType = t("assetFin.assetTypeRequired");
     if (!form.assetDescription.trim())
-      e.assetDescription = "Asset description is required";
+      e.assetDescription = t("assetFin.assetDescriptionRequired");
     if (!form.assetCost.trim()) {
-      e.assetCost = "Asset cost is required";
+      e.assetCost = t("assetFin.assetCostRequired");
     } else if (isNaN(Number(form.assetCost)) || Number(form.assetCost) <= 0) {
-      e.assetCost = "Enter a valid cost";
+      e.assetCost = t("assetFin.validCost");
     }
-    if (!assetInvoice) e.assetInvoice = "Asset invoice/quotation is required";
-    if (!form.supplierName.trim()) e.supplierName = "Supplier name is required";
+    if (!assetInvoice) e.assetInvoice = t("assetFin.invoiceRequired");
+    if (!form.supplierName.trim())
+      e.supplierName = t("assetFin.supplierNameRequired");
     if (!form.supplierContact.trim())
-      e.supplierContact = "Supplier contact is required";
+      e.supplierContact = t("assetFin.supplierContactRequired");
 
     // Financing Request
     if (!form.downPayment.trim()) {
-      e.downPayment = "Down payment is required";
+      e.downPayment = t("assetFin.downPaymentRequired");
     } else if (
       isNaN(Number(form.downPayment)) ||
       Number(form.downPayment) < 0
     ) {
-      e.downPayment = "Enter a valid amount";
+      e.downPayment = t("financing.validAmount");
     }
     if (!form.requestedAmount.trim()) {
-      e.requestedAmount = "Requested financing amount is required";
+      e.requestedAmount = t("financing.requestedRequired");
     } else if (
       isNaN(Number(form.requestedAmount)) ||
       Number(form.requestedAmount) <= 0
     ) {
-      e.requestedAmount = "Enter a valid amount";
+      e.requestedAmount = t("financing.validAmount");
     }
     if (!form.repaymentPeriod.trim())
-      e.repaymentPeriod = "Repayment period is required";
-    if (!form.interestRate.trim()) e.interestRate = "Interest rate is required";
+      e.repaymentPeriod = t("financing.repaymentRequired");
+    if (!form.interestRate.trim())
+      e.interestRate = t("financing.interestRequired");
     if (!form.collateralDetails.trim())
-      e.collateralDetails = "Collateral details are required";
+      e.collateralDetails = t("financing.collateralRequired");
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -163,16 +171,16 @@ export default function AssetFinancingScreen() {
 
   const handleSubmit = () => {
     if (!validate()) {
-      showToast("Please fill in all required fields correctly.", "error");
+      showToast(t("financing.fillRequired"), "error");
       return;
     }
 
     if (!declaration || !authorizeChecks || !approvalTerms || !agreeTerms) {
-      showToast("Please accept all declarations and terms before submitting.", "error");
+      showToast(t("financing.acceptTerms"), "error");
       return;
     }
 
-    showToast("Your asset financing application has been submitted successfully.", "success");
+    showToast(t("assetFin.submitted"), "success");
   };
 
   return (
@@ -183,27 +191,21 @@ export default function AssetFinancingScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
-        Acquire essential business equipment, vehicles, and machinery with
-        flexible asset financing solutions tailored to your needs.
-      </Text>
+      <Text style={styles.subtitle}>{t("assetFin.subtitle")}</Text>
 
       {/* Required fields note */}
-      <Text style={styles.requiredNote}>
-        All fields marked with <Text style={styles.asterisk}>*</Text> are
-        required
-      </Text>
+      <Text style={styles.requiredNote}>{t("common.requiredNote")}</Text>
 
       {/* ── Company Information ── */}
-      <Text style={styles.sectionTitle}>Company Information</Text>
+      <Text style={styles.sectionTitle}>{t("financing.companyInfo")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Name <Text style={styles.asterisk}>*</Text>
+          {t("financing.companyName")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.companyName && styles.inputError]}
-          placeholder="Enter company name"
+          placeholder={t("financing.companyNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.companyName}
           onChangeText={(v) => updateField("companyName", v)}
@@ -215,11 +217,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Phone Number <Text style={styles.asterisk}>*</Text>
+          {t("financing.phoneNumber")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.phoneNumber && styles.inputError]}
-          placeholder="e.g. +254 712 345 678"
+          placeholder={t("financing.phonePlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="phone-pad"
           value={form.phoneNumber}
@@ -232,11 +234,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Contact Person <Text style={styles.asterisk}>*</Text>
+          {t("financing.contactPerson")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.contactPerson && styles.inputError]}
-          placeholder="Enter full name"
+          placeholder={t("financing.contactPersonPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.contactPerson}
           onChangeText={(v) => updateField("contactPerson", v)}
@@ -248,11 +250,12 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Registration Number <Text style={styles.asterisk}>*</Text>
+          {t("financing.registrationNumber")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.registrationNumber && styles.inputError]}
-          placeholder="Enter registration number"
+          placeholder={t("financing.registrationPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.registrationNumber}
           onChangeText={(v) => updateField("registrationNumber", v)}
@@ -263,10 +266,10 @@ export default function AssetFinancingScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>VAT Number</Text>
+        <Text style={styles.label}>{t("financing.vatNumber")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter VAT number (optional)"
+          placeholder={t("financing.vatPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.vatNumber}
           onChangeText={(v) => updateField("vatNumber", v)}
@@ -275,7 +278,7 @@ export default function AssetFinancingScreen() {
 
       {/* Tax Compliance Certificate */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Tax Compliance Certificate</Text>
+        <Text style={styles.label}>{t("assetFin.taxCertificate")}</Text>
         <TouchableOpacity
           style={[styles.uploadButton]}
           activeOpacity={0.7}
@@ -294,14 +297,14 @@ export default function AssetFinancingScreen() {
               taxCertificate && styles.uploadTextSelected,
             ]}
           >
-            {taxCertificate || "Upload tax compliance certificate"}
+            {taxCertificate || t("assetFin.taxCertificatePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Address <Text style={styles.asterisk}>*</Text>
+          {t("financing.companyAddress")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -309,7 +312,7 @@ export default function AssetFinancingScreen() {
             styles.textArea,
             errors.companyAddress && styles.inputError,
           ]}
-          placeholder="Enter company address"
+          placeholder={t("financing.companyAddressPlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -324,15 +327,15 @@ export default function AssetFinancingScreen() {
 
       {/* ── Asset Details ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Asset Details</Text>
+      <Text style={styles.sectionTitle}>{t("assetFin.assetDetails")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Asset Type <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.assetType")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.assetType && styles.inputError]}
-          placeholder="e.g. Vehicle, Machinery, Equipment"
+          placeholder={t("assetFin.assetTypePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.assetType}
           onChangeText={(v) => updateField("assetType", v)}
@@ -344,7 +347,8 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Asset Description <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.assetDescription")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -352,7 +356,7 @@ export default function AssetFinancingScreen() {
             styles.textArea,
             errors.assetDescription && styles.inputError,
           ]}
-          placeholder="Describe the asset including make, model, and specifications"
+          placeholder={t("assetFin.assetDescriptionPlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -367,11 +371,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Asset Cost (KES) <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.assetCost")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.assetCost && styles.inputError]}
-          placeholder="Enter asset cost"
+          placeholder={t("assetFin.assetCostPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.assetCost}
@@ -384,8 +388,7 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Upload Asset Invoice / Quotation{" "}
-          <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.assetInvoice")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TouchableOpacity
           style={[
@@ -406,12 +409,10 @@ export default function AssetFinancingScreen() {
               assetInvoice && styles.uploadTextSelected,
             ]}
           >
-            {assetInvoice || "Upload invoice or quotation"}
+            {assetInvoice || t("assetFin.assetInvoicePlaceholder")}
           </Text>
         </TouchableOpacity>
-        <Text style={styles.uploadHint}>
-          Accepted formats: PDF, JPG, PNG, DOC (Max 10MB)
-        </Text>
+        <Text style={styles.uploadHint}>{t("common.acceptedFormats")}</Text>
         {errors.assetInvoice && (
           <Text style={styles.errorText}>{errors.assetInvoice}</Text>
         )}
@@ -419,11 +420,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Supplier's Name <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.supplierName")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.supplierName && styles.inputError]}
-          placeholder="Enter supplier's name"
+          placeholder={t("assetFin.supplierNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.supplierName}
           onChangeText={(v) => updateField("supplierName", v)}
@@ -435,11 +436,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Supplier Contact Information <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.supplierContact")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.supplierContact && styles.inputError]}
-          placeholder="e.g. +254 712 345 678"
+          placeholder={t("financing.phonePlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="phone-pad"
           value={form.supplierContact}
@@ -452,15 +453,15 @@ export default function AssetFinancingScreen() {
 
       {/* ── Financing Request ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Financing Request</Text>
+      <Text style={styles.sectionTitle}>{t("financing.financingRequest")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Down Payment (KES) <Text style={styles.asterisk}>*</Text>
+          {t("assetFin.downPayment")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.downPayment && styles.inputError]}
-          placeholder="Enter down payment amount"
+          placeholder={t("assetFin.downPaymentPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.downPayment}
@@ -473,12 +474,12 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Requested Financing Amount (KES){" "}
+          {t("financing.requestedAmount")}{" "}
           <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.requestedAmount && styles.inputError]}
-          placeholder="Enter requested amount"
+          placeholder={t("financing.requestedAmountPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.requestedAmount}
@@ -491,11 +492,12 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Repayment Period <Text style={styles.asterisk}>*</Text>
+          {t("financing.repaymentPeriod")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.repaymentPeriod && styles.inputError]}
-          placeholder="e.g. 12 months"
+          placeholder={t("financing.repaymentPeriodPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.repaymentPeriod}
           onChangeText={(v) => updateField("repaymentPeriod", v)}
@@ -507,11 +509,11 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Interest Rate (%) <Text style={styles.asterisk}>*</Text>
+          {t("financing.interestRate")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.interestRate && styles.inputError]}
-          placeholder="e.g. 12%"
+          placeholder={t("financing.interestRatePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.interestRate}
           onChangeText={(v) => updateField("interestRate", v)}
@@ -523,7 +525,8 @@ export default function AssetFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Collateral Details <Text style={styles.asterisk}>*</Text>
+          {t("financing.collateralDetails")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -531,7 +534,7 @@ export default function AssetFinancingScreen() {
             styles.textArea,
             errors.collateralDetails && styles.inputError,
           ]}
-          placeholder="Describe the collateral being offered"
+          placeholder={t("financing.collateralPlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -546,10 +549,10 @@ export default function AssetFinancingScreen() {
 
       {/* ── Supporting Documents ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Supporting Documents</Text>
+      <Text style={styles.sectionTitle}>{t("assetFin.supportingDocs")}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>National ID</Text>
+        <Text style={styles.label}>{t("assetFin.nationalId")}</Text>
         <TouchableOpacity
           style={[styles.uploadButton]}
           activeOpacity={0.7}
@@ -563,13 +566,13 @@ export default function AssetFinancingScreen() {
           <Text
             style={[styles.uploadText, nationalId && styles.uploadTextSelected]}
           >
-            {nationalId || "Upload national ID"}
+            {nationalId || t("assetFin.nationalIdPlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Proof of Income (e.g. Payslip)</Text>
+        <Text style={styles.label}>{t("assetFin.proofIncome")}</Text>
         <TouchableOpacity
           style={[styles.uploadButton]}
           activeOpacity={0.7}
@@ -586,14 +589,14 @@ export default function AssetFinancingScreen() {
               proofOfIncome && styles.uploadTextSelected,
             ]}
           >
-            {proofOfIncome || "Upload proof of income"}
+            {proofOfIncome || t("assetFin.proofIncomePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Declarations ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Declarations & Agreements</Text>
+      <Text style={styles.sectionTitle}>{t("financing.declarations")}</Text>
 
       <TouchableOpacity
         style={styles.checkboxRow}
@@ -605,10 +608,7 @@ export default function AssetFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I declare that all information provided is true and accurate to the
-          best of my knowledge.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration1")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -623,10 +623,7 @@ export default function AssetFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I authorize the partner bank to verify the information provided and
-          conduct credit checks.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration2")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -641,10 +638,7 @@ export default function AssetFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I understand that approval is subject to the partner bank's terms and
-          conditions.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration3")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -657,9 +651,7 @@ export default function AssetFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I agree to the Terms and Conditions and Privacy Policy.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration4")}</Text>
       </TouchableOpacity>
 
       {/* ── Submit Button ── */}
@@ -669,7 +661,9 @@ export default function AssetFinancingScreen() {
         onPress={handleSubmit}
       >
         <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-        <Text style={styles.submitButtonText}>Submit Application</Text>
+        <Text style={styles.submitButtonText}>
+          {t("financing.submitApplication")}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.bottomSpacer} />

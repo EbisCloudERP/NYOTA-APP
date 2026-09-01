@@ -1,22 +1,23 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
+    createContext,
+    useCallback,
+    useContext,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
 } from "react";
 import {
-  Animated,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { Colors } from "../theme/colors";
+import { useLanguage } from "./LanguageContext";
 
 type ToastType = "success" | "error" | "info";
 
@@ -66,6 +67,7 @@ interface ToastState {
 }
 
 export function FeedbackProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [toast, setToast] = useState<ToastState | null>(null);
   const [confirmState, setConfirmState] = useState<
     (ConfirmOptions & { resolve: (value: boolean) => void }) | null
@@ -186,19 +188,20 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
                   onPress={() => resolveConfirm(false)}
                 >
                   <Text style={styles.cancelButtonText}>
-                    {confirmState?.cancelText ?? "Cancel"}
+                    {confirmState?.cancelText ?? t("common.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.confirmButton,
-                    confirmState?.destructive && styles.confirmButtonDestructive,
+                    confirmState?.destructive &&
+                      styles.confirmButtonDestructive,
                   ]}
                   activeOpacity={0.7}
                   onPress={() => resolveConfirm(true)}
                 >
                   <Text style={styles.confirmButtonText}>
-                    {confirmState?.confirmText ?? "Confirm"}
+                    {confirmState?.confirmText ?? t("common.confirm")}
                   </Text>
                 </TouchableOpacity>
               </View>

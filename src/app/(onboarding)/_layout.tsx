@@ -4,17 +4,19 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 
 function HeaderRight() {
   const { signOut } = useAuth();
   const { confirm } = useFeedback();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     const ok = await confirm({
-      title: "Log out",
-      message: "Are you sure you want to log out?",
-      confirmText: "Log out",
-      cancelText: "Cancel",
+      title: t("header.logOutTitle"),
+      message: t("header.logOutMessage"),
+      confirmText: t("header.logOut"),
+      cancelText: t("common.cancel"),
       destructive: true,
     });
     if (ok) {
@@ -37,11 +39,13 @@ function HeaderRight() {
 }
 
 export default function OnboardingLayout() {
+  const { t } = useLanguage();
+
   return (
     <Stack
       screenOptions={{
         headerShown: true,
-        title: "Get Started",
+        title: t("onboard.getStartedTitle"),
         headerTitleStyle: {
           fontWeight: "700",
           color: "#1F2937",

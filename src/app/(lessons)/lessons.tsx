@@ -2,16 +2,17 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { getCourse, type CourseDetail } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 type LessonStatus = "current" | "upcoming" | "completed";
@@ -30,26 +31,30 @@ export default function LessonsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
-  const loadCourse = useCallback(async (isRefresh = false) => {
-    if (!slug) {
-      setLoading(false);
-      return;
-    }
-    if (isRefresh) setRefreshing(true);
-    try {
-      const res = await getCourse(slug);
-      setCourse(res.data);
-    } catch (e) {
-      showToast(
-        e instanceof Error ? e.message : "Failed to load lessons.",
-        "error",
-      );
-    } finally {
-      setLoading(false);
-      if (isRefresh) setRefreshing(false);
-    }
-  }, [slug]);
+  const loadCourse = useCallback(
+    async (isRefresh = false) => {
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+      if (isRefresh) setRefreshing(true);
+      try {
+        const res = await getCourse(slug);
+        setCourse(res.data);
+      } catch (e) {
+        showToast(
+          e instanceof Error ? e.message : t("lessons.failedLoad"),
+          "error",
+        );
+      } finally {
+        setLoading(false);
+        if (isRefresh) setRefreshing(false);
+      }
+    },
+    [slug],
+  );
 
   useEffect(() => {
     loadCourse();
@@ -70,12 +75,13 @@ export default function LessonsScreen() {
   if (!course) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.emptyText}>Course not found.</Text>
+        <Text style={styles.emptyText}>{t("lessons.notFound")}</Text>
       </View>
     );
   }
 
-  const completedCount = course.progress?.completed ?? course.completed_lessons ?? 0;
+  const completedCount =
+    course.progress?.completed ?? course.completed_lessons ?? 0;
 
   const lessons: Lesson[] = (course.lessons ?? []).map((lesson, index) => {
     const status: LessonStatus =
@@ -89,7 +95,7 @@ export default function LessonsScreen() {
       id: lesson.id,
       title: lesson.title,
       duration: lesson.duration_minutes
-        ? `${lesson.duration_minutes} min`
+        ? `${lesson.duration_minutes} ${t("common.min")}`
         : "—",
       status,
       number: index + 1,
@@ -106,9 +112,7 @@ export default function LessonsScreen() {
   const remainingCount = totalCount - totalCompleted;
   const allCompleted = totalCount > 0 && totalCompleted === totalCount;
   const currentLesson =
-    activeLessons.find(
-      (l) => l.id === course.progress?.current_lesson?.id,
-    ) ||
+    activeLessons.find((l) => l.id === course.progress?.current_lesson?.id) ||
     activeLessons.find((l) => l.status === "current") ||
     activeLessons[0];
 
@@ -129,7 +133,9 @@ export default function LessonsScreen() {
       <View style={styles.progressCard}>
         {/* Header row */}
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Course progress</Text>
+          <Text style={styles.progressTitle}>
+            {t("lessons.courseProgress")}
+          </Text>
           <Text style={styles.progressPercent}>{progressPercent}%</Text>
         </View>
 
@@ -153,17 +159,25 @@ export default function LessonsScreen() {
         {/* Lesson count row */}
         <View style={styles.lessonCountRow}>
           <Text style={styles.lessonCountText}>
-            {totalCompleted} of {totalCount} lessons completed
+            {t("lessons.lessonsCompleted", {
+              completed: totalCompleted,
+              total: totalCount,
+            })}
           </Text>
           <Text style={styles.lessonRemainingText}>
-            {remainingCount} lesson{remainingCount !== 1 ? "s" : ""} remaining
+            {t("lessons.remaining", {
+              count: remainingCount,
+              s: remainingCount !== 1 ? "s" : "",
+            })}
           </Text>
         </View>
 
         {/* Completed lessons */}
         {completedLessons.length > 0 && (
           <View style={styles.completedSection}>
-            <Text style={styles.completedSubtitle}>Completed lessons</Text>
+            <Text style={styles.completedSubtitle}>
+              {t("lessons.completedLessons")}
+            </Text>
             <View style={styles.completedBadgesRow}>
               {completedLessons.map((lesson) => (
                 <TouchableOpacity
@@ -193,8 +207,7 @@ export default function LessonsScreen() {
         <View style={styles.completionAlert}>
           <Ionicons name="checkmark-circle" size={24} color="#059669" />
           <Text style={styles.completionAlertText}>
-            Course Completed! You have successfully completed all lessons in
-            this course.
+            {t("lessons.completedAlert")}
           </Text>
           <TouchableOpacity
             style={styles.certificateButton}
@@ -202,13 +215,15 @@ export default function LessonsScreen() {
             onPress={() => router.push("/(certificates)/certificates")}
           >
             <Ionicons name="ribbon" size={16} color={Colors.white} />
-            <Text style={styles.certificateButtonText}>Go to certificates</Text>
+            <Text style={styles.certificateButtonText}>
+              {t("lessons.goToCertificates")}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Lessons Section */}
-      <Text style={styles.sectionTitle}>Lessons</Text>
+      <Text style={styles.sectionTitle}>{t("lessons.lessons")}</Text>
 
       {activeLessons.map((lesson) => {
         const isLocked = lesson.status === "upcoming";
@@ -224,7 +239,9 @@ export default function LessonsScreen() {
                   size={22}
                   color={isLocked ? "#9CA3AF" : Colors.brand}
                 />
-                <Text style={styles.lessonLabel}>Lesson {lesson.number}:</Text>
+                <Text style={styles.lessonLabel}>
+                  {t("lessons.lesson", { number: lesson.number })}
+                </Text>
                 <Text style={styles.lessonTitle} numberOfLines={1}>
                   {lesson.title}
                 </Text>
@@ -250,7 +267,7 @@ export default function LessonsScreen() {
                       : styles.statusBadgeTextUpcoming,
                   ]}
                 >
-                  {isCurrent ? "Current" : "Upcoming"}
+                  {isCurrent ? t("lessons.current") : t("lessons.upcoming")}
                 </Text>
               </View>
             </View>
@@ -289,7 +306,7 @@ export default function LessonsScreen() {
                   isLocked && styles.startButtonTextDisabled,
                 ]}
               >
-                {isLocked ? "Locked" : "Start lesson"}
+                {isLocked ? t("lessons.locked") : t("lessons.startLesson")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -299,7 +316,7 @@ export default function LessonsScreen() {
       {activeLessons.length === 0 && !allCompleted && (
         <View style={styles.emptyState}>
           <Ionicons name="book-outline" size={40} color="#D1D5DB" />
-          <Text style={styles.emptyText}>No lessons available.</Text>
+          <Text style={styles.emptyText}>{t("lessons.noLessons")}</Text>
         </View>
       )}
     </ScrollView>

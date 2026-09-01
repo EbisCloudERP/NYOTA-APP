@@ -3,22 +3,23 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as ScreenCapture from "expo-screen-capture";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  AppState,
-  BackHandler,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    AppState,
+    BackHandler,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  getExams,
-  startExamAttempt,
-  submitExam,
-  type ExamSubmissionResult,
+    getExams,
+    startExamAttempt,
+    submitExam,
+    type ExamSubmissionResult,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -75,6 +76,7 @@ export default function QuizScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [starting, setStarting] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appStateRef = useRef(AppState.currentState);
@@ -106,7 +108,7 @@ export default function QuizScreen() {
       })
       .catch((e) =>
         showToast(
-          e instanceof Error ? e.message : "Failed to load exam.",
+          e instanceof Error ? e.message : t("quiz.failedLoad"),
           "error",
         ),
       )
@@ -186,7 +188,7 @@ export default function QuizScreen() {
       startTimer();
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to start exam.",
+        e instanceof Error ? e.message : t("quiz.failedStart"),
         "error",
       );
     } finally {
@@ -214,7 +216,7 @@ export default function QuizScreen() {
       setPhase("results");
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to submit exam.",
+        e instanceof Error ? e.message : t("quiz.failedSubmit"),
         "error",
       );
     } finally {
@@ -240,7 +242,7 @@ export default function QuizScreen() {
       <View style={styles.container}>
         <Text style={styles.quizTitle}>{examTitle}</Text>
         <Text style={styles.passText}>
-          You need <Text style={styles.passHighlight}>{passMark}%</Text> to pass
+          {t("quiz.needToPass", { mark: `${passMark}%` })}
         </Text>
 
         <View style={styles.instructionsCard}>
@@ -250,15 +252,17 @@ export default function QuizScreen() {
               size={22}
               color={Colors.brand}
             />
-            <Text style={styles.instructionsTitle}>Exam Instructions</Text>
+            <Text style={styles.instructionsTitle}>
+              {t("quiz.instructions")}
+            </Text>
           </View>
           {hasTimeLimit && (
             <View style={styles.instructionItem}>
               <Ionicons name="time-outline" size={16} color="#6B7280" />
               <Text style={styles.instructionText}>
-                Time limit:{" "}
+                {t("quiz.timeLimit")}{" "}
                 <Text style={styles.instructionBold}>
-                  {timeLimitSeconds / 60} minutes
+                  {timeLimitSeconds / 60} {t("quiz.minutes")}
                 </Text>
               </Text>
             </View>
@@ -266,9 +270,9 @@ export default function QuizScreen() {
           <View style={styles.instructionItem}>
             <Ionicons name="help-circle-outline" size={16} color="#6B7280" />
             <Text style={styles.instructionText}>
-              Questions:{" "}
+              {t("quiz.questions")}{" "}
               <Text style={styles.instructionBold}>
-                {questions.length} multiple choice
+                {questions.length} {t("quiz.multipleChoice")}
               </Text>
             </Text>
           </View>
@@ -279,15 +283,13 @@ export default function QuizScreen() {
               color="#6B7280"
             />
             <Text style={styles.instructionText}>
-              Pass mark:{" "}
+              {t("quiz.passMark")}{" "}
               <Text style={styles.instructionBold}>{passMark}%</Text>
             </Text>
           </View>
           <View style={styles.instructionItem}>
             <Ionicons name="warning-outline" size={16} color="#6B7280" />
-            <Text style={styles.instructionText}>
-              Do not leave the screen or switch apps during the exam
-            </Text>
+            <Text style={styles.instructionText}>{t("quiz.warning")}</Text>
           </View>
         </View>
 
@@ -303,7 +305,7 @@ export default function QuizScreen() {
             <Ionicons name="play-circle" size={20} color={Colors.white} />
           )}
           <Text style={styles.startButtonText}>
-            {starting ? "Starting..." : "Start now"}
+            {starting ? t("quiz.starting") : t("quiz.startNow")}
           </Text>
         </TouchableOpacity>
 
@@ -313,7 +315,7 @@ export default function QuizScreen() {
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={18} color={Colors.brand} />
-          <Text style={styles.backButtonText}>Back to lesson</Text>
+          <Text style={styles.backButtonText}>{t("quiz.backToLesson")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -346,7 +348,10 @@ export default function QuizScreen() {
 
         {/* Question progress */}
         <Text style={styles.questionProgress}>
-          Question {currentIndex + 1} of {questions.length}
+          {t("quiz.question", {
+            current: currentIndex + 1,
+            total: questions.length,
+          })}
         </Text>
 
         {/* Question */}
@@ -409,9 +414,9 @@ export default function QuizScreen() {
           >
             {isLast
               ? submitting
-                ? "Submitting..."
-                : "Submit exam"
-              : "Next question"}
+                ? t("quiz.submitting")
+                : t("quiz.submitExam")
+              : t("quiz.nextQuestion")}
           </Text>
         </TouchableOpacity>
 
@@ -420,8 +425,7 @@ export default function QuizScreen() {
           <View style={styles.warningBanner}>
             <Ionicons name="warning" size={14} color="#D97706" />
             <Text style={styles.warningText}>
-              Switching apps during the exam has been flagged ({backgroundCount}
-              ×). This may affect your result.
+              {t("quiz.flagged", { count: backgroundCount })}
             </Text>
           </View>
         )}
@@ -458,7 +462,7 @@ export default function QuizScreen() {
         >
           {scoreDisplay}
         </Text>
-        <Text style={styles.scoreLabel}>Final score</Text>
+        <Text style={styles.scoreLabel}>{t("quiz.finalScore")}</Text>
       </View>
 
       {/* Pass / fail message */}
@@ -480,8 +484,8 @@ export default function QuizScreen() {
           ]}
         >
           {passed
-            ? `Congratulations! You passed with ${scoreDisplay}`
-            : `You scored ${scoreDisplay}. The pass mark is ${passMark}%.`}
+            ? t("quiz.passed", { score: scoreDisplay })
+            : t("quiz.failed", { score: scoreDisplay, mark: passMark })}
         </Text>
       </View>
 
@@ -490,7 +494,7 @@ export default function QuizScreen() {
         <Text style={styles.resultsCardTitle}>{examTitle}</Text>
 
         <View style={styles.resultRow}>
-          <Text style={styles.resultLabel}>Status</Text>
+          <Text style={styles.resultLabel}>{t("quiz.status")}</Text>
           <View
             style={[
               styles.statusBadge,
@@ -508,19 +512,19 @@ export default function QuizScreen() {
                 { color: passed ? "#059669" : "#DC2626" },
               ]}
             >
-              {passed ? "Passed" : "Failed"}
+              {passed ? t("quiz.passedLabel") : t("quiz.failedLabel")}
             </Text>
           </View>
         </View>
 
         <View style={styles.resultRow}>
-          <Text style={styles.resultLabel}>Attempt</Text>
+          <Text style={styles.resultLabel}>{t("quiz.attempt")}</Text>
           <Text style={styles.resultValue}>{result.attempt_number}</Text>
         </View>
 
         {result.completed_at && (
           <View style={styles.resultRow}>
-            <Text style={styles.resultLabel}>Completed at</Text>
+            <Text style={styles.resultLabel}>{t("quiz.completedAt")}</Text>
             <Text style={styles.resultValue}>
               {formatDateTime(result.completed_at)}
             </Text>
@@ -529,7 +533,7 @@ export default function QuizScreen() {
 
         {hasNextAttempt && (
           <View style={styles.resultRow}>
-            <Text style={styles.resultLabel}>Next attempt</Text>
+            <Text style={styles.resultLabel}>{t("quiz.nextAttempt")}</Text>
             <Text style={styles.resultValue}>
               {formatDateTime(result.next_attempt_at!)}
             </Text>
@@ -540,20 +544,25 @@ export default function QuizScreen() {
         <View style={styles.performanceSection}>
           <View style={styles.performanceHeader}>
             <Ionicons name="stats-chart" size={18} color={Colors.brand} />
-            <Text style={styles.performanceTitle}>Performance summary</Text>
+            <Text style={styles.performanceTitle}>{t("quiz.performance")}</Text>
           </View>
 
           <View style={styles.performanceRow}>
             <Ionicons name="trophy-outline" size={16} color="#6B7280" />
-            <Text style={styles.performanceLabel}>Score</Text>
+            <Text style={styles.performanceLabel}>{t("quiz.score")}</Text>
             <Text style={styles.performanceValue}>
-              {result.score}/{result.total_points} points
+              {t("quiz.points", {
+                score: result.score,
+                total: result.total_points,
+              })}
             </Text>
           </View>
 
           <View style={styles.performanceRow}>
             <Ionicons name="checkmark-done" size={16} color="#6B7280" />
-            <Text style={styles.performanceLabel}>Correct answers</Text>
+            <Text style={styles.performanceLabel}>
+              {t("quiz.correctAnswers")}
+            </Text>
             <Text style={styles.performanceValue}>{correctCount}</Text>
           </View>
         </View>
@@ -567,7 +576,7 @@ export default function QuizScreen() {
           onPress={handleRetake}
         >
           <Ionicons name="refresh" size={18} color={Colors.white} />
-          <Text style={styles.retakeButtonText}>Retake exam</Text>
+          <Text style={styles.retakeButtonText}>{t("quiz.retake")}</Text>
         </TouchableOpacity>
       )}
 
@@ -577,7 +586,9 @@ export default function QuizScreen() {
         onPress={() => router.back()}
       >
         <Ionicons name="book-outline" size={18} color={Colors.brand} />
-        <Text style={styles.backToLessonsText}>Back to lessons</Text>
+        <Text style={styles.backToLessonsText}>
+          {t("lesson.backToLessons")}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );

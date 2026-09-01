@@ -4,13 +4,15 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 function HeaderLeft() {
   const { user } = useAuth();
-  const firstName = user?.first_name || "User";
+  const { t } = useLanguage();
+  const firstName = user?.first_name || t("header.user");
   const initials =
-    `${(user?.first_name?.[0] ?? "")}${(user?.last_name?.[0] ?? "")}`.toUpperCase() ||
+    `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() ||
     "U";
 
   return (
@@ -19,7 +21,7 @@ function HeaderLeft() {
         <Text style={styles.avatarText}>{initials}</Text>
       </View>
       <View>
-        <Text style={styles.headerGreeting}>Welcome back</Text>
+        <Text style={styles.headerGreeting}>{t("header.welcomeBack")}</Text>
         <Text style={styles.headerName}>{firstName}</Text>
       </View>
     </View>
@@ -29,13 +31,14 @@ function HeaderLeft() {
 function HeaderRight() {
   const { signOut } = useAuth();
   const { confirm } = useFeedback();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     const ok = await confirm({
-      title: "Log out",
-      message: "Are you sure you want to log out?",
-      confirmText: "Log out",
-      cancelText: "Cancel",
+      title: t("header.logOutTitle"),
+      message: t("header.logOutMessage"),
+      confirmText: t("header.logOut"),
+      cancelText: t("common.cancel"),
       destructive: true,
     });
     if (ok) {
@@ -61,6 +64,8 @@ function HeaderRight() {
 }
 
 export default function AppLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -83,7 +88,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("tab.home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size - 2} color={color} />
           ),
@@ -92,7 +97,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="my-learning"
         options={{
-          title: "My Learning",
+          title: t("tab.myLearning"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book-outline" size={size - 2} color={color} />
           ),
@@ -101,7 +106,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="opportunities"
         options={{
-          title: "Opportunities",
+          title: t("tab.opportunities"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="briefcase-outline" size={size - 2} color={color} />
           ),
@@ -110,7 +115,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="webinars"
         options={{
-          title: "Webinars",
+          title: t("tab.webinars"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="tv-outline" size={size - 2} color={color} />
           ),
@@ -119,7 +124,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("tab.settings"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size - 2} color={color} />
           ),

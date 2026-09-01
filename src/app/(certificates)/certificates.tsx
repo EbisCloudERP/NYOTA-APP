@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getEnrolledCourses, type CatalogueCourse } from "../../services/api";
 import { Colors } from "../../theme/colors";
 
@@ -60,6 +61,8 @@ function CertificateModal({
   cert: Certificate | null;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
+
   if (!cert) return null;
 
   return (
@@ -83,7 +86,7 @@ function CertificateModal({
           {/* Header above the gold frame */}
           <View style={modalStyles.certHeaderRow}>
             <Text style={modalStyles.yourCertificateLabel}>
-              Your Certificate:
+              {t("certificates.yourCertificate")}
             </Text>
             <Text style={modalStyles.certNumber}>{cert.id}</Text>
           </View>
@@ -110,17 +113,19 @@ function CertificateModal({
                 resizeMode="contain"
               />
 
-              <Text style={modalStyles.republicText}>REPUBLIC OF KENYA</Text>
+              <Text style={modalStyles.republicText}>
+                {t("certificates.republic")}
+              </Text>
 
               <Text style={modalStyles.ministryText}>
-                MINISTRY OF COOPERATIVES AND MICRO, SMALL AND MEDIUM
+                {t("certificates.ministry1")}
               </Text>
               <Text style={modalStyles.ministryText}>
-                ENTERPRISES DEVELOPMENT
+                {t("certificates.ministry2")}
               </Text>
 
               <Text style={modalStyles.programText}>
-                NATIONAL YOUTH OPPORTUNITIES TOWARDS ADVANCEMENT
+                {t("certificates.program")}
               </Text>
 
               <Image
@@ -129,43 +134,53 @@ function CertificateModal({
                 resizeMode="contain"
               />
 
-              <Text style={modalStyles.certificateTitle}>CERTIFICATE</Text>
-              <Text style={modalStyles.ofCompletion}>OF COMPLETION</Text>
+              <Text style={modalStyles.certificateTitle}>
+                {t("certificates.certificate")}
+              </Text>
+              <Text style={modalStyles.ofCompletion}>
+                {t("certificates.ofCompletion")}
+              </Text>
 
               <Text style={modalStyles.certifyLabel}>
-                This is to certify that
+                {t("certificates.certify")}
               </Text>
               <Text style={modalStyles.studentName}>{cert.studentName}</Text>
 
               <Text style={modalStyles.completedTrainingLabel}>
-                Has successfully completed the training for:
+                {t("certificates.completedTraining")}
               </Text>
               <Text style={modalStyles.courseTitle}>
                 {cert.title.toUpperCase()}
               </Text>
 
               <Text style={modalStyles.heldOn}>
-                Held on {cert.completedDate}
+                {t("certificates.heldOn", { date: cert.completedDate })}
               </Text>
 
               {/* Signatures */}
               <View style={modalStyles.signatureRow}>
                 <View style={modalStyles.signatureCol}>
                   <View style={modalStyles.signatureLine} />
-                  <Text style={modalStyles.signatureLabel}>DIRECTOR</Text>
+                  <Text style={modalStyles.signatureLabel}>
+                    {t("certificates.director")}
+                  </Text>
                 </View>
                 <View style={modalStyles.signatureCol}>
                   <View style={modalStyles.signatureLine} />
-                  <Text style={modalStyles.signatureLabel}>SIGNATURE</Text>
+                  <Text style={modalStyles.signatureLabel}>
+                    {t("certificates.signature")}
+                  </Text>
                 </View>
                 <View style={modalStyles.signatureCol}>
                   <View style={modalStyles.signatureLine} />
-                  <Text style={modalStyles.signatureLabel}>DATE</Text>
+                  <Text style={modalStyles.signatureLabel}>
+                    {t("certificates.date")}
+                  </Text>
                 </View>
               </View>
 
               <Text style={modalStyles.disclaimer}>
-                This is not an AGPO certificate
+                {t("certificates.disclaimer")}
               </Text>
             </View>
           </View>
@@ -178,7 +193,7 @@ function CertificateModal({
         >
           <Ionicons name="download-outline" size={20} color={Colors.white} />
           <Text style={modalStyles.downloadButtonText}>
-            Download Certificate
+            {t("certificates.download")}
           </Text>
         </TouchableOpacity>
 
@@ -191,7 +206,7 @@ function CertificateModal({
             <View style={modalStyles.courseCardTitleRow}>
               <Text style={modalStyles.courseCardTitle}>{cert.title}</Text>
               <Text style={modalStyles.courseCardSubtitle}>
-                Completed course
+                {t("certificates.completedCourse")}
               </Text>
             </View>
           </View>
@@ -205,7 +220,9 @@ function CertificateModal({
           {/* Lesson badges */}
           {cert.lessons.length > 0 && (
             <>
-              <Text style={modalStyles.lessonsLabel}>Lessons completed</Text>
+              <Text style={modalStyles.lessonsLabel}>
+                {t("certificates.lessonsLabel")}
+              </Text>
               <View style={modalStyles.lessonsRow}>
                 {cert.lessons.map((lesson, i) => (
                   <View key={i} style={modalStyles.lessonBadge}>
@@ -219,9 +236,11 @@ function CertificateModal({
 
         {/* ── What's next card ── */}
         <View style={modalStyles.whatNextCard}>
-          <Text style={modalStyles.whatNextTitle}>What's next?</Text>
+          <Text style={modalStyles.whatNextTitle}>
+            {t("certificates.whatNext")}
+          </Text>
           <Text style={modalStyles.whatNextSubtitle}>
-            Continue your learning journey or explore more courses.
+            {t("certificates.whatNextSub")}
           </Text>
 
           <TouchableOpacity
@@ -233,7 +252,9 @@ function CertificateModal({
             }}
           >
             <Ionicons name="book-outline" size={18} color={Colors.white} />
-            <Text style={modalStyles.whatNextButtonText}>Browse lessons</Text>
+            <Text style={modalStyles.whatNextButtonText}>
+              {t("certificates.browseLessons")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -246,7 +267,7 @@ function CertificateModal({
           >
             <Ionicons name="home-outline" size={18} color={Colors.brand} />
             <Text style={modalStyles.whatNextOutlineButtonText}>
-              Go to home
+              {t("certificates.goHome")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -258,6 +279,7 @@ function CertificateModal({
 // ── Main screen ────────────────────────────────────────
 export default function CertificatesScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -325,9 +347,7 @@ export default function CertificatesScreen() {
       }
     >
       {/* Title */}
-      <Text style={styles.subtitle}>
-        View and download your earned certificates
-      </Text>
+      <Text style={styles.subtitle}>{t("certificates.subtitle")}</Text>
 
       {/* Certificate cards */}
       {certificates.map((cert) => (
@@ -346,19 +366,25 @@ export default function CertificatesScreen() {
           {/* Details */}
           <View style={styles.cardBody}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Lessons completed</Text>
+              <Text style={styles.detailLabel}>
+                {t("certificates.lessonsCompleted")}
+              </Text>
               <Text style={styles.detailValue}>
                 {cert.completedLessons}/{cert.totalLessons}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Duration</Text>
+              <Text style={styles.detailLabel}>
+                {t("certificates.duration")}
+              </Text>
               <Text style={styles.detailValue}>
                 {formatDuration(cert.durationMinutes)}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Certificate ID</Text>
+              <Text style={styles.detailLabel}>
+                {t("certificates.certificateId")}
+              </Text>
               <Text style={styles.detailValueMono}>{cert.id}</Text>
             </View>
           </View>
@@ -370,7 +396,9 @@ export default function CertificatesScreen() {
             onPress={() => setSelectedCert(cert)}
           >
             <Ionicons name="eye-outline" size={16} color={Colors.brand} />
-            <Text style={styles.viewLinkText}>View certificate</Text>
+            <Text style={styles.viewLinkText}>
+              {t("certificates.viewCertificate")}
+            </Text>
           </TouchableOpacity>
         </View>
       ))}
@@ -379,10 +407,8 @@ export default function CertificatesScreen() {
       {!loading && certificates.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="ribbon-outline" size={48} color="#D1D5DB" />
-          <Text style={styles.emptyTitle}>No certificates yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Complete a course to earn your first certificate.
-          </Text>
+          <Text style={styles.emptyTitle}>{t("certificates.none")}</Text>
+          <Text style={styles.emptySubtitle}>{t("certificates.noneSub")}</Text>
         </View>
       )}
 
@@ -397,12 +423,8 @@ export default function CertificatesScreen() {
             />
           </View>
           <View style={styles.infoText}>
-            <Text style={styles.infoTitle}>Share your achievements</Text>
-            <Text style={styles.infoSub}>
-              Let your network know about your skills. Share your certificates
-              on LinkedIn, Twitter, or download them as PDF to include in your
-              professional portfolio.
-            </Text>
+            <Text style={styles.infoTitle}>{t("certificates.share")}</Text>
+            <Text style={styles.infoSub}>{t("certificates.shareSub")}</Text>
           </View>
         </View>
       )}

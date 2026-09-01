@@ -1,18 +1,19 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -33,6 +34,7 @@ export default function OtpLoginScreen() {
   const [verified, setVerified] = useState(false);
   const { signInWithOtp } = useAuth();
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -81,7 +83,9 @@ export default function OtpLoginScreen() {
       setVerified(true);
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Verification failed. Please try again.";
+        error instanceof Error
+          ? error.message
+          : t("auth.create.verificationFailed");
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -108,10 +112,8 @@ export default function OtpLoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <LanguageSelector />
-        <Text style={styles.title}>Enter verification code</Text>
-        <Text style={styles.subtitle}>
-          We've sent a 6-digit code to your email and phone
-        </Text>
+        <Text style={styles.title}>{t("otp.title")}</Text>
+        <Text style={styles.subtitle}>{t("otp.subtitleEmailPhone")}</Text>
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
@@ -128,27 +130,24 @@ export default function OtpLoginScreen() {
         </View>
 
         {loading && (
-          <ActivityIndicator
-            color={Colors.brand}
-            style={styles.loader}
-          />
+          <ActivityIndicator color={Colors.brand} style={styles.loader} />
         )}
 
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
           <Text style={styles.timerText}>
-            Code expire in: {formatTime(timeLeft)}
+            {t("otp.expiresIn", { time: formatTime(timeLeft) })}
           </Text>
         </View>
 
         {timeLeft > 0 ? (
           <Text style={styles.waitText}>
-            Didn't receive the code? Wait: {formatTime(timeLeft)} to resend
+            {t("otp.waitResend", { time: formatTime(timeLeft) })}
           </Text>
         ) : (
           <TouchableOpacity onPress={handleResend} disabled={loading}>
             <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>
-              Resend code
+              {t("otp.resend")}
             </Text>
           </TouchableOpacity>
         )}
@@ -158,7 +157,7 @@ export default function OtpLoginScreen() {
           onPress={() => router.back()}
           disabled={loading}
         >
-          <Text style={styles.goBackText}>Wrong details? Go back</Text>
+          <Text style={styles.goBackText}>{t("otp.wrongDetails")}</Text>
         </TouchableOpacity>
       </ScrollView>
 

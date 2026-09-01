@@ -14,6 +14,7 @@ import {
 import { submitIbsInquiry } from "../../services/api";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 interface FormData {
@@ -61,7 +62,9 @@ export default function LpoFinancingScreen() {
     companyName: "",
     phoneNumber: user?.phone ?? "",
     email: user?.email ?? "",
-    contactPerson: [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+    contactPerson: [user?.first_name, user?.last_name]
+      .filter(Boolean)
+      .join(" "),
     companyAddress: "",
     registrationNumber: "",
     vatNumber: "",
@@ -75,6 +78,7 @@ export default function LpoFinancingScreen() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const { showToast, confirm } = useFeedback();
+  const { t } = useLanguage();
 
   // File upload states (store filename to show selection)
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
@@ -96,13 +100,16 @@ export default function LpoFinancingScreen() {
     }
   };
 
-  const handleUpload = async (label: string, setter: (v: string | null) => void) => {
+  const handleUpload = async (
+    label: string,
+    setter: (v: string | null) => void,
+  ) => {
     // Placeholder for actual file picker (expo-document-picker)
     const ok = await confirm({
       title: `Upload ${label}`,
-      message: "This will open the file picker.",
-      confirmText: "Select file",
-      cancelText: "Cancel",
+      message: t("common.filePickerMessage"),
+      confirmText: t("common.selectFile"),
+      cancelText: t("common.cancel"),
     });
     if (ok) setter("selected-file.pdf");
   };
@@ -110,33 +117,34 @@ export default function LpoFinancingScreen() {
   const validate = (): boolean => {
     const e: FormErrors = {};
 
-    if (!form.companyName.trim()) e.companyName = "Company name is required";
-    if (!form.phoneNumber.trim()) e.phoneNumber = "Phone number is required";
+    if (!form.companyName.trim())
+      e.companyName = t("financing.companyNameRequired");
+    if (!form.phoneNumber.trim()) e.phoneNumber = t("financing.phoneRequired");
     if (!form.email.trim()) {
-      e.email = "Email address is required";
+      e.email = t("financing.emailRequired");
     } else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
-      e.email = "Enter a valid email address";
+      e.email = t("financing.validEmail");
     }
     if (!form.contactPerson.trim())
-      e.contactPerson = "Contact person is required";
+      e.contactPerson = t("financing.contactPersonRequired");
     if (!form.companyAddress.trim())
-      e.companyAddress = "Company address is required";
+      e.companyAddress = t("financing.addressRequired");
     if (!form.registrationNumber.trim())
-      e.registrationNumber = "Registration number is required";
+      e.registrationNumber = t("financing.registrationRequired");
 
-    if (!form.lpoNumber.trim()) e.lpoNumber = "LPO number is required";
-    if (!form.lpoAmount.trim()) e.lpoAmount = "LPO amount is required";
-    if (!form.lpoDate.trim()) e.lpoDate = "LPO date is required";
-    if (!lpoDocument) e.lpoDocument = "LPO document is required";
-    if (!form.buyerName.trim()) e.buyerName = "Buyer name is required";
+    if (!form.lpoNumber.trim()) e.lpoNumber = t("lpo.lpoNumberRequired");
+    if (!form.lpoAmount.trim()) e.lpoAmount = t("lpo.lpoAmountRequired");
+    if (!form.lpoDate.trim()) e.lpoDate = t("lpo.lpoDateRequired");
+    if (!lpoDocument) e.lpoDocument = t("lpo.lpoDocumentRequired");
+    if (!form.buyerName.trim()) e.buyerName = t("lpo.buyerRequired");
 
     if (!form.requestedAmount.trim()) {
-      e.requestedAmount = "Requested financing amount is required";
+      e.requestedAmount = t("financing.requestedRequired");
     } else if (
       isNaN(Number(form.requestedAmount)) ||
       Number(form.requestedAmount) <= 0
     ) {
-      e.requestedAmount = "Enter a valid amount";
+      e.requestedAmount = t("financing.validAmount");
     }
 
     setErrors(e);
@@ -145,17 +153,17 @@ export default function LpoFinancingScreen() {
 
   const handleSubmit = async () => {
     if (!validate()) {
-      showToast("Please fill in all required fields correctly.", "error");
+      showToast(t("financing.fillRequired"), "error");
       return;
     }
 
     if (!declaration || !authorizeChecks || !approvalTerms || !agreeTerms) {
-      showToast("Please accept all declarations and terms before submitting.", "error");
+      showToast(t("financing.acceptTerms"), "error");
       return;
     }
 
     if (!bankSlug) {
-      showToast("No bank selected. Please go back and choose a funding provider.", "error");
+      showToast(t("lpo.noBank"), "error");
       return;
     }
 
@@ -171,7 +179,10 @@ export default function LpoFinancingScreen() {
       await submitIbsInquiry({
         service: "LPO Financing",
         bank_slug: bankSlug,
-        category: providerType === "government" ? "government_services" : "bank_service",
+        category:
+          providerType === "government"
+            ? "government_services"
+            : "bank_service",
         requester_name: form.contactPerson.trim(),
         company_name: form.companyName.trim(),
         email: form.email.trim(),
@@ -188,10 +199,10 @@ export default function LpoFinancingScreen() {
           vat_number: form.vatNumber.trim() || undefined,
         },
       });
-      showToast("Your LPO financing application has been submitted successfully.", "success");
+      showToast(t("lpo.submitted"), "success");
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Submission failed. Please try again.",
+        e instanceof Error ? e.message : t("financing.submissionFailed"),
         "error",
       );
     } finally {
@@ -207,37 +218,32 @@ export default function LpoFinancingScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
-        Get financing against confirmed Local Purchase Orders (LPOs) to fulfill
-        large contracts without straining your working capital.
-      </Text>
+      <Text style={styles.subtitle}>{t("lpo.subtitle")}</Text>
 
       {/* Required fields note */}
-      <Text style={styles.requiredNote}>
-        All fields marked with <Text style={styles.asterisk}>*</Text> are
-        required
-      </Text>
+      <Text style={styles.requiredNote}>{t("common.requiredNote")}</Text>
 
       {/* Selected provider */}
       {bankName ? (
         <View style={styles.providerBanner}>
           <Ionicons name="business-outline" size={18} color={Colors.brand} />
           <Text style={styles.providerBannerText}>
-            Applying to <Text style={styles.providerBannerBold}>{bankName}</Text>
+            {t("lpo.applyingTo")}
+            <Text style={styles.providerBannerBold}>{bankName}</Text>
           </Text>
         </View>
       ) : null}
 
       {/* ── Company Information ── */}
-      <Text style={styles.sectionTitle}>Company Information</Text>
+      <Text style={styles.sectionTitle}>{t("financing.companyInfo")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Name <Text style={styles.asterisk}>*</Text>
+          {t("financing.companyName")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.companyName && styles.inputError]}
-          placeholder="Enter company name"
+          placeholder={t("financing.companyNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.companyName}
           onChangeText={(v) => updateField("companyName", v)}
@@ -249,11 +255,11 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Phone Number <Text style={styles.asterisk}>*</Text>
+          {t("financing.phoneNumber")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.phoneNumber && styles.inputError]}
-          placeholder="e.g. +254 712 345 678"
+          placeholder={t("financing.phonePlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="phone-pad"
           value={form.phoneNumber}
@@ -266,29 +272,27 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Email Address <Text style={styles.asterisk}>*</Text>
+          {t("financing.emailAddress")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.email && styles.inputError]}
-          placeholder="e.g. name@company.co.ke"
+          placeholder={t("financing.emailPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="email-address"
           autoCapitalize="none"
           value={form.email}
           onChangeText={(v) => updateField("email", v)}
         />
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email}</Text>
-        )}
+        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
       </View>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Contact Person <Text style={styles.asterisk}>*</Text>
+          {t("financing.contactPerson")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.contactPerson && styles.inputError]}
-          placeholder="Enter full name"
+          placeholder={t("financing.contactPersonPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.contactPerson}
           onChangeText={(v) => updateField("contactPerson", v)}
@@ -300,7 +304,7 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Address <Text style={styles.asterisk}>*</Text>
+          {t("financing.companyAddress")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -308,7 +312,7 @@ export default function LpoFinancingScreen() {
             styles.textArea,
             errors.companyAddress && styles.inputError,
           ]}
-          placeholder="Enter company address"
+          placeholder={t("financing.companyAddressPlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -323,11 +327,12 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Company Registration Number <Text style={styles.asterisk}>*</Text>
+          {t("financing.registrationNumber")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.registrationNumber && styles.inputError]}
-          placeholder="Enter registration number"
+          placeholder={t("financing.registrationPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.registrationNumber}
           onChangeText={(v) => updateField("registrationNumber", v)}
@@ -339,10 +344,10 @@ export default function LpoFinancingScreen() {
 
       {/* VAT Number */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>VAT Number</Text>
+        <Text style={styles.label}>{t("financing.vatNumber")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter VAT number (optional)"
+          placeholder={t("financing.vatPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.vatNumber}
           onChangeText={(v) => updateField("vatNumber", v)}
@@ -351,7 +356,7 @@ export default function LpoFinancingScreen() {
 
       {/* Company Profile Picture */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Company Profile Picture</Text>
+        <Text style={styles.label}>{t("lpo.profilePicture")}</Text>
         <TouchableOpacity
           style={[styles.uploadButton]}
           activeOpacity={0.7}
@@ -368,14 +373,14 @@ export default function LpoFinancingScreen() {
               profilePicture && styles.uploadTextSelected,
             ]}
           >
-            {profilePicture || "Upload profile picture"}
+            {profilePicture || t("lpo.profilePicturePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Tax Compliance Certificate */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Tax Compliance Certificate</Text>
+        <Text style={styles.label}>{t("lpo.taxCertificate")}</Text>
         <TouchableOpacity
           style={[styles.uploadButton]}
           activeOpacity={0.7}
@@ -394,22 +399,22 @@ export default function LpoFinancingScreen() {
               taxCertificate && styles.uploadTextSelected,
             ]}
           >
-            {taxCertificate || "Upload tax compliance certificate"}
+            {taxCertificate || t("lpo.taxCertificatePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── LPO Details ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>LPO Details</Text>
+      <Text style={styles.sectionTitle}>{t("lpo.lpoDetails")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          LPO Number <Text style={styles.asterisk}>*</Text>
+          {t("lpo.lpoNumber")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.lpoNumber && styles.inputError]}
-          placeholder="Enter LPO number"
+          placeholder={t("lpo.lpoNumberPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.lpoNumber}
           onChangeText={(v) => updateField("lpoNumber", v)}
@@ -421,11 +426,11 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          LPO Amount (KES) <Text style={styles.asterisk}>*</Text>
+          {t("lpo.lpoAmount")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.lpoAmount && styles.inputError]}
-          placeholder="Enter LPO amount"
+          placeholder={t("lpo.lpoAmountPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.lpoAmount}
@@ -438,11 +443,11 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          LPO Date <Text style={styles.asterisk}>*</Text>
+          {t("lpo.lpoDate")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.lpoDate && styles.inputError]}
-          placeholder="YYYY-MM-DD"
+          placeholder={t("lpo.lpoDatePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.lpoDate}
           onChangeText={(v) => updateField("lpoDate", v)}
@@ -454,7 +459,7 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          LPO Document <Text style={styles.asterisk}>*</Text>
+          {t("lpo.lpoDocument")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TouchableOpacity
           style={[styles.uploadButton, errors.lpoDocument && styles.inputError]}
@@ -472,12 +477,10 @@ export default function LpoFinancingScreen() {
               lpoDocument && styles.uploadTextSelected,
             ]}
           >
-            {lpoDocument || "Upload LPO document"}
+            {lpoDocument || t("lpo.lpoDocumentPlaceholder")}
           </Text>
         </TouchableOpacity>
-        <Text style={styles.uploadHint}>
-          Accepted formats: PDF, JPG, PNG, DOC (Max 10MB)
-        </Text>
+        <Text style={styles.uploadHint}>{t("common.acceptedFormats")}</Text>
         {errors.lpoDocument && (
           <Text style={styles.errorText}>{errors.lpoDocument}</Text>
         )}
@@ -485,11 +488,11 @@ export default function LpoFinancingScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Buyer Name <Text style={styles.asterisk}>*</Text>
+          {t("lpo.buyerName")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.buyerName && styles.inputError]}
-          placeholder="Enter buyer name"
+          placeholder={t("lpo.buyerNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.buyerName}
           onChangeText={(v) => updateField("buyerName", v)}
@@ -501,16 +504,16 @@ export default function LpoFinancingScreen() {
 
       {/* ── Financing Request ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Financing Request</Text>
+      <Text style={styles.sectionTitle}>{t("financing.financingRequest")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Requested Financing Amount (KES){" "}
+          {t("financing.requestedAmount")}{" "}
           <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.requestedAmount && styles.inputError]}
-          placeholder="Enter amount"
+          placeholder={t("lpo.amountPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.requestedAmount}
@@ -523,7 +526,7 @@ export default function LpoFinancingScreen() {
 
       {/* ── Declarations ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Declarations & Agreements</Text>
+      <Text style={styles.sectionTitle}>{t("financing.declarations")}</Text>
 
       <TouchableOpacity
         style={styles.checkboxRow}
@@ -535,10 +538,7 @@ export default function LpoFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I declare that all information provided is true and accurate to the
-          best of my knowledge.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration1")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -553,10 +553,7 @@ export default function LpoFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I authorize the partner bank to verify the information provided and
-          conduct credit checks.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration2")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -571,10 +568,7 @@ export default function LpoFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I understand that approval is subject to the partner bank's terms and
-          conditions.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration3")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -587,9 +581,7 @@ export default function LpoFinancingScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I agree to the Terms and Conditions and Privacy Policy.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration4")}</Text>
       </TouchableOpacity>
 
       {/* ── Submit Button ── */}

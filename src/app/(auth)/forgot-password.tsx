@@ -2,17 +2,18 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { sendEmailOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 const FORGOT_PW_IMAGE = require("../../../assets/images/nyotapic_girl.jpeg");
@@ -22,11 +23,12 @@ export default function ForgotPasswordScreen() {
   const [isFocused, setIsFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   const handleVerify = async () => {
     const contact = emailOrPhone.trim();
     if (!contact) {
-      showToast("Please enter your email or phone number", "error");
+      showToast(t("auth.forgot.enterContact"), "error");
       return;
     }
     const type = contact.includes("@") ? "email" : "phone";
@@ -45,7 +47,7 @@ export default function ForgotPasswordScreen() {
       } else {
         const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
         sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
-          () => {}
+          () => {},
         );
       }
     } finally {
@@ -74,18 +76,15 @@ export default function ForgotPasswordScreen() {
           showsVerticalScrollIndicator={false}
         >
           <LanguageSelector />
-          <Text style={styles.title}>Forgot password</Text>
+          <Text style={styles.title}>{t("auth.forgot.title")}</Text>
 
-          <Text style={styles.subtitle}>
-            Enter your email address or phone number and we will send you a
-            password reset link
-          </Text>
+          <Text style={styles.subtitle}>{t("auth.forgot.subtitle")}</Text>
 
           {/* Email/Phone Field */}
-          <Text style={styles.label}>Email address or phone number</Text>
+          <Text style={styles.label}>{t("auth.forgot.label")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email or phone number"
+            placeholder={t("auth.forgot.placeholder")}
             placeholderTextColor="#9CA3AF"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -97,9 +96,7 @@ export default function ForgotPasswordScreen() {
           />
 
           {/* Info text */}
-          <Text style={styles.infoText}>
-            We'll send a verification code to this email
-          </Text>
+          <Text style={styles.infoText}>{t("auth.forgot.info")}</Text>
 
           {/* Verify Button */}
           <TouchableOpacity
@@ -110,20 +107,22 @@ export default function ForgotPasswordScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.verifyButtonText}>Verify</Text>
+              <Text style={styles.verifyButtonText}>
+                {t("auth.create.verify")}
+              </Text>
             )}
           </TouchableOpacity>
 
           {/* Login Link */}
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account? </Text>
+            <Text style={styles.loginText}>{t("auth.create.alreadyHave")}</Text>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.loginLink}>Log in</Text>
+              <Text style={styles.loginLink}>{t("auth.create.logIn")}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer */}
-          <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+          <Text style={styles.footer}>{t("common.footer")}</Text>
         </ScrollView>
       </View>
     </View>

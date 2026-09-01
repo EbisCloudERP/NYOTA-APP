@@ -6,14 +6,16 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 export default function GetStartedScreen() {
+  const { t } = useLanguage();
   const bulletPoints = [
-    "Access verified AGPO opportunities matched to your skills",
-    "Unlock personalized training programs to build in-demand skills",
-    "Become eligible for funding opportunities to support your projects and education",
-    "Connect with a community of like-minded professionals and mentors",
+    t("onboard.bullet1"),
+    t("onboard.bullet2"),
+    t("onboard.bullet3"),
+    t("onboard.bullet4"),
   ];
 
   return (
@@ -23,50 +25,41 @@ export default function GetStartedScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome */}
-        <Text style={styles.welcome}>Welcome, Joab!</Text>
-        <Text style={styles.welcomeSub}>Let's get your profile ready</Text>
+        <Text style={styles.welcome}>{t("onboard.welcome")}</Text>
+        <Text style={styles.welcomeSub}>{t("onboard.welcomeSub")}</Text>
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            You're just a few steps away from accessing thousands of
-            opportunities!{"\n\n"}
-            Complete your profile to unlock job listings, training programs, and
-            funding opportunities.
-          </Text>
+          <Text style={styles.infoText}>{t("onboard.infoText")}</Text>
         </View>
 
         {/* Setup Checklist */}
-        <Text style={styles.sectionTitle}>Setup Checklist</Text>
+        <Text style={styles.sectionTitle}>{t("onboard.setupChecklist")}</Text>
 
         <View style={styles.cardsRow}>
           {/* Eligibility Card */}
           <TouchableOpacity style={styles.card} activeOpacity={0.7}>
-            <Text style={styles.cardTitle}>Eligibility & Context</Text>
-            <Text style={styles.cardSub}>
-              Verify your eligibility and provide context about your situation
-            </Text>
+            <Text style={styles.cardTitle}>{t("onboard.eligibility")}</Text>
+            <Text style={styles.cardSub}>{t("onboard.eligibilitySub")}</Text>
             <View style={styles.cardFooter}>
               <Text style={styles.clockIcon}>⏱</Text>
-              <Text style={styles.clockText}>3 min</Text>
+              <Text style={styles.clockText}>3 {t("onboard.min")}</Text>
             </View>
           </TouchableOpacity>
 
           {/* Courses Card */}
           <TouchableOpacity style={styles.card} activeOpacity={0.7}>
-            <Text style={styles.cardTitle}>Courses Preview</Text>
-            <Text style={styles.cardSub}>
-              Explore available courses and their details
-            </Text>
+            <Text style={styles.cardTitle}>{t("onboard.coursesPreview")}</Text>
+            <Text style={styles.cardSub}>{t("onboard.coursesPreviewSub")}</Text>
             <View style={styles.cardFooter}>
               <Text style={styles.clockIcon}>⏱</Text>
-              <Text style={styles.clockText}>3 min</Text>
+              <Text style={styles.clockText}>3 {t("onboard.min")}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Why Complete Section */}
-        <Text style={styles.whyTitle}>🎯 Why Complete Your Profile?</Text>
+        <Text style={styles.whyTitle}>{t("onboard.whyTitle")}</Text>
         <View style={styles.bulletList}>
           {bulletPoints.map((point, index) => (
             <View key={index} style={styles.bulletRow}>
@@ -86,9 +79,9 @@ export default function GetStartedScreen() {
           style={styles.startButton}
           onPress={() => router.push("/kyc")}
         >
-          <Text style={styles.startButtonText}>Start</Text>
+          <Text style={styles.startButtonText}>{t("onboard.start")}</Text>
         </TouchableOpacity>
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        <Text style={styles.footer}>{t("common.footer")}</Text>
       </View>
     </View>
   );

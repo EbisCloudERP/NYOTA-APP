@@ -2,18 +2,19 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { getFundProviders, type FundProvider } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 type Tab = "opportunities" | "funding";
@@ -27,15 +28,18 @@ export default function OpportunitiesScreen() {
   const [applyModalType, setApplyModalType] = useState<ApplyModalType>(null);
   const [providers, setProviders] = useState<FundProvider[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState<FundProvider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<FundProvider | null>(
+    null,
+  );
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   useEffect(() => {
     getFundProviders()
       .then((res) => setProviders(res.data ?? []))
       .catch((e) =>
         showToast(
-          e instanceof Error ? e.message : "Failed to load funding options.",
+          e instanceof Error ? e.message : t("opportunities.failedLoad"),
           "error",
         ),
       )
@@ -50,7 +54,10 @@ export default function OpportunitiesScreen() {
     setFundingView(null);
   };
 
-  const handleApplyNow = (type: "government" | "external", provider: FundProvider) => {
+  const handleApplyNow = (
+    type: "government" | "external",
+    provider: FundProvider,
+  ) => {
     setSelectedProvider(provider);
     setApplyModalType(type);
   };
@@ -78,10 +85,8 @@ export default function OpportunitiesScreen() {
       scrollEnabled={activeTab !== "opportunities"}
     >
       {/* ── Header ── */}
-      <Text style={styles.title}>Opportunities</Text>
-      <Text style={styles.subtitle}>
-        View and explore available opportunities
-      </Text>
+      <Text style={styles.title}>{t("opportunities.title")}</Text>
+      <Text style={styles.subtitle}>{t("opportunities.subtitle")}</Text>
 
       {/* ── Tabs ── */}
       <View style={styles.tabBar}>
@@ -99,7 +104,7 @@ export default function OpportunitiesScreen() {
               activeTab === "opportunities" && styles.tabTextActive,
             ]}
           >
-            Opportunities
+            {t("opportunities.tabOpportunities")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -113,7 +118,7 @@ export default function OpportunitiesScreen() {
               activeTab === "funding" && styles.tabTextActive,
             ]}
           >
-            Funding
+            {t("opportunities.tabFunding")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -131,11 +136,12 @@ export default function OpportunitiesScreen() {
                   color="#92400E"
                 />
               </View>
-              <Text style={styles.infoTitle}>Before you apply</Text>
+              <Text style={styles.infoTitle}>
+                {t("opportunities.beforeApply")}
+              </Text>
             </View>
             <Text style={styles.infoText}>
-              Make sure you are registered with e-GP before applying for
-              tenders. Browse the latest tenders directly below.
+              {t("opportunities.beforeApplyText")}
             </Text>
           </View>
 
@@ -148,7 +154,7 @@ export default function OpportunitiesScreen() {
               renderLoading={() => (
                 <View style={styles.webviewLoading}>
                   <Text style={styles.webviewLoadingText}>
-                    Loading e-GP Portal…
+                    {t("opportunities.loadingPortal")}
                   </Text>
                 </View>
               )}
@@ -172,13 +178,11 @@ export default function OpportunitiesScreen() {
               resizeMode="contain"
             />
             <View style={styles.fundingContent}>
-              <Text style={styles.fundingTitle}>Government Funding</Text>
+              <Text style={styles.fundingTitle}>
+                {t("opportunities.governmentFunding")}
+              </Text>
               <Text style={styles.fundingSubtext}>
-                Explore various government funding opportunities available for
-                youth and entrepreneurs. Stay updated on the latest grants,
-                loans, and financial support programs offered by the government
-                to help you grow your business or pursue your entrepreneurial
-                dreams.
+                {t("opportunities.governmentFundingText")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
@@ -196,12 +200,11 @@ export default function OpportunitiesScreen() {
               resizeMode="contain"
             />
             <View style={styles.fundingContent}>
-              <Text style={styles.fundingTitle}>External (Banks) Funding</Text>
+              <Text style={styles.fundingTitle}>
+                {t("opportunities.externalFunding")}
+              </Text>
               <Text style={styles.fundingSubtext}>
-                Explore various external funding opportunities available for
-                youth and entrepreneurs. Stay updated on the latest loans and
-                financial support programs offered by banks to help you grow
-                your business or pursue your entrepreneurial dreams.
+                {t("opportunities.externalFundingText")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
@@ -219,14 +222,17 @@ export default function OpportunitiesScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={18} color={Colors.brand} />
-            <Text style={styles.backButtonText}>Back to funding</Text>
+            <Text style={styles.backButtonText}>
+              {t("opportunities.backToFunding")}
+            </Text>
           </TouchableOpacity>
 
           {/* Section header */}
-          <Text style={styles.sectionTitle}>Government funding options</Text>
+          <Text style={styles.sectionTitle}>
+            {t("opportunities.governmentOptions")}
+          </Text>
           <Text style={styles.sectionSubtitle}>
-            Explore government-backed loans, grants, and financial support
-            programs
+            {t("opportunities.governmentOptionsSub")}
           </Text>
 
           {loadingProviders ? (
@@ -247,14 +253,17 @@ export default function OpportunitiesScreen() {
                   <Text style={styles.fundOptionTitle}>{provider.name}</Text>
                 </View>
                 <Text style={styles.fundOptionSubtext}>
-                  {provider.description || "Government funding opportunity."}
+                  {provider.description ||
+                    t("opportunities.governmentOpportunity")}
                 </Text>
                 <TouchableOpacity
                   style={styles.applyButton}
                   activeOpacity={0.7}
                   onPress={() => handleApplyNow("government", provider)}
                 >
-                  <Text style={styles.applyButtonText}>Apply now</Text>
+                  <Text style={styles.applyButtonText}>
+                    {t("opportunities.applyNow")}
+                  </Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -274,7 +283,9 @@ export default function OpportunitiesScreen() {
           <View style={styles.modalContent}>
             {/* Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Apply now</Text>
+              <Text style={styles.modalTitle}>
+                {t("opportunities.applyModalTitle")}
+              </Text>
               <TouchableOpacity
                 onPress={() => setApplyModalType(null)}
                 activeOpacity={0.7}
@@ -286,7 +297,7 @@ export default function OpportunitiesScreen() {
 
             {/* Subtitle */}
             <Text style={styles.modalSubtitle}>
-              Select a bank service to apply for financing:
+              {t("opportunities.applyModalSubtitle")}
             </Text>
 
             <ScrollView
@@ -304,20 +315,22 @@ export default function OpportunitiesScreen() {
                     />
                   </View>
                   <View style={styles.modalCardTitleRow}>
-                    <Text style={styles.modalCardTitle}>LPO Financing</Text>
+                    <Text style={styles.modalCardTitle}>
+                      {t("opportunities.lpoFinancing")}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.modalCardSubtext}>
-                  Get financing against confirmed Local Purchase Orders to
-                  fulfill large contracts without straining your working
-                  capital.
+                  {t("opportunities.lpoFinancingText")}
                 </Text>
                 <TouchableOpacity
                   style={styles.modalApplyButton}
                   activeOpacity={0.7}
                   onPress={() => handleModalNavigate("lpo")}
                 >
-                  <Text style={styles.modalApplyButtonText}>Apply now</Text>
+                  <Text style={styles.modalApplyButtonText}>
+                    {t("opportunities.applyNow")}
+                  </Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -334,20 +347,22 @@ export default function OpportunitiesScreen() {
                       />
                     </View>
                     <View style={styles.modalCardTitleRow}>
-                      <Text style={styles.modalCardTitle}>Overdraft</Text>
+                      <Text style={styles.modalCardTitle}>
+                        {t("opportunities.overdraft")}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.modalCardSubtext}>
-                    Access flexible overdraft facilities to manage your
-                    day-to-day cash flow and cover short-term funding gaps as
-                    they arise.
+                    {t("opportunities.overdraftText")}
                   </Text>
                   <TouchableOpacity
                     style={styles.modalApplyButton}
                     activeOpacity={0.7}
                     onPress={() => handleModalNavigate("overdraft")}
                   >
-                    <Text style={styles.modalApplyButtonText}>Apply now</Text>
+                    <Text style={styles.modalApplyButtonText}>
+                      {t("opportunities.applyNow")}
+                    </Text>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
@@ -365,20 +380,22 @@ export default function OpportunitiesScreen() {
                       />
                     </View>
                     <View style={styles.modalCardTitleRow}>
-                      <Text style={styles.modalCardTitle}>Asset Financing</Text>
+                      <Text style={styles.modalCardTitle}>
+                        {t("opportunities.assetFinancing")}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.modalCardSubtext}>
-                    Acquire essential business equipment, vehicles, and
-                    machinery with flexible asset financing solutions tailored
-                    to your needs.
+                    {t("opportunities.assetFinancingText")}
                   </Text>
                   <TouchableOpacity
                     style={styles.modalApplyButton}
                     activeOpacity={0.7}
                     onPress={() => handleModalNavigate("assetFin")}
                   >
-                    <Text style={styles.modalApplyButtonText}>Apply now</Text>
+                    <Text style={styles.modalApplyButtonText}>
+                      {t("opportunities.applyNow")}
+                    </Text>
                     <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
@@ -398,14 +415,17 @@ export default function OpportunitiesScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={18} color={Colors.brand} />
-            <Text style={styles.backButtonText}>Back to funding</Text>
+            <Text style={styles.backButtonText}>
+              {t("opportunities.backToFunding")}
+            </Text>
           </TouchableOpacity>
 
           {/* Section header */}
-          <Text style={styles.sectionTitle}>External funding options</Text>
+          <Text style={styles.sectionTitle}>
+            {t("opportunities.externalOptions")}
+          </Text>
           <Text style={styles.sectionSubtitle}>
-            Explore loans and financial support programs offered by leading
-            banks
+            {t("opportunities.externalOptionsSub")}
           </Text>
 
           {loadingProviders ? (
@@ -426,14 +446,16 @@ export default function OpportunitiesScreen() {
                   <Text style={styles.fundOptionTitle}>{provider.name}</Text>
                 </View>
                 <Text style={styles.fundOptionSubtext}>
-                  {provider.description || "Bank funding opportunity."}
+                  {provider.description || t("opportunities.bankOpportunity")}
                 </Text>
                 <TouchableOpacity
                   style={styles.applyButton}
                   activeOpacity={0.7}
                   onPress={() => handleApplyNow("external", provider)}
                 >
-                  <Text style={styles.applyButtonText}>Apply now</Text>
+                  <Text style={styles.applyButtonText}>
+                    {t("opportunities.applyNow")}
+                  </Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>

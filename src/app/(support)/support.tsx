@@ -20,6 +20,7 @@ import {
 } from "../../services/api";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 // ── Helpers ──
@@ -75,9 +76,7 @@ const statusLabel = (s: string): string => {
 };
 
 const categoryLabel = (c: string): string =>
-  c
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  c.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 
 const formatDate = (value: string): string => {
   const d = new Date(value.replace(" ", "T"));
@@ -93,6 +92,23 @@ const formatDate = (value: string): string => {
 export default function SupportScreen() {
   const { user } = useAuth();
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
+
+  const statusText = (s: string): string => {
+    switch (s.toLowerCase()) {
+      case "in_progress":
+      case "ongoing":
+        return t("support.inProgress");
+      case "open":
+        return t("support.open");
+      case "resolved":
+        return t("support.resolved");
+      case "closed":
+        return t("support.closed");
+      default:
+        return s;
+    }
+  };
   const [tickets, setTickets] = useState<FeedbackTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,13 +130,15 @@ export default function SupportScreen() {
         const raw = (res as { data?: unknown })?.data;
         const list: FeedbackTicket[] = Array.isArray(raw)
           ? (raw as FeedbackTicket[])
-          : raw && typeof raw === "object" && Array.isArray((raw as { data?: unknown }).data)
-            ? ((raw as { data: FeedbackTicket[] }).data)
+          : raw &&
+              typeof raw === "object" &&
+              Array.isArray((raw as { data?: unknown }).data)
+            ? (raw as { data: FeedbackTicket[] }).data
             : [];
         setTickets(list);
       } catch (e) {
         showToast(
-          e instanceof Error ? e.message : "Failed to load tickets.",
+          e instanceof Error ? e.message : t("support.failedLoad"),
           "error",
         );
       } finally {
@@ -150,10 +168,7 @@ export default function SupportScreen() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (tickets ?? []).filter((t) => {
-      if (
-        q &&
-        !`${t.subject} ${t.ticket_number}`.toLowerCase().includes(q)
-      ) {
+      if (q && !`${t.subject} ${t.ticket_number}`.toLowerCase().includes(q)) {
         return false;
       }
       if (categoryFilter !== "all" && t.category !== categoryFilter) {
@@ -162,7 +177,10 @@ export default function SupportScreen() {
       if (statusFilter !== "all" && t.status.toLowerCase() !== statusFilter) {
         return false;
       }
-      if (priorityFilter !== "all" && t.priority.toLowerCase() !== priorityFilter) {
+      if (
+        priorityFilter !== "all" &&
+        t.priority.toLowerCase() !== priorityFilter
+      ) {
         return false;
       }
       return true;
@@ -188,11 +206,11 @@ export default function SupportScreen() {
         description: ticket.description,
         priority: ticket.priority,
       });
-      showToast("Ticket created successfully.", "success");
+      showToast(t("support.ticketCreated"), "success");
       loadTickets();
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to create ticket.",
+        e instanceof Error ? e.message : t("support.failedCreate"),
         "error",
       );
     } finally {
@@ -210,7 +228,9 @@ export default function SupportScreen() {
       <Text style={[styles.cell, styles.cellSubject]} numberOfLines={2}>
         {item.subject}
       </Text>
-      <Text style={[styles.cell, styles.cellModule]}>{categoryLabel(item.category)}</Text>
+      <Text style={[styles.cell, styles.cellModule]}>
+        {categoryLabel(item.category)}
+      </Text>
       <View style={styles.cellBadge}>
         <View
           style={[
@@ -245,11 +265,13 @@ export default function SupportScreen() {
             ]}
           />
           <Text style={[styles.badgeText, { color: statusColor(item.status) }]}>
-            {statusLabel(item.status)}
+            {statusText(item.status)}
           </Text>
         </View>
       </View>
-      <Text style={[styles.cell, styles.cellDate]}>{formatDate(item.created_at)}</Text>
+      <Text style={[styles.cell, styles.cellDate]}>
+        {formatDate(item.created_at)}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -275,9 +297,7 @@ export default function SupportScreen() {
         ListHeaderComponent={
           <View>
             {/* ── Title & Subtitle ── */}
-            <Text style={styles.subtitle}>
-              Get in touch with our support team for assistance
-            </Text>
+            <Text style={styles.subtitle}>{t("support.subtitle")}</Text>
 
             {/* ── Contact buttons ── */}
             <View style={styles.contactRow}>
@@ -287,7 +307,7 @@ export default function SupportScreen() {
                 onPress={handleCall}
               >
                 <Ionicons name="call-outline" size={20} color={Colors.brand} />
-                <Text style={styles.contactBtnText}>Call</Text>
+                <Text style={styles.contactBtnText}>{t("support.call")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.contactBtn}
@@ -295,7 +315,7 @@ export default function SupportScreen() {
                 onPress={handleEmail}
               >
                 <Ionicons name="mail-outline" size={20} color={Colors.brand} />
-                <Text style={styles.contactBtnText}>Email</Text>
+                <Text style={styles.contactBtnText}>{t("support.email")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.contactBtn}
@@ -303,7 +323,9 @@ export default function SupportScreen() {
                 onPress={handleWhatsApp}
               >
                 <Ionicons name="logo-whatsapp" size={20} color={Colors.brand} />
-                <Text style={styles.contactBtnText}>WhatsApp</Text>
+                <Text style={styles.contactBtnText}>
+                  {t("support.whatsapp")}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -318,7 +340,7 @@ export default function SupportScreen() {
                 />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search tickets..."
+                  placeholder={t("common.searchTickets")}
                   placeholderTextColor="#9CA3AF"
                   value={search}
                   onChangeText={setSearch}
@@ -332,21 +354,23 @@ export default function SupportScreen() {
                 selected={categoryFilter}
                 onSelect={setCategoryFilter}
                 displayLabel={(v) =>
-                  v === "all" ? "All Categories" : categoryLabel(v)
+                  v === "all" ? t("support.allCategories") : categoryLabel(v)
                 }
               />
               <FilterChip
                 options={["all", "open", "in_progress", "resolved", "closed"]}
                 selected={statusFilter}
                 onSelect={setStatusFilter}
-                displayLabel={(v) => (v === "all" ? "All Status" : statusLabel(v))}
+                displayLabel={(v) =>
+                  v === "all" ? t("support.allStatus") : statusText(v)
+                }
               />
               <FilterChip
                 options={["all", "urgent", "high", "medium", "low"]}
                 selected={priorityFilter}
                 onSelect={setPriorityFilter}
                 displayLabel={(v) =>
-                  v === "all" ? "All Priority" : priorityLabel(v)
+                  v === "all" ? t("support.allPriority") : priorityLabel(v)
                 }
               />
             </View>
@@ -368,7 +392,7 @@ export default function SupportScreen() {
                 />
               )}
               <Text style={styles.newTicketText}>
-                {creating ? "Creating..." : "New ticket"}
+                {creating ? t("support.creating") : t("support.newTicket")}
               </Text>
             </TouchableOpacity>
 
@@ -376,23 +400,29 @@ export default function SupportScreen() {
             <View style={styles.tableHeader}>
               <Text style={[styles.headerCell, styles.cellId]}>#</Text>
               <Text style={[styles.headerCell, styles.cellSubject]}>
-                Subject
+                {t("support.subject")}
               </Text>
-              <Text style={[styles.headerCell, styles.cellModule]}>Category</Text>
+              <Text style={[styles.headerCell, styles.cellModule]}>
+                {t("support.category")}
+              </Text>
               <Text style={[styles.headerCell, styles.cellBadge]}>
-                Priority
+                {t("support.priority")}
               </Text>
-              <Text style={[styles.headerCell, styles.cellBadge]}>Status</Text>
-              <Text style={[styles.headerCell, styles.cellDate]}>Date</Text>
+              <Text style={[styles.headerCell, styles.cellBadge]}>
+                {t("support.status")}
+              </Text>
+              <Text style={[styles.headerCell, styles.cellDate]}>
+                {t("support.date")}
+              </Text>
             </View>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="ticket-outline" size={48} color="#D1D5DB" />
-            <Text style={styles.emptyTitle}>No tickets found</Text>
+            <Text style={styles.emptyTitle}>{t("support.noTickets")}</Text>
             <Text style={styles.emptySubtitle}>
-              Create a new ticket to get help from our team.
+              {t("support.noTicketsSub")}
             </Text>
           </View>
         }

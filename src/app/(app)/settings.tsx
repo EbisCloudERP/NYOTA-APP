@@ -2,14 +2,15 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 type NotificationSettings = {
@@ -21,6 +22,7 @@ type NotificationSettings = {
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { confirm } = useFeedback();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     email: true,
     sms: false,
@@ -29,10 +31,10 @@ export default function SettingsScreen() {
 
   const handleLogout = async () => {
     const ok = await confirm({
-      title: "Log out",
-      message: "Are you sure you want to log out?",
-      confirmText: "Log out",
-      cancelText: "Cancel",
+      title: t("header.logOutTitle"),
+      message: t("header.logOutMessage"),
+      confirmText: t("header.logOut"),
+      cancelText: t("common.cancel"),
       destructive: true,
     });
     if (ok) {
@@ -52,7 +54,7 @@ export default function SettingsScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header ── */}
-      <Text style={styles.heading}>Settings</Text>
+      <Text style={styles.heading}>{t("settings.title")}</Text>
 
       {/* ── Menu items ── */}
       <TouchableOpacity
@@ -64,7 +66,7 @@ export default function SettingsScreen() {
           <View style={styles.menuIcon}>
             <Ionicons name="person-outline" size={18} color={Colors.brand} />
           </View>
-          <Text style={styles.menuItemText}>Profile</Text>
+          <Text style={styles.menuItemText}>{t("settings.profile")}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
@@ -78,7 +80,7 @@ export default function SettingsScreen() {
           <View style={styles.menuIcon}>
             <Ionicons name="headset-outline" size={18} color={Colors.brand} />
           </View>
-          <Text style={styles.menuItemText}>Support</Text>
+          <Text style={styles.menuItemText}>{t("settings.support")}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
@@ -96,7 +98,7 @@ export default function SettingsScreen() {
               color={Colors.brand}
             />
           </View>
-          <Text style={styles.menuItemText}>Data Policy</Text>
+          <Text style={styles.menuItemText}>{t("settings.dataPolicy")}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
@@ -114,13 +116,13 @@ export default function SettingsScreen() {
               color={Colors.brand}
             />
           </View>
-          <Text style={styles.menuItemText}>Terms & Conditions</Text>
+          <Text style={styles.menuItemText}>{t("settings.terms")}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
 
       {/* ── Notifications Section ── */}
-      <Text style={styles.sectionTitle}>Notifications</Text>
+      <Text style={styles.sectionTitle}>{t("settings.notifications")}</Text>
 
       {/* Email */}
       <TouchableOpacity
@@ -133,9 +135,9 @@ export default function SettingsScreen() {
             <Ionicons name="mail-outline" size={18} color={Colors.brand} />
           </View>
           <View style={styles.notifContent}>
-            <Text style={styles.notifTitle}>Email Notifications</Text>
+            <Text style={styles.notifTitle}>{t("settings.emailNotif")}</Text>
             <Text style={styles.notifSubtext}>
-              Receive updates and announcements via email
+              {t("settings.emailNotifSub")}
             </Text>
           </View>
         </View>
@@ -159,11 +161,9 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.notifContent}>
             <Text style={[styles.notifTitle, styles.notifTitleDisabled]}>
-              SMS Notifications
+              {t("settings.smsNotif")}
             </Text>
-            <Text style={styles.notifSubtext}>
-              Get important alerts and reminders via SMS
-            </Text>
+            <Text style={styles.notifSubtext}>{t("settings.smsNotifSub")}</Text>
           </View>
         </View>
         <View
@@ -194,9 +194,9 @@ export default function SettingsScreen() {
             />
           </View>
           <View style={styles.notifContent}>
-            <Text style={styles.notifTitle}>Push Notifications</Text>
+            <Text style={styles.notifTitle}>{t("settings.pushNotif")}</Text>
             <Text style={styles.notifSubtext}>
-              Enable real-time notifications on your device
+              {t("settings.pushNotifSub")}
             </Text>
           </View>
         </View>
@@ -222,21 +222,16 @@ export default function SettingsScreen() {
           />
         </View>
         <View style={styles.infoBarContent}>
-          <Text style={styles.infoBarTitle}>Why we need this information</Text>
-          <Text style={styles.infoBarText}>
-            We use this information to send you important updates, reminders,
-            and personalized content based on your preferences.
-          </Text>
+          <Text style={styles.infoBarTitle}>{t("settings.whyInfo")}</Text>
+          <Text style={styles.infoBarText}>{t("settings.whyInfoText")}</Text>
         </View>
       </View>
 
       {/* ── Language Section ── */}
       <Text style={[styles.sectionTitle, styles.languageSectionTitle]}>
-        Language
+        {t("settings.language")}
       </Text>
-      <Text style={styles.languageSubtitle}>
-        Manage your language preferences
-      </Text>
+      <Text style={styles.languageSubtitle}>{t("settings.languageSub")}</Text>
 
       {/* English */}
       <View style={[styles.langItem, styles.langItemDisabled]}>
@@ -244,7 +239,7 @@ export default function SettingsScreen() {
           <View style={[styles.langIcon, styles.langIconDisabled]}>
             <Ionicons name="language-outline" size={18} color="#9CA3AF" />
           </View>
-          <Text style={styles.langTitleDisabled}>English</Text>
+          <Text style={styles.langTitleDisabled}>{t("settings.english")}</Text>
         </View>
         <View
           style={[
@@ -263,7 +258,7 @@ export default function SettingsScreen() {
           <View style={[styles.langIcon, styles.langIconDisabled]}>
             <Ionicons name="language-outline" size={18} color="#9CA3AF" />
           </View>
-          <Text style={styles.langTitleDisabled}>Swahili</Text>
+          <Text style={styles.langTitleDisabled}>{t("settings.swahili")}</Text>
         </View>
         <View style={[styles.checkbox, styles.checkboxDisabled]} />
       </View>
@@ -278,17 +273,14 @@ export default function SettingsScreen() {
           />
         </View>
         <View style={styles.infoBarContent}>
-          <Text style={styles.infoBarTitle}>Why we need this information</Text>
-          <Text style={styles.infoBarText}>
-            We use this information to send you important updates, reminders,
-            and personalized content based on your preferences.
-          </Text>
+          <Text style={styles.infoBarTitle}>{t("settings.whyInfo")}</Text>
+          <Text style={styles.infoBarText}>{t("settings.whyInfoText")}</Text>
         </View>
       </View>
 
       {/* ── Logout ── */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Log out</Text>
+        <Text style={styles.logoutText}>{t("header.logOut")}</Text>
       </TouchableOpacity>
 
       <View style={styles.bottomSpacer} />

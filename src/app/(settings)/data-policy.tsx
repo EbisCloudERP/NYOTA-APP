@@ -1,111 +1,62 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLanguage } from "../../services/LanguageContext";
 
 export default function DataPolicyScreen() {
+  const { t } = useLanguage();
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.lastUpdated}>Last updated: August 11, 2026</Text>
+      <Text style={styles.lastUpdated}>{t("dataPolicy.lastUpdated")}</Text>
 
-      <Text style={styles.paragraph}>
-        At Nyota, we take your privacy seriously. This Data Policy explains how
-        we collect, use, store, and protect your personal information when you
-        use our platform.
-      </Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.intro")}</Text>
 
-      <Text style={styles.sectionTitle}>1. Information We Collect</Text>
-      <Text style={styles.paragraph}>
-        We collect information that you provide directly to us, including but
-        not limited to:
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s1Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s1Intro")}</Text>
       <View style={styles.bulletList}>
-        <Text style={styles.bullet}>
-          • Personal identification details (name, email address, phone number,
-          national ID)
-        </Text>
-        <Text style={styles.bullet}>
-          • Business information (company name, registration details, KRA PIN)
-        </Text>
-        <Text style={styles.bullet}>
-          • Profile data (profile picture, bio, preferences)
-        </Text>
-        <Text style={styles.bullet}>
-          • Usage data (courses enrolled, certificates earned, webinar
-          attendance)
-        </Text>
-        <Text style={styles.bullet}>
-          • Device information (device type, operating system, IP address)
-        </Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s1b1")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s1b2")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s1b3")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s1b4")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s1b5")}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
-      <Text style={styles.paragraph}>
-        Your information helps us provide and improve our services:
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s2Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s2Intro")}</Text>
       <View style={styles.bulletList}>
-        <Text style={styles.bullet}>• To create and manage your account</Text>
-        <Text style={styles.bullet}>
-          • To deliver courses, webinars, and learning content
-        </Text>
-        <Text style={styles.bullet}>
-          • To process applications for funding and opportunities
-        </Text>
-        <Text style={styles.bullet}>
-          • To send notifications about updates, events, and relevant
-          opportunities
-        </Text>
-        <Text style={styles.bullet}>
-          • To comply with legal and regulatory requirements
-        </Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s2b1")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s2b2")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s2b3")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s2b4")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s2b5")}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>3. Data Sharing</Text>
-      <Text style={styles.paragraph}>
-        We do not sell your personal data. We may share your information with:
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s3Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s3Intro")}</Text>
       <View style={styles.bulletList}>
-        <Text style={styles.bullet}>
-          • Government agencies for funding and tender applications you initiate
-        </Text>
-        <Text style={styles.bullet}>
-          • Partner banks and financial institutions for funding applications
-        </Text>
-        <Text style={styles.bullet}>
-          • Service providers who assist us in platform operations
-        </Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s3b1")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s3b2")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s3b3")}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>4. Data Storage & Security</Text>
-      <Text style={styles.paragraph}>
-        We implement industry-standard security measures to protect your data,
-        including encryption, secure servers, and regular security audits. Your
-        data is stored on secure servers located in Kenya, in compliance with
-        the Data Protection Act, 2019.
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s4Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s4Text")}</Text>
 
-      <Text style={styles.sectionTitle}>5. Your Rights</Text>
-      <Text style={styles.paragraph}>
-        Under the Kenya Data Protection Act, you have the right to:
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s5Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s5Intro")}</Text>
       <View style={styles.bulletList}>
-        <Text style={styles.bullet}>• Access your personal data</Text>
-        <Text style={styles.bullet}>
-          • Request correction of inaccurate data
-        </Text>
-        <Text style={styles.bullet}>• Request deletion of your data</Text>
-        <Text style={styles.bullet}>
-          • Object to or restrict processing of your data
-        </Text>
-        <Text style={styles.bullet}>• Withdraw consent at any time</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s5b1")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s5b2")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s5b3")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s5b4")}</Text>
+        <Text style={styles.bullet}>• {t("dataPolicy.s5b5")}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>6. Contact Us</Text>
-      <Text style={styles.paragraph}>
-        If you have questions about this Data Policy or wish to exercise your
-        data rights, contact our Data Protection Officer at:
-      </Text>
+      <Text style={styles.sectionTitle}>{t("dataPolicy.s6Title")}</Text>
+      <Text style={styles.paragraph}>{t("dataPolicy.s6Text")}</Text>
       <Text style={styles.contactInfo}>📧 privacy@nyota.go.ke</Text>
       <Text style={styles.contactInfo}>📞 +254 700 000 000</Text>
 

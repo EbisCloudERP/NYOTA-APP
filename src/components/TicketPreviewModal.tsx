@@ -19,6 +19,7 @@ import {
 } from "../services/api";
 import { useAuth } from "../services/AuthContext";
 import { useFeedback } from "../services/FeedbackContext";
+import { useLanguage } from "../services/LanguageContext";
 import { Colors } from "../theme/colors";
 
 // ── Types ──
@@ -120,6 +121,7 @@ export default function TicketPreviewModal({
 }: TicketPreviewModalProps) {
   const { user } = useAuth();
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
   const [ticket, setTicket] = useState<FeedbackTicket | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -134,7 +136,7 @@ export default function TicketPreviewModal({
         setTicket(res.data ?? null);
       } catch (e) {
         showToast(
-          e instanceof Error ? e.message : "Failed to load ticket.",
+          e instanceof Error ? e.message : t("ticket.failedLoad"),
           "error",
         );
       } finally {
@@ -158,7 +160,7 @@ export default function TicketPreviewModal({
               {
                 id: -1,
                 sender: "user" as const,
-                name: "You",
+                name: t("common.you"),
                 message: ticket.description,
                 time: formatTime(ticket.created_at),
               },
@@ -167,7 +169,7 @@ export default function TicketPreviewModal({
         ...(ticket.replies ?? []).map((r) => ({
           id: r.id,
           sender: r.is_admin_reply ? ("support" as const) : ("user" as const),
-          name: r.is_admin_reply ? r.user_name : "You",
+          name: r.is_admin_reply ? r.user_name : t("common.you"),
           message: r.message,
           time: formatTime(r.created_at),
         })),
@@ -181,10 +183,7 @@ export default function TicketPreviewModal({
     try {
       const uuid = user?.uuid ?? "";
       if (!uuid) {
-        showToast(
-          "Unable to identify your account. Please log in again.",
-          "error",
-        );
+        showToast(t("webinars.unableIdentify"), "error");
         return;
       }
       await replyFeedbackTicket(ticketId, text, uuid);
@@ -198,7 +197,7 @@ export default function TicketPreviewModal({
                   id: Date.now(),
                   message: text,
                   is_admin_reply: false,
-                  user_name: "You",
+                  user_name: t("common.you"),
                   created_at: new Date().toISOString(),
                 },
               ],
@@ -208,7 +207,7 @@ export default function TicketPreviewModal({
       setMessage("");
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Failed to send reply.",
+        e instanceof Error ? e.message : t("ticket.failedReply"),
         "error",
       );
     } finally {
@@ -238,7 +237,7 @@ export default function TicketPreviewModal({
             <Ionicons name="close" size={24} color="#111827" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {ticket?.ticket_number ?? "Ticket"}
+            {ticket?.ticket_number ?? t("ticket.ticket")}
           </Text>
           <View style={{ width: 24 }} />
         </View>
@@ -260,7 +259,8 @@ export default function TicketPreviewModal({
                 <View style={styles.infoCard}>
                   <Text style={styles.subject}>{ticket.subject}</Text>
                   <Text style={styles.meta}>
-                    {ticket.ticket_number} &bull; {formatDate(ticket.created_at)}
+                    {ticket.ticket_number} &bull;{" "}
+                    {formatDate(ticket.created_at)}
                   </Text>
 
                   {/* Badges */}
@@ -273,7 +273,10 @@ export default function TicketPreviewModal({
                     <View
                       style={[
                         styles.badge,
-                        { backgroundColor: priorityColor(ticket.priority) + "1A" },
+                        {
+                          backgroundColor:
+                            priorityColor(ticket.priority) + "1A",
+                        },
                       ]}
                     >
                       <View
@@ -317,7 +320,7 @@ export default function TicketPreviewModal({
               )}
 
               {/* ── Chat Section ── */}
-              <Text style={styles.chatHeading}>Conversation</Text>
+              <Text style={styles.chatHeading}>{t("ticket.conversation")}</Text>
 
               {messages.map((msg) => (
                 <View
@@ -368,7 +371,7 @@ export default function TicketPreviewModal({
             <View style={styles.inputBar}>
               <TextInput
                 style={styles.messageInput}
-                placeholder="Type your message..."
+                placeholder={t("ticket.typeMessage")}
                 placeholderTextColor="#9CA3AF"
                 value={message}
                 onChangeText={setMessage}

@@ -1,0 +1,1678 @@
+export type Language = "en" | "sw";
+
+const en = {
+  // ── Common ──
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
+  "common.done": "Done",
+  "common.close": "Close",
+  "common.back": "Back",
+  "common.next": "Next",
+  "common.continue": "Continue",
+  "common.all": "All",
+  "common.english": "English",
+  "common.swahili": "Kiswahili",
+  "common.footer": "© 2026 EbisCloud Solutions",
+  "common.selectLanguage": "Select language",
+  "common.selectFile": "Select file",
+  "common.filePickerMessage": "This will open the file picker.",
+  "common.you": "You",
+  "common.host": "Host",
+  "common.min": "min",
+  "common.hours": "hours",
+  "common.attending": "{count} attending",
+  "common.requiredNote": "All fields marked with * are required",
+  "common.searchTickets": "Search tickets...",
+  "common.acceptedFormats": "Accepted formats: PDF, JPG, PNG, DOC (Max 10MB)",
+  "common.loadingQuestions": "Loading questions...",
+  "common.loadingRecommendations": "Loading recommendations...",
+
+  // ── Language selector ──
+  "lang.optionEnglish": "English",
+  "lang.optionSwahili": "Kiswahili",
+
+  // ── Header ──
+  "header.welcomeBack": "Welcome back",
+  "header.user": "User",
+  "header.logOutTitle": "Log out",
+  "header.logOutMessage": "Are you sure you want to log out?",
+  "header.logOut": "Log out",
+
+  // ── Tabs ──
+  "tab.home": "Home",
+  "tab.myLearning": "My Learning",
+  "tab.opportunities": "Opportunities",
+  "tab.webinars": "Webinars",
+  "tab.settings": "Settings",
+
+  // ── Login ──
+  "auth.login.welcome": "Welcome back!",
+  "auth.login.subtitle": "Log into your account",
+  "auth.login.email": "Email",
+  "auth.login.emailPlaceholder": "Enter your email",
+  "auth.login.password": "Password",
+  "auth.login.passwordPlaceholder": "Enter your password",
+  "auth.login.forgotPassword": "Forgot Password?",
+  "auth.login.login": "Login",
+  "auth.login.signUp": "Sign Up",
+  "auth.login.enterCredentials": "Please enter your email and password",
+  "auth.login.failed": "Login failed. Please try again.",
+
+  // ── Create account ──
+  "auth.create.title": "Create your account",
+  "auth.create.subtitle": "Join thousands of businesses building their future",
+  "auth.create.info": "We'll send a verification code to this email",
+  "auth.create.verify": "Verify",
+  "auth.create.alreadyHave": "Already have an account? ",
+  "auth.create.logIn": "Log in",
+  "auth.create.accountExists": "Account Exists",
+  "auth.create.accountExistsMessage":
+    "An account with this email already exists. Please log in instead.",
+  "auth.create.verificationFailed": "Verification failed. Please try again.",
+
+  // ── Forgot password ──
+  "auth.forgot.title": "Forgot password",
+  "auth.forgot.subtitle":
+    "Enter your email address or phone number and we will send you a password reset link",
+  "auth.forgot.label": "Email address or phone number",
+  "auth.forgot.placeholder": "Enter your email or phone number",
+  "auth.forgot.info": "We'll send a verification code to this email",
+  "auth.forgot.enterContact": "Please enter your email or phone number",
+
+  // ── Register ──
+  "auth.register.title": "Finish setting up your account",
+  "auth.register.subtitle":
+    "Almost there! Please complete the form below to create your account.",
+  "auth.register.personalInfo": "Personal Information",
+  "auth.register.firstName": "First name",
+  "auth.register.firstNamePlaceholder": "Enter your first name",
+  "auth.register.middleName": "Middle name",
+  "auth.register.middleNamePlaceholder": "Enter your middle name",
+  "auth.register.lastName": "Last name",
+  "auth.register.lastNamePlaceholder": "Enter your last name",
+  "auth.register.nationalId": "National ID number",
+  "auth.register.nationalIdPlaceholder": "Enter your national ID number",
+  "auth.register.identityInfo": "We'll use this to verify your identity",
+  "auth.register.countyInfo": "County Information",
+  "auth.register.county": "County",
+  "auth.register.constituency": "Constituency",
+  "auth.register.ward": "Ward",
+  "auth.register.selectCounty": "Select your county",
+  "auth.register.selectConstituency": "Select your constituency",
+  "auth.register.selectWard": "Select your ward",
+  "auth.register.passwordSection": "Password",
+  "auth.register.passwordPlaceholder": "Enter your password",
+  "auth.register.passwordInfo":
+    "Must be at least 8 characters and include a mix of letters and numbers",
+  "auth.register.confirmPassword": "Confirm password",
+  "auth.register.confirmPasswordPlaceholder": "Confirm your password",
+  "auth.register.passwordsDoNotMatch": "Passwords do not match",
+  "auth.register.confirmPasswordInfo": "Must match the password entered above",
+  "auth.register.weak": "Weak",
+  "auth.register.fair": "Fair",
+  "auth.register.good": "Good",
+  "auth.register.strong": "Strong",
+  "auth.register.register": "Register",
+  "auth.register.fillPersonal":
+    "Please fill in all personal information fields.",
+  "auth.register.selectCountyError":
+    "Please select your county and constituency.",
+  "auth.register.passwordLength": "Password must be at least 8 characters.",
+  "auth.register.passwordMismatch": "Passwords do not match.",
+  "auth.register.registrationFailed": "Registration failed. Please try again.",
+  "auth.register.selectCountyModal": "Select County",
+  "auth.register.selectConstituencyModal": "Select Constituency",
+  "auth.register.selectWardModal": "Select Ward",
+
+  // ── Reset password ──
+  "auth.reset.title": "Reset password",
+  "auth.reset.subtitle": "Enter your new password below",
+  "auth.reset.newPassword": "New password",
+  "auth.reset.newPasswordPlaceholder": "Enter your new password",
+  "auth.reset.confirmPassword": "Confirm password",
+  "auth.reset.confirmPasswordPlaceholder": "Confirm your new password",
+  "auth.reset.reset": "Reset password",
+  "auth.reset.missingDetails": "Missing account details. Please start over.",
+  "auth.reset.success": "Password reset successfully. Please log in.",
+  "auth.reset.failed": "Reset failed. Please try again.",
+
+  // ── Verify phone ──
+  "auth.verifyPhone.title": "Verify your phone number",
+  "auth.verifyPhone.subtitle": "Enter your phone number to verify your account",
+  "auth.verifyPhone.phoneNumber": "Phone number",
+  "auth.verifyPhone.info": "Example: +254 712 345 678 → enter 712345678",
+  "auth.verifyPhone.invalidPhone": "Please enter a valid phone number.",
+  "auth.verifyPhone.wrongDetails": "Wrong details? Go back",
+
+  // ── OTP screens ──
+  "otp.title": "Enter verification code",
+  "otp.subtitleEmail": "We've sent a 6-digit code to your email",
+  "otp.subtitleEmailPhone": "We've sent a 6-digit code to your email and phone",
+  "otp.subtitlePhone": "We've sent a 6-digit code to your phone number",
+  "otp.expiresIn": "Code expire in: {time}",
+  "otp.waitResend": "Didn't receive the code? Wait: {time} to resend",
+  "otp.resend": "Resend code",
+  "otp.wrongDetails": "Wrong details? Go back",
+  "otp.incorrectCode":
+    "The verification code you entered is incorrect. Please try again.",
+
+  // ── Onboarding: get started ──
+  "onboard.welcome": "Welcome, Joab!",
+  "onboard.welcomeSub": "Let's get your profile ready",
+  "onboard.infoText":
+    "You're just a few steps away from accessing thousands of opportunities!\n\nComplete your profile to unlock job listings, training programs, and funding opportunities.",
+  "onboard.setupChecklist": "Setup Checklist",
+  "onboard.eligibility": "Eligibility & Context",
+  "onboard.eligibilitySub":
+    "Verify your eligibility and provide context about your situation",
+  "onboard.coursesPreview": "Courses Preview",
+  "onboard.coursesPreviewSub": "Explore available courses and their details",
+  "onboard.min": "min",
+  "onboard.whyTitle": "🎯 Why Complete Your Profile?",
+  "onboard.bullet1":
+    "Access verified AGPO opportunities matched to your skills",
+  "onboard.bullet2":
+    "Unlock personalized training programs to build in-demand skills",
+  "onboard.bullet3":
+    "Become eligible for funding opportunities to support your projects and education",
+  "onboard.bullet4":
+    "Connect with a community of like-minded professionals and mentors",
+  "onboard.start": "Start",
+  "onboard.getStartedTitle": "Get Started",
+
+  // ── Onboarding: KYC ──
+  "kyc.progress": "Question {current} of {total}",
+  "kyc.title": "Eligibility & Context",
+  "kyc.subtitle": "Help us match you with the right opportunities",
+  "kyc.submit": "Submit",
+  "kyc.footer": "You can update your profile anytime from the dashboard",
+  "kyc.loadFailed": "Failed to load questions. Please try again.",
+  "kyc.missingUuid": "Missing user UUID. Please log in again.",
+  "kyc.submissionFailed": "Submission failed. Please try again.",
+
+  // ── Onboarding: results ──
+  "results.title": "Congratulations!",
+  "results.subtitle":
+    "Here are the courses we recommend based on your profile.",
+  "results.noCourses": "No courses yet.",
+  "results.loadFailed": "Failed to load recommendations.",
+  "results.dashboard": "Proceed to Dashboard",
+
+  // ── Home ──
+  "home.greeting": "Welcome back, {name}! 👋",
+  "home.subtitle": "Here's a summary of your recent activity.",
+  "home.onboarded": "Onboarded",
+  "home.profileIncomplete": "Profile incomplete",
+  "home.quickAccess": "Quick Access",
+  "home.certificates": "Certificates",
+  "home.digitalTools": "Digital Tools",
+  "home.profile": "Profile",
+  "home.support": "Support",
+  "home.continueLearning": "Continue Learning",
+  "home.lessonsCompleted": "{completed}/{total} lessons completed",
+  "home.overallProgress": "Overall progress",
+  "home.enrolled": "Enrolled",
+  "home.done": "Done",
+  "home.available": "Available",
+  "home.coursesAvailable": "{count} course{s} available",
+  "home.continueLearningBtn": "Continue learning",
+  "home.noCourses": "No courses in progress.",
+  "home.browseCourses": "Browse courses",
+  "home.announcements": "Announcements",
+  "home.noAnnouncements": "No announcements right now.",
+  "home.webinars": "Webinars",
+  "home.live": "● Live",
+  "home.hostedBy": "Hosted by {host} • {count} attending",
+  "home.hostedByOnly": "Hosted by {host}",
+  "home.joinMeeting": "Join meeting",
+  "home.meetingLinkAvailable": "Meeting link available",
+  "home.upcoming": "Upcoming",
+  "home.past": "Past",
+  "home.registered": "Registered",
+  "home.rsvpNow": "RSVP now",
+  "home.watchRecording": "Watch recording",
+  "home.noRecording": "No recording",
+  "home.recordingAvailable": "Recording available",
+  "home.noLinkAvailable": "No link available",
+  "home.browseAllWebinars": "Browse all webinars",
+  "home.sectorTraining": "Sector Specific Training",
+  "home.construction": "Construction",
+  "home.viewAll": "View all",
+  "home.faq": "Frequently Asked Questions",
+  "home.webinarFaqs": "Webinar FAQs",
+  "home.noFaqs": "No FAQs available yet.",
+  "home.prerecorded": "Pre-recorded Webinars",
+  "home.recordedSessions": "Recorded sessions",
+  "home.noRecordedSessions": "No recorded sessions yet.",
+  "home.unableOpenLink": "Unable to open the link.",
+  "home.registeredWebinar": "You're registered for this webinar.",
+  "home.unableRegister": "Unable to register. Please try again.",
+
+  // ── My learning ──
+  "learning.title": "Your Learning Path",
+  "learning.subtitle":
+    "Complete courses to earn certificates and unlock opportunities",
+  "learning.recommended": "Recommended for you",
+  "learning.allCourses": "All courses",
+  "learning.completed": "Completed",
+  "learning.enrolled": "Enrolled",
+  "learning.notEnrolled": "Not enrolled",
+  "learning.lessons": "lessons",
+  "learning.lessonsCount": "{completed}/{total} lessons",
+  "learning.enrollNow": "Enroll now",
+  "learning.reviewCourse": "Review course",
+  "learning.goToLessons": "Go to lessons",
+  "learning.noCourses": "No courses found",
+  "learning.checkBack": "Check back later for new recommendations.",
+  "learning.selfPaced": "Self-paced",
+  "learning.failedLoad": "Failed to load courses.",
+  "learning.enrollTitle": "Enroll in Course",
+  "learning.enrollMessage":
+    'You are about to enroll in "{title}". Are you sure you want to continue?',
+  "learning.enroll": "Enroll",
+  "learning.tryAgain": "Please try again.",
+
+  // ── Opportunities ──
+  "opportunities.title": "Opportunities",
+  "opportunities.subtitle": "View and explore available opportunities",
+  "opportunities.tabOpportunities": "Opportunities",
+  "opportunities.tabFunding": "Funding",
+  "opportunities.beforeApply": "Before you apply",
+  "opportunities.beforeApplyText":
+    "Make sure you are registered with e-GP before applying for tenders. Browse the latest tenders directly below.",
+  "opportunities.loadingPortal": "Loading e-GP Portal…",
+  "opportunities.governmentFunding": "Government Funding",
+  "opportunities.governmentFundingText":
+    "Explore various government funding opportunities available for youth and entrepreneurs. Stay updated on the latest grants, loans, and financial support programs offered by the government to help you grow your business or pursue your entrepreneurial dreams.",
+  "opportunities.externalFunding": "External (Banks) Funding",
+  "opportunities.externalFundingText":
+    "Explore various external funding opportunities available for youth and entrepreneurs. Stay updated on the latest loans and financial support programs offered by banks to help you grow your business or pursue your entrepreneurial dreams.",
+  "opportunities.backToFunding": "Back to funding",
+  "opportunities.governmentOptions": "Government funding options",
+  "opportunities.governmentOptionsSub":
+    "Explore government-backed loans, grants, and financial support programs",
+  "opportunities.externalOptions": "External funding options",
+  "opportunities.externalOptionsSub":
+    "Explore loans and financial support programs offered by leading banks",
+  "opportunities.governmentOpportunity": "Government funding opportunity.",
+  "opportunities.bankOpportunity": "Bank funding opportunity.",
+  "opportunities.applyNow": "Apply now",
+  "opportunities.applyModalTitle": "Apply now",
+  "opportunities.applyModalSubtitle":
+    "Select a bank service to apply for financing:",
+  "opportunities.lpoFinancing": "LPO Financing",
+  "opportunities.lpoFinancingText":
+    "Get financing against confirmed Local Purchase Orders to fulfill large contracts without straining your working capital.",
+  "opportunities.overdraft": "Overdraft",
+  "opportunities.overdraftText":
+    "Access flexible overdraft facilities to manage your day-to-day cash flow and cover short-term funding gaps as they arise.",
+  "opportunities.assetFinancing": "Asset Financing",
+  "opportunities.assetFinancingText":
+    "Acquire essential business equipment, vehicles, and machinery with flexible asset financing solutions tailored to your needs.",
+  "opportunities.failedLoad": "Failed to load funding options.",
+
+  // ── Webinars ──
+  "webinars.title": "Webinars",
+  "webinars.subtitle":
+    "Join live webinars and interactive sessions led by industry experts",
+  "webinars.live": "Live",
+  "webinars.upcoming": "Upcoming",
+  "webinars.past": "Past",
+  "webinars.ended": "Ended",
+  "webinars.attending": "{count} attending",
+  "webinars.joinMeeting": "Join meeting",
+  "webinars.watchRecording": "Watch recording",
+  "webinars.noRecording": "No recording",
+  "webinars.registered": "Registered",
+  "webinars.rsvpNow": "RSVP now",
+  "webinars.meetingLinkAvailable": "Meeting link available",
+  "webinars.recordingAvailable": "Recording available",
+  "webinars.noLinkAvailable": "No link available",
+  "webinars.noWebinars": "No webinars found",
+  "webinars.checkBack": "Check back later for new sessions.",
+  "webinars.failedLoad": "Failed to load webinars.",
+  "webinars.unableIdentify":
+    "Unable to identify your account. Please log in again.",
+  "webinars.registeredMsg": "You're registered for this webinar.",
+  "webinars.unableRegister": "Unable to register. Please try again.",
+
+  // ── Settings ──
+  "settings.title": "Settings",
+  "settings.profile": "Profile",
+  "settings.support": "Support",
+  "settings.dataPolicy": "Data Policy",
+  "settings.terms": "Terms & Conditions",
+  "settings.notifications": "Notifications",
+  "settings.emailNotif": "Email Notifications",
+  "settings.emailNotifSub": "Receive updates and announcements via email",
+  "settings.smsNotif": "SMS Notifications",
+  "settings.smsNotifSub": "Get important alerts and reminders via SMS",
+  "settings.pushNotif": "Push Notifications",
+  "settings.pushNotifSub": "Enable real-time notifications on your device",
+  "settings.whyInfo": "Why we need this information",
+  "settings.whyInfoText":
+    "We use this information to send you important updates, reminders, and personalized content based on your preferences.",
+  "settings.language": "Language",
+  "settings.languageSub": "Manage your language preferences",
+  "settings.english": "English",
+  "settings.swahili": "Swahili",
+
+  // ── Certificates ──
+  "certificates.subtitle": "View and download your earned certificates",
+  "certificates.lessonsCompleted": "Lessons completed",
+  "certificates.duration": "Duration",
+  "certificates.certificateId": "Certificate ID",
+  "certificates.viewCertificate": "View certificate",
+  "certificates.none": "No certificates yet",
+  "certificates.noneSub": "Complete a course to earn your first certificate.",
+  "certificates.share": "Share your achievements",
+  "certificates.shareSub":
+    "Let your network know about your skills. Share your certificates on LinkedIn, Twitter, or download them as PDF to include in your professional portfolio.",
+  "certificates.yourCertificate": "Your Certificate:",
+  "certificates.republic": "REPUBLIC OF KENYA",
+  "certificates.ministry1":
+    "MINISTRY OF COOPERATIVES AND MICRO, SMALL AND MEDIUM",
+  "certificates.ministry2": "ENTERPRISES DEVELOPMENT",
+  "certificates.program": "NATIONAL YOUTH OPPORTUNITIES TOWARDS ADVANCEMENT",
+  "certificates.certificate": "CERTIFICATE",
+  "certificates.ofCompletion": "OF COMPLETION",
+  "certificates.certify": "This is to certify that",
+  "certificates.completedTraining":
+    "Has successfully completed the training for:",
+  "certificates.heldOn": "Held on {date}",
+  "certificates.director": "DIRECTOR",
+  "certificates.signature": "SIGNATURE",
+  "certificates.date": "DATE",
+  "certificates.disclaimer": "This is not an AGPO certificate",
+  "certificates.download": "Download Certificate",
+  "certificates.completedCourse": "Completed course",
+  "certificates.lessonsLabel": "Lessons completed",
+  "certificates.whatNext": "What's next?",
+  "certificates.whatNextSub":
+    "Continue your learning journey or explore more courses.",
+  "certificates.browseLessons": "Browse lessons",
+  "certificates.goHome": "Go to home",
+
+  // ── Digital tools ──
+  "digitalTools.subtitle":
+    "Explore and onboard to essential business tools and solutions to improve productivity, streamline workflows and access to market.",
+  "digitalTools.bulkSms": "Bulk SMS",
+  "digitalTools.bookKeeping": "Book Keeping",
+  "digitalTools.ecommerce": "E-commerce",
+  "digitalTools.website": "Website Builder",
+  "digitalTools.bulkSmsText":
+    "Send thousands of personalized SMS messages to your customers at once. Perfect for promotions, alerts, reminders, and notifications.",
+  "digitalTools.bookKeepingText":
+    "Simplify your financial record-keeping. Track every transaction, manage invoices, and generate professional financial reports effortlessly.",
+  "digitalTools.ecommerceText":
+    "Launch and manage your online store with ease. We set up a Shopify-style storefront with product catalogs, payment gateways including M-Pesa, inventory management, and order tracking — all tailored to your brand.",
+  "digitalTools.websiteText":
+    "Build your complete online presence. Get a stunning website, a professional domain name, and business email — all in one seamless package.",
+  "digitalTools.whatsIncluded": "What's included",
+  "digitalTools.onboard": "Onboard",
+  "digitalTools.notAvailable":
+    "This feature is not available in the app at the moment. Please visit our main website on your browser to get started.",
+  "digitalTools.checklist.instantDelivery": "Instant delivery to all networks",
+  "digitalTools.checklist.personalized": "Personalized messaging at scale",
+  "digitalTools.checklist.deliveryReports":
+    "Detailed delivery reports & analytics",
+  "digitalTools.checklist.trackTransactions":
+    "Track every transaction effortlessly",
+  "digitalTools.checklist.invoices": "Manage invoices & payments",
+  "digitalTools.checklist.reports": "Generate professional financial reports",
+  "digitalTools.checklist.shopify": "Shopify-style storefront setup",
+  "digitalTools.checklist.mpesa": "M-Pesa & card payment gateways",
+  "digitalTools.checklist.inventory": "Inventory & order tracking",
+  "digitalTools.checklist.responsive": "Stunning, responsive website",
+  "digitalTools.checklist.domain": "Professional domain name",
+  "digitalTools.checklist.email": "Business email included",
+
+  // ── Financing (shared) ──
+  "financing.companyInfo": "Company Information",
+  "financing.companyName": "Company Name",
+  "financing.companyNamePlaceholder": "Enter company name",
+  "financing.phoneNumber": "Phone Number",
+  "financing.phonePlaceholder": "e.g. +254 712 345 678",
+  "financing.emailAddress": "Email Address",
+  "financing.emailPlaceholder": "e.g. name@company.co.ke",
+  "financing.contactPerson": "Contact Person",
+  "financing.contactPersonPlaceholder": "Enter full name",
+  "financing.companyAddress": "Company Address",
+  "financing.companyAddressPlaceholder": "Enter company address",
+  "financing.registrationNumber": "Company Registration Number",
+  "financing.registrationPlaceholder": "Enter registration number",
+  "financing.vatNumber": "VAT Number",
+  "financing.vatPlaceholder": "Enter VAT number (optional)",
+  "financing.financingRequest": "Financing Request",
+  "financing.requestedAmount": "Requested Financing Amount (KES)",
+  "financing.requestedAmountPlaceholder": "Enter requested amount",
+  "financing.interestRate": "Interest Rate (%)",
+  "financing.interestRatePlaceholder": "e.g. 12%",
+  "financing.repaymentPeriod": "Repayment Period",
+  "financing.repaymentPeriodPlaceholder": "e.g. 12 months",
+  "financing.collateralDetails": "Collateral Details",
+  "financing.collateralPlaceholder": "Describe the collateral being offered",
+  "financing.declarations": "Declarations & Agreements",
+  "financing.declaration1":
+    "I declare that all information provided is true and accurate to the best of my knowledge.",
+  "financing.declaration2":
+    "I authorize the partner bank to verify the information provided and conduct credit checks.",
+  "financing.declaration3":
+    "I understand that approval is subject to the partner bank's terms and conditions.",
+  "financing.declaration4":
+    "I agree to the Terms and Conditions and Privacy Policy.",
+  "financing.submitApplication": "Submit Application",
+  "financing.fillRequired": "Please fill in all required fields correctly.",
+  "financing.acceptTerms":
+    "Please accept all declarations and terms before submitting.",
+  "financing.companyNameRequired": "Company name is required",
+  "financing.phoneRequired": "Phone number is required",
+  "financing.contactPersonRequired": "Contact person is required",
+  "financing.registrationRequired": "Registration number is required",
+  "financing.addressRequired": "Company address is required",
+  "financing.emailRequired": "Email address is required",
+  "financing.validEmail": "Enter a valid email address",
+  "financing.validAmount": "Enter a valid amount",
+  "financing.requestedRequired": "Requested financing amount is required",
+  "financing.repaymentRequired": "Repayment period is required",
+  "financing.interestRequired": "Interest rate is required",
+  "financing.collateralRequired": "Collateral details are required",
+  "financing.submissionFailed": "Submission failed. Please try again.",
+
+  // ── Asset financing ──
+  "assetFin.subtitle":
+    "Acquire essential business equipment, vehicles, and machinery with flexible asset financing solutions tailored to your needs.",
+  "assetFin.assetDetails": "Asset Details",
+  "assetFin.assetType": "Asset Type",
+  "assetFin.assetTypePlaceholder": "e.g. Vehicle, Machinery, Equipment",
+  "assetFin.assetDescription": "Asset Description",
+  "assetFin.assetDescriptionPlaceholder":
+    "Describe the asset including make, model, and specifications",
+  "assetFin.assetCost": "Asset Cost (KES)",
+  "assetFin.assetCostPlaceholder": "Enter asset cost",
+  "assetFin.assetInvoice": "Upload Asset Invoice / Quotation",
+  "assetFin.assetInvoicePlaceholder": "Upload invoice or quotation",
+  "assetFin.supplierName": "Supplier's Name",
+  "assetFin.supplierNamePlaceholder": "Enter supplier's name",
+  "assetFin.supplierContact": "Supplier Contact Information",
+  "assetFin.downPayment": "Down Payment (KES)",
+  "assetFin.downPaymentPlaceholder": "Enter down payment amount",
+  "assetFin.supportingDocs": "Supporting Documents",
+  "assetFin.nationalId": "National ID",
+  "assetFin.nationalIdPlaceholder": "Upload national ID",
+  "assetFin.proofIncome": "Proof of Income (e.g. Payslip)",
+  "assetFin.proofIncomePlaceholder": "Upload proof of income",
+  "assetFin.taxCertificate": "Tax Compliance Certificate",
+  "assetFin.taxCertificatePlaceholder": "Upload tax compliance certificate",
+  "assetFin.assetTypeRequired": "Asset type is required",
+  "assetFin.assetDescriptionRequired": "Asset description is required",
+  "assetFin.assetCostRequired": "Asset cost is required",
+  "assetFin.validCost": "Enter a valid cost",
+  "assetFin.invoiceRequired": "Asset invoice/quotation is required",
+  "assetFin.supplierNameRequired": "Supplier name is required",
+  "assetFin.supplierContactRequired": "Supplier contact is required",
+  "assetFin.downPaymentRequired": "Down payment is required",
+  "assetFin.submitted":
+    "Your asset financing application has been submitted successfully.",
+
+  // ── LPO financing ──
+  "lpo.subtitle":
+    "Get financing against confirmed Local Purchase Orders (LPOs) to fulfill large contracts without straining your working capital.",
+  "lpo.applyingTo": "Applying to ",
+  "lpo.profilePicture": "Company Profile Picture",
+  "lpo.profilePicturePlaceholder": "Upload profile picture",
+  "lpo.taxCertificate": "Tax Compliance Certificate",
+  "lpo.taxCertificatePlaceholder": "Upload tax compliance certificate",
+  "lpo.lpoDetails": "LPO Details",
+  "lpo.lpoNumber": "LPO Number",
+  "lpo.lpoNumberPlaceholder": "Enter LPO number",
+  "lpo.lpoAmount": "LPO Amount (KES)",
+  "lpo.lpoAmountPlaceholder": "Enter LPO amount",
+  "lpo.lpoDate": "LPO Date",
+  "lpo.lpoDatePlaceholder": "YYYY-MM-DD",
+  "lpo.lpoDocument": "LPO Document",
+  "lpo.lpoDocumentPlaceholder": "Upload LPO document",
+  "lpo.buyerName": "Buyer Name",
+  "lpo.buyerNamePlaceholder": "Enter buyer name",
+  "lpo.amountPlaceholder": "Enter amount",
+  "lpo.lpoNumberRequired": "LPO number is required",
+  "lpo.lpoAmountRequired": "LPO amount is required",
+  "lpo.lpoDateRequired": "LPO date is required",
+  "lpo.lpoDocumentRequired": "LPO document is required",
+  "lpo.buyerRequired": "Buyer name is required",
+  "lpo.noBank":
+    "No bank selected. Please go back and choose a funding provider.",
+  "lpo.submitted":
+    "Your LPO financing application has been submitted successfully.",
+
+  // ── Overdraft ──
+  "overdraft.subtitle":
+    "Access flexible overdraft facilities to manage your day-to-day cash flow and cover short-term funding gaps as they arise.",
+  "overdraft.accountHolder": "Account Holder",
+  "overdraft.accountHolderName": "Account Holder's Name",
+  "overdraft.accountHolderNamePlaceholder": "Enter account holder's name",
+  "overdraft.accountNumber": "Account Number",
+  "overdraft.accountNumberPlaceholder": "Enter account number",
+  "overdraft.tradingName": "Business / Trading Name",
+  "overdraft.tradingNamePlaceholder":
+    "Enter business or trading name (optional)",
+  "overdraft.contactInfo": "Contact Info",
+  "overdraft.overdraftRequest": "Overdraft Request Details",
+  "overdraft.requestedAmount": "Requested Overdraft Amount (KES)",
+  "overdraft.requestedAmountPlaceholder": "Enter requested amount",
+  "overdraft.purpose": "Purpose of Overdraft",
+  "overdraft.purposePlaceholder": "Describe the purpose of the overdraft",
+  "overdraft.currentBalance": "Current Account Balance (KES)",
+  "overdraft.currentBalancePlaceholder": "Enter current balance",
+  "overdraft.avgMonthly": "Average Monthly Revenue (KES)",
+  "overdraft.avgMonthlyPlaceholder": "Enter average monthly revenue",
+  "overdraft.repaymentPeriod": "Proposed Repayment Period",
+  "overdraft.repaymentPeriodPlaceholder": "e.g. 6 months",
+  "overdraft.collateral": "Collateral",
+  "overdraft.collateralValuation": "Valuation of Collateral (KES)",
+  "overdraft.collateralValuationPlaceholder": "Enter valuation amount",
+  "overdraft.uploadDocs": "Upload Supporting Documents",
+  "overdraft.uploadDocsPlaceholder": "Upload supporting documents",
+  "overdraft.accountHolderRequired": "Account holder name is required",
+  "overdraft.accountNumberRequired": "Account number is required",
+  "overdraft.contactRequired": "Contact info is required",
+  "overdraft.requestedRequired": "Requested overdraft amount is required",
+  "overdraft.purposeRequired": "Purpose of overdraft is required",
+  "overdraft.balanceRequired": "Current account balance is required",
+  "overdraft.validBalance": "Enter a valid balance",
+  "overdraft.avgRequired": "Average monthly revenue is required",
+  "overdraft.collateralValuationRequired": "Collateral valuation is required",
+  "overdraft.validValuation": "Enter a valid valuation",
+  "overdraft.docsRequired": "Supporting documents are required",
+  "overdraft.submitted":
+    "Your overdraft application has been submitted successfully.",
+
+  // ── Lesson ──
+  "lesson.notFound": "Lesson not found.",
+  "lesson.failedLoad": "Failed to load lesson.",
+  "lesson.about": "About this lesson",
+  "lesson.content": "Lesson Content",
+  "lesson.completed": "Lesson completed!",
+  "lesson.completedText": "Great job! The next lesson is now unlocked.",
+  "lesson.nextLesson": "Continue to next lesson",
+  "lesson.backToLessons": "Back to lessons",
+  "lesson.markComplete": "Mark as complete",
+  "lesson.completing": "Completing...",
+  "lesson.failedComplete": "Failed to complete lesson.",
+  "lesson.missingCourse": "Course information is missing.",
+
+  // ── Lessons list ──
+  "lessons.notFound": "Course not found.",
+  "lessons.failedLoad": "Failed to load lessons.",
+  "lessons.courseProgress": "Course progress",
+  "lessons.lessonsCompleted": "{completed} of {total} lessons completed",
+  "lessons.remaining": "{count} lesson{s} remaining",
+  "lessons.completedLessons": "Completed lessons",
+  "lessons.completedAlert":
+    "Course Completed! You have successfully completed all lessons in this course.",
+  "lessons.goToCertificates": "Go to certificates",
+  "lessons.lessons": "Lessons",
+  "lessons.lesson": "Lesson {number}:",
+  "lessons.current": "Current",
+  "lessons.upcoming": "Upcoming",
+  "lessons.locked": "Locked",
+  "lessons.startLesson": "Start lesson",
+  "lessons.noLessons": "No lessons available.",
+
+  // ── My applications ──
+  "applications.subtitle":
+    "Track and manage all your Integrated Business Solutions applications",
+  "applications.all": "All",
+  "applications.needsAction": "Needs action",
+  "applications.underReview": "Under review",
+  "applications.approved": "Approved",
+  "applications.declined": "Declined",
+  "applications.application": "Application",
+  "applications.date": "Date",
+  "applications.service": "Service",
+  "applications.status": "Status",
+  "applications.amount": "Amount",
+  "applications.provider": "Provider",
+  "applications.action": "Action",
+  "applications.resolve": "Resolve",
+  "applications.view": "View",
+  "applications.reapply": "Reapply",
+  "applications.empty": "No applications found in this category.",
+  "applications.details": "Application details",
+  "applications.dateApplied": "Date applied",
+
+  // ── Profile ──
+  "profile.subtitle": "Update your personal information and account settings",
+  "profile.personalInfo": "Personal Information",
+  "profile.firstName": "First name",
+  "profile.middleName": "Middle name",
+  "profile.lastName": "Last name",
+  "profile.email": "Email address",
+  "profile.phone": "Phone number",
+  "profile.county": "County",
+  "profile.whyInfo": "Why we need this information",
+  "profile.whyInfoText":
+    "We collect this information to personalize your learning experience, match you with relevant opportunities in your region, and ensure compliance with procurement eligibility requirements. Your county details help us surface tenders and training programs available in your area.",
+
+  // ── Quiz ──
+  "quiz.needToPass": "You need {mark}% to pass",
+  "quiz.instructions": "Exam Instructions",
+  "quiz.timeLimit": "Time limit: ",
+  "quiz.minutes": "minutes",
+  "quiz.questions": "Questions: ",
+  "quiz.multipleChoice": "multiple choice",
+  "quiz.passMark": "Pass mark: ",
+  "quiz.warning": "Do not leave the screen or switch apps during the exam",
+  "quiz.starting": "Starting...",
+  "quiz.startNow": "Start now",
+  "quiz.backToLesson": "Back to lesson",
+  "quiz.question": "Question {current} of {total}",
+  "quiz.submitting": "Submitting...",
+  "quiz.submitExam": "Submit exam",
+  "quiz.nextQuestion": "Next question",
+  "quiz.flagged":
+    "Switching apps during the exam has been flagged ({count}×). This may affect your result.",
+  "quiz.finalScore": "Final score",
+  "quiz.passed": "Congratulations! You passed with {score}",
+  "quiz.failed": "You scored {score}. The pass mark is {mark}%.",
+  "quiz.status": "Status",
+  "quiz.passedLabel": "Passed",
+  "quiz.failedLabel": "Failed",
+  "quiz.attempt": "Attempt",
+  "quiz.completedAt": "Completed at",
+  "quiz.nextAttempt": "Next attempt",
+  "quiz.performance": "Performance summary",
+  "quiz.score": "Score",
+  "quiz.points": "{score}/{total} points",
+  "quiz.correctAnswers": "Correct answers",
+  "quiz.retake": "Retake exam",
+  "quiz.failedLoad": "Failed to load exam.",
+  "quiz.failedStart": "Failed to start exam.",
+  "quiz.failedSubmit": "Failed to submit exam.",
+
+  // ── Support ──
+  "support.subtitle": "Get in touch with our support team for assistance",
+  "support.call": "Call",
+  "support.email": "Email",
+  "support.whatsapp": "WhatsApp",
+  "support.allCategories": "All Categories",
+  "support.allStatus": "All Status",
+  "support.allPriority": "All Priority",
+  "support.creating": "Creating...",
+  "support.newTicket": "New ticket",
+  "support.subject": "Subject",
+  "support.category": "Category",
+  "support.priority": "Priority",
+  "support.status": "Status",
+  "support.date": "Date",
+  "support.noTickets": "No tickets found",
+  "support.noTicketsSub": "Create a new ticket to get help from our team.",
+  "support.failedLoad": "Failed to load tickets.",
+  "support.ticketCreated": "Ticket created successfully.",
+  "support.failedCreate": "Failed to create ticket.",
+  "support.inProgress": "In Progress",
+  "support.open": "Open",
+  "support.resolved": "Resolved",
+  "support.closed": "Closed",
+
+  // ── New ticket modal ──
+  "newTicket.title": "Create New Ticket",
+  "newTicket.subject": "Subject",
+  "newTicket.subjectPlaceholder": "Enter ticket subject",
+  "newTicket.category": "Category",
+  "newTicket.selectCategory": "Select category",
+  "newTicket.priority": "Priority",
+  "newTicket.selectPriority": "Select priority",
+  "newTicket.description": "Description",
+  "newTicket.descriptionPlaceholder": "Describe your issue in detail...",
+  "newTicket.submit": "Submit Ticket",
+
+  // ── Ticket preview ──
+  "ticket.ticket": "Ticket",
+  "ticket.conversation": "Conversation",
+  "ticket.typeMessage": "Type your message...",
+  "ticket.failedLoad": "Failed to load ticket.",
+  "ticket.failedReply": "Failed to send reply.",
+
+  // ── Data policy ──
+  "dataPolicy.lastUpdated": "Last updated: August 11, 2026",
+  "dataPolicy.intro":
+    "At Nyota, we take your privacy seriously. This Data Policy explains how we collect, use, store, and protect your personal information when you use our platform.",
+  "dataPolicy.s1Title": "1. Information We Collect",
+  "dataPolicy.s1Intro":
+    "We collect information that you provide directly to us, including but not limited to:",
+  "dataPolicy.s1b1":
+    "Personal identification details (name, email address, phone number, national ID)",
+  "dataPolicy.s1b2":
+    "Business information (company name, registration details, KRA PIN)",
+  "dataPolicy.s1b3": "Profile data (profile picture, bio, preferences)",
+  "dataPolicy.s1b4":
+    "Usage data (courses enrolled, certificates earned, webinar attendance)",
+  "dataPolicy.s1b5":
+    "Device information (device type, operating system, IP address)",
+  "dataPolicy.s2Title": "2. How We Use Your Information",
+  "dataPolicy.s2Intro":
+    "Your information helps us provide and improve our services:",
+  "dataPolicy.s2b1": "To create and manage your account",
+  "dataPolicy.s2b2": "To deliver courses, webinars, and learning content",
+  "dataPolicy.s2b3": "To process applications for funding and opportunities",
+  "dataPolicy.s2b4":
+    "To send notifications about updates, events, and relevant opportunities",
+  "dataPolicy.s2b5": "To comply with legal and regulatory requirements",
+  "dataPolicy.s3Title": "3. Data Sharing",
+  "dataPolicy.s3Intro":
+    "We do not sell your personal data. We may share your information with:",
+  "dataPolicy.s3b1":
+    "Government agencies for funding and tender applications you initiate",
+  "dataPolicy.s3b2":
+    "Partner banks and financial institutions for funding applications",
+  "dataPolicy.s3b3": "Service providers who assist us in platform operations",
+  "dataPolicy.s4Title": "4. Data Storage & Security",
+  "dataPolicy.s4Text":
+    "We implement industry-standard security measures to protect your data, including encryption, secure servers, and regular security audits. Your data is stored on secure servers located in Kenya, in compliance with the Data Protection Act, 2019.",
+  "dataPolicy.s5Title": "5. Your Rights",
+  "dataPolicy.s5Intro":
+    "Under the Kenya Data Protection Act, you have the right to:",
+  "dataPolicy.s5b1": "Access your personal data",
+  "dataPolicy.s5b2": "Request correction of inaccurate data",
+  "dataPolicy.s5b3": "Request deletion of your data",
+  "dataPolicy.s5b4": "Object to or restrict processing of your data",
+  "dataPolicy.s5b5": "Withdraw consent at any time",
+  "dataPolicy.s6Title": "6. Contact Us",
+  "dataPolicy.s6Text":
+    "If you have questions about this Data Policy or wish to exercise your data rights, contact our Data Protection Officer at:",
+
+  // ── Terms & conditions ──
+  "terms.lastUpdated": "Last updated: August 11, 2026",
+  "terms.intro":
+    "Welcome to our Training Portal. By accessing or using our services, you agree to comply with the following terms and conditions. Please read them carefully before proceeding.",
+  "terms.s1Title": "1. Acceptance of Terms",
+  "terms.s1Text":
+    "By creating an account, accessing, or using any part of this platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must discontinue use of our services immediately.",
+  "terms.s2Title": "2. Eligibility",
+  "terms.s2Text":
+    "You must be at least 18 years old to use our services. By using this platform, you represent and warrant that you meet the minimum age requirement and have the legal capacity to enter into a binding agreement.",
+  "terms.s3Title": "3. Account Registration and Security",
+  "terms.s3Text":
+    "You are responsible for providing accurate, current, and complete information during the registration process. You must maintain and promptly update your account information to keep it accurate. You are solely responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized access or use of your account.",
+  "terms.s4Title": "4. User Conduct and Responsibilities",
+  "terms.s4Text":
+    "You agree not to use our services for any unlawful, fraudulent, or unauthorized purpose. You shall not engage in any activity that interferes with or disrupts the platform, its servers, or networks. You may not upload, post, or transmit any content that is defamatory, obscene, harassing, or otherwise objectionable.",
+  "terms.s5Title": "5. Intellectual Property Rights",
+  "terms.s5Text":
+    "All content, materials, logos, trademarks, and intellectual property displayed on this platform are owned by or licensed to us. You may not reproduce, distribute, modify, or create derivative works from any content without our express written permission. Unauthorized use of our intellectual property may result in legal action.",
+  "terms.s6Title": "6. Payment and Billing",
+  "terms.s6Text":
+    "Certain services on this platform may require payment of fees. You agree to pay all applicable charges in accordance with the billing terms in effect at the time such fees become payable. All payments are non-refundable unless otherwise stated. We reserve the right to change our pricing at any time with reasonable notice.",
+  "terms.s7Title": "7. Privacy and Data Protection",
+  "terms.s7Text":
+    "Your privacy is important to us. Our collection, use, and disclosure of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference. By using our services, you consent to the collection and use of your data as described in our Privacy Policy.",
+  "terms.s8Title": "8. Third-Party Services and Links",
+  "terms.s8Text":
+    "Our platform may contain links to third-party websites, applications, or services that are not owned or controlled by us. We assume no responsibility for the content, privacy policies, or practices of any third-party sites. You access such third-party services at your own risk.",
+  "terms.s9Title": "9. Limitation of Liability",
+  "terms.s9Text":
+    "To the fullest extent permitted by applicable law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or in connection with your use of the platform. Our total liability for any claim shall not exceed the amount paid by you, if any, for the services during the twelve months preceding the claim.",
+  "terms.s10Title": "10. Disclaimers of Warranties",
+  "terms.s10Text":
+    'The platform and all content, services, and features are provided on an "as is" and "as available" basis without warranties of any kind, either express or implied. We do not guarantee that the services will be uninterrupted, error-free, secure, or free from viruses or other harmful components.',
+  "terms.s11Title": "11. Termination",
+  "terms.s11Text":
+    "We reserve the right to suspend or terminate your account and access to the platform at our sole discretion, without prior notice, for any violation of these Terms or for any other reason. Upon termination, your right to use the platform will cease immediately, and any data associated with your account may be deleted.",
+  "terms.s12Title": "12. Modifications to Terms",
+  "terms.s12Text":
+    "We reserve the right to modify or update these Terms and Conditions at any time without prior notice. Any changes will be effective immediately upon posting. Your continued use of the platform after any modifications constitutes your acceptance of the revised terms. It is your responsibility to review these Terms periodically for updates.",
+  "terms.s13Title": "13. Governing Law and Dispute Resolution",
+  "terms.s13Text":
+    "These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of Kenya. Any disputes arising out of or in connection with these Terms shall first be attempted to be resolved through good-faith negotiations. If a resolution cannot be reached, the dispute shall be submitted to mediation or arbitration in accordance with applicable laws.",
+  "terms.s14Title": "14. Contact Information",
+  "terms.s14Text":
+    "If you have any questions, concerns, or feedback regarding these Terms and Conditions, please contact us through the support channels provided on our platform. We are committed to addressing your inquiries in a timely manner.",
+  "terms.footer":
+    "By continuing to use our services, you acknowledge that you have read, understood, and agreed to be bound by these Terms and Conditions. If you do not agree, please discontinue use of the platform immediately.",
+};
+
+export type TranslationKey = keyof typeof en;
+
+const sw: Record<TranslationKey, string> = {
+  // ── Common ──
+  "common.cancel": "Ghairi",
+  "common.confirm": "Thibitisha",
+  "common.done": "Nimemaliza",
+  "common.close": "Funga",
+  "common.back": "Rudi",
+  "common.next": "Endelea",
+  "common.continue": "Endelea",
+  "common.all": "Zote",
+  "common.english": "Kiingereza",
+  "common.swahili": "Kiswahili",
+  "common.footer": "© 2026 EbisCloud Solutions",
+  "common.selectLanguage": "Chagua lugha",
+  "common.selectFile": "Chagua faili",
+  "common.filePickerMessage": "Hii itafungua kichagua faili.",
+  "common.you": "Wewe",
+  "common.host": "Mwenyeji",
+  "common.min": "dk",
+  "common.hours": "saa",
+  "common.attending": "{count} wanaohudhuria",
+  "common.requiredNote": "Sehemu zote zilizo na * zinahitajika",
+  "common.searchTickets": "Tafuta tiketi...",
+  "common.acceptedFormats":
+    "Miundo inayokubalika: PDF, JPG, PNG, DOC (Upeo wa MB 10)",
+  "common.loadingQuestions": "Inapakia maswali...",
+  "common.loadingRecommendations": "Inapakia mapendekezo...",
+
+  // ── Language selector ──
+  "lang.optionEnglish": "Kiingereza",
+  "lang.optionSwahili": "Kiswahili",
+
+  // ── Header ──
+  "header.welcomeBack": "Karibu tena",
+  "header.user": "Mtumiaji",
+  "header.logOutTitle": "Ondoka",
+  "header.logOutMessage": "Una uhakika unataka kuondoka?",
+  "header.logOut": "Ondoka",
+
+  // ── Tabs ──
+  "tab.home": "Nyumbani",
+  "tab.myLearning": "Masomo Yangu",
+  "tab.opportunities": "Fursa",
+  "tab.webinars": "Mikutano",
+  "tab.settings": "Mipangilio",
+
+  // ── Login ──
+  "auth.login.welcome": "Karibu tena!",
+  "auth.login.subtitle": "Ingia kwenye akaunti yako",
+  "auth.login.email": "Barua pepe",
+  "auth.login.emailPlaceholder": "Weka barua pepe yako",
+  "auth.login.password": "Nenosiri",
+  "auth.login.passwordPlaceholder": "Weka nenosiri lako",
+  "auth.login.forgotPassword": "Umesahau nenosiri?",
+  "auth.login.login": "Ingia",
+  "auth.login.signUp": "Jisajili",
+  "auth.login.enterCredentials": "Tafadhali weka barua pepe na nenosiri",
+  "auth.login.failed": "Kuingia kumeshindikana. Tafadhali jaribu tena.",
+
+  // ── Create account ──
+  "auth.create.title": "Unda akaunti yako",
+  "auth.create.subtitle":
+    "Jiunge na maelfu ya biashara zinazojenga mustakabali wao",
+  "auth.create.info": "Tutatuma nambari ya uthibitisho kwa barua pepe hii",
+  "auth.create.verify": "Thibitisha",
+  "auth.create.alreadyHave": "Tayari una akaunti? ",
+  "auth.create.logIn": "Ingia",
+  "auth.create.accountExists": "Akaunti Ipo",
+  "auth.create.accountExistsMessage":
+    "Akaunti yenye barua pepe hii tayari ipo. Tafadhali ingia badala yake.",
+  "auth.create.verificationFailed":
+    "Uthibitishaji umeshindikana. Tafadhali jaribu tena.",
+
+  // ── Forgot password ──
+  "auth.forgot.title": "Umesahau nenosiri",
+  "auth.forgot.subtitle":
+    "Weka barua pepe au nambari ya simu na tutakutumia kiungo cha kuweka upya nenosiri",
+  "auth.forgot.label": "Barua pepe au nambari ya simu",
+  "auth.forgot.placeholder": "Weka barua pepe au nambari ya simu",
+  "auth.forgot.info": "Tutatuma nambari ya uthibitisho kwa barua pepe hii",
+  "auth.forgot.enterContact": "Tafadhali weka barua pepe au nambari ya simu",
+
+  // ── Register ──
+  "auth.register.title": "Malizia kuunda akaunti yako",
+  "auth.register.subtitle":
+    "Karibu! Tafadhali jaza fomu hapa chini ili kuunda akaunti yako.",
+  "auth.register.personalInfo": "Taarifa Binafsi",
+  "auth.register.firstName": "Jina la kwanza",
+  "auth.register.firstNamePlaceholder": "Weka jina lako la kwanza",
+  "auth.register.middleName": "Jina la kati",
+  "auth.register.middleNamePlaceholder": "Weka jina lako la kati",
+  "auth.register.lastName": "Jina la mwisho",
+  "auth.register.lastNamePlaceholder": "Weka jina lako la mwisho",
+  "auth.register.nationalId": "Nambari ya kitambulisho cha taifa",
+  "auth.register.nationalIdPlaceholder":
+    "Weka nambari ya kitambulisho cha taifa",
+  "auth.register.identityInfo": "Tutatumia hii kuthibitisha utambulisho wako",
+  "auth.register.countyInfo": "Taarifa za Kaunti",
+  "auth.register.county": "Kaunti",
+  "auth.register.constituency": "Eneo bunge",
+  "auth.register.ward": "Wadi",
+  "auth.register.selectCounty": "Chagua kaunti yako",
+  "auth.register.selectConstituency": "Chagua eneo bunge lako",
+  "auth.register.selectWard": "Chagua wadi yako",
+  "auth.register.passwordSection": "Nenosiri",
+  "auth.register.passwordPlaceholder": "Weka nenosiri lako",
+  "auth.register.passwordInfo":
+    "Lazima liwe na angalau herufi 8 na liwe na mchanganyiko wa herufi na nambari",
+  "auth.register.confirmPassword": "Thibitisha nenosiri",
+  "auth.register.confirmPasswordPlaceholder": "Thibitisha nenosiri lako",
+  "auth.register.passwordsDoNotMatch": "Nenosiri hazilingani",
+  "auth.register.confirmPasswordInfo":
+    "Lazima lifanane na nenosiri lililoingizwa hapo juu",
+  "auth.register.weak": "Dhaifu",
+  "auth.register.fair": "Wastani",
+  "auth.register.good": "Nzuri",
+  "auth.register.strong": "Imara",
+  "auth.register.register": "Jisajili",
+  "auth.register.fillPersonal":
+    "Tafadhali jaza sehemu zote za taarifa binafsi.",
+  "auth.register.selectCountyError":
+    "Tafadhali chagua kaunti yako na eneo bunge.",
+  "auth.register.passwordLength": "Nenosiri lazima liwe na angalau herufi 8.",
+  "auth.register.passwordMismatch": "Nenosiri hazilingani.",
+  "auth.register.registrationFailed":
+    "Usajili umeshindikana. Tafadhali jaribu tena.",
+  "auth.register.selectCountyModal": "Chagua Kaunti",
+  "auth.register.selectConstituencyModal": "Chagua Eneo Bunge",
+  "auth.register.selectWardModal": "Chagua Wadi",
+
+  // ── Reset password ──
+  "auth.reset.title": "Weka upya nenosiri",
+  "auth.reset.subtitle": "Weka nenosiri lako jipya hapa chini",
+  "auth.reset.newPassword": "Nenosiri jipya",
+  "auth.reset.newPasswordPlaceholder": "Weka nenosiri lako jipya",
+  "auth.reset.confirmPassword": "Thibitisha nenosiri",
+  "auth.reset.confirmPasswordPlaceholder": "Thibitisha nenosiri lako jipya",
+  "auth.reset.reset": "Weka upya nenosiri",
+  "auth.reset.missingDetails":
+    "Taarifa za akaunti hazipo. Tafadhali anza upya.",
+  "auth.reset.success":
+    "Nenosiri limewekwa upya kwa mafanikio. Tafadhali ingia.",
+  "auth.reset.failed": "Kuweka upya kumeshindikana. Tafadhali jaribu tena.",
+
+  // ── Verify phone ──
+  "auth.verifyPhone.title": "Thibitisha nambari yako ya simu",
+  "auth.verifyPhone.subtitle":
+    "Weka nambari yako ya simu kuthibitisha akaunti yako",
+  "auth.verifyPhone.phoneNumber": "Nambari ya simu",
+  "auth.verifyPhone.info": "Mfano: +254 712 345 678 → weka 712345678",
+  "auth.verifyPhone.invalidPhone": "Tafadhali weka nambari sahihi ya simu.",
+  "auth.verifyPhone.wrongDetails": "Maelezo si sahihi? Rudi nyuma",
+
+  // ── OTP screens ──
+  "otp.title": "Weka nambari ya uthibitisho",
+  "otp.subtitleEmail": "Tumetuma nambari ya tarakimu 6 kwa barua pepe yako",
+  "otp.subtitleEmailPhone":
+    "Tumetuma nambari ya tarakimu 6 kwa barua pepe na simu yako",
+  "otp.subtitlePhone":
+    "Tumetuma nambari ya tarakimu 6 kwa nambari yako ya simu",
+  "otp.expiresIn": "Nambari inaisha baada ya: {time}",
+  "otp.waitResend": "Hukupokea nambari? Subiri: {time} ili utume tena",
+  "otp.resend": "Tuma nambari tena",
+  "otp.wrongDetails": "Maelezo si sahihi? Rudi nyuma",
+  "otp.incorrectCode":
+    "Nambari ya uthibitisho uliyoweka si sahihi. Tafadhali jaribu tena.",
+
+  // ── Onboarding: get started ──
+  "onboard.welcome": "Karibu, Joab!",
+  "onboard.welcomeSub": "Tuandae wasifu wako",
+  "onboard.infoText":
+    "Uko hatua chache mbali na kupata maelfu ya fursa!\n\nKamilisha wasifu wako ili kufungua tangazo za kazi, mipango ya mafunzo, na fursa za ufadhili.",
+  "onboard.setupChecklist": "Orodha ya Kuanzisha",
+  "onboard.eligibility": "Ustahiki na Muktadha",
+  "onboard.eligibilitySub":
+    "Thibitisha ustahiki wako na utoe muktadha kuhusu hali yako",
+  "onboard.coursesPreview": "Muhtasari wa Kozi",
+  "onboard.coursesPreviewSub": "Chunguza kozi zinazopatikana na maelezo yake",
+  "onboard.min": "dk",
+  "onboard.whyTitle": "🎯 Kwa nini ukamilishe wasifu wako?",
+  "onboard.bullet1":
+    "Pata fursa za AGPO zilizothibitishwa zinazolingana na ujuzi wako",
+  "onboard.bullet2": "Fungua mipango ya mafunzo ili kujenga ujuzi unaohitajika",
+  "onboard.bullet3":
+    "Kuwa na sifa za kupata fursa za ufadhili kwa miradi na elimu yako",
+  "onboard.bullet4":
+    "Ungana na jamii ya wataalamu na washauri wenye malengo kama yako",
+  "onboard.start": "Anza",
+  "onboard.getStartedTitle": "Anza",
+
+  // ── Onboarding: KYC ──
+  "kyc.progress": "Swali la {current} kati ya {total}",
+  "kyc.title": "Ustahiki na Muktadha",
+  "kyc.subtitle": "Tusaidie kukulinganisha na fursa sahihi",
+  "kyc.submit": "Wasilisha",
+  "kyc.footer":
+    "Unaweza kusasisha wasifu wako wakati wowote kutoka kwenye dashibodi",
+  "kyc.loadFailed": "Imeshindikana kupakia maswali. Tafadhali jaribu tena.",
+  "kyc.missingUuid": "UUID ya mtumiaji haipo. Tafadhali ingia tena.",
+  "kyc.submissionFailed": "Uwasilishaji umeshindikana. Tafadhali jaribu tena.",
+
+  // ── Onboarding: results ──
+  "results.title": "Hongera!",
+  "results.subtitle": "Hizi ni kozi tunazopendekeza kulingana na wasifu wako.",
+  "results.noCourses": "Hakuna kozi bado.",
+  "results.loadFailed": "Imeshindikana kupakia mapendekezo.",
+  "results.dashboard": "Endelea kwenye Dashibodi",
+
+  // ── Home ──
+  "home.greeting": "Karibu tena, {name}! 👋",
+  "home.subtitle": "Huu ni muhtasari wa shughuli zako za hivi karibuni.",
+  "home.onboarded": "Umekamilishwa",
+  "home.profileIncomplete": "Wasifu haujakamilika",
+  "home.quickAccess": "Ufikiaji wa Haraka",
+  "home.certificates": "Vyeti",
+  "home.digitalTools": "Zana za Kidijitali",
+  "home.profile": "Wasifu",
+  "home.support": "Msaada",
+  "home.continueLearning": "Endelea Kujifunza",
+  "home.lessonsCompleted": "{completed}/{total} masomo yamekamilika",
+  "home.overallProgress": "Maendeleo ya jumla",
+  "home.enrolled": "Umejiandikisha",
+  "home.done": "Imekamilika",
+  "home.available": "Inapatikana",
+  "home.coursesAvailable": "{count} kozi {s} zinapatikana",
+  "home.continueLearningBtn": "Endelea kujifunza",
+  "home.noCourses": "Hakuna kozi zinazoendelea.",
+  "home.browseCourses": "Vinjari kozi",
+  "home.announcements": "Matangazo",
+  "home.noAnnouncements": "Hakuna matangazo kwa sasa.",
+  "home.webinars": "Mikutano ya Mtandaoni",
+  "home.live": "● Moja kwa moja",
+  "home.hostedBy": "Imeandaliwa na {host} • {count} wanaohudhuria",
+  "home.hostedByOnly": "Imeandaliwa na {host}",
+  "home.joinMeeting": "Jiunge na mkutano",
+  "home.meetingLinkAvailable": "Kiungo cha mkutano kinapatikana",
+  "home.upcoming": "Inakuja",
+  "home.past": "Iliyopita",
+  "home.registered": "Umesajiliwa",
+  "home.rsvpNow": "Jisajili sasa",
+  "home.watchRecording": "Tazama rekodi",
+  "home.noRecording": "Hakuna rekodi",
+  "home.recordingAvailable": "Rekodi inapatikana",
+  "home.noLinkAvailable": "Hakuna kiungo kinachopatikana",
+  "home.browseAllWebinars": "Vinjari mikutano yote",
+  "home.sectorTraining": "Mafunzo ya Sekta Mahususi",
+  "home.construction": "Ujenzi",
+  "home.viewAll": "Ona yote",
+  "home.faq": "Maswali Yanayoulizwa Mara kwa Mara",
+  "home.webinarFaqs": "Maswali ya mikutano ya mtandaoni",
+  "home.noFaqs": "Hakuna maswali bado.",
+  "home.prerecorded": "Mikutano Iliyorekodiwa",
+  "home.recordedSessions": "Vipindi vilivyorekodiwa",
+  "home.noRecordedSessions": "Hakuna vipindi vilivyorekodiwa bado.",
+  "home.unableOpenLink": "Imeshindikana kufungua kiungo.",
+  "home.registeredWebinar": "Umesajiliwa kwa mkutano huu wa mtandaoni.",
+  "home.unableRegister": "Imeshindikana kujisajili. Tafadhali jaribu tena.",
+
+  // ── My learning ──
+  "learning.title": "Njia Yako ya Kujifunza",
+  "learning.subtitle": "Kamilisha kozi ili kupata vyeti na kufungua fursa",
+  "learning.recommended": "Imependekezwa kwako",
+  "learning.allCourses": "Kozi zote",
+  "learning.completed": "Imekamilika",
+  "learning.enrolled": "Umejiandikisha",
+  "learning.notEnrolled": "Hujaandikishwa",
+  "learning.lessons": "masomo",
+  "learning.lessonsCount": "{completed}/{total} masomo",
+  "learning.enrollNow": "Jiandikishe sasa",
+  "learning.reviewCourse": "Pitia kozi",
+  "learning.goToLessons": "Nenda kwenye masomo",
+  "learning.noCourses": "Hakuna kozi zilizopatikana",
+  "learning.checkBack": "Rudi baadaye kwa mapendekezo mapya.",
+  "learning.selfPaced": "Kwa kasi yako",
+  "learning.failedLoad": "Imeshindikana kupakia kozi.",
+  "learning.enrollTitle": "Jiandikishe kwenye Kozi",
+  "learning.enrollMessage":
+    'Unakaribia kujiandikisha kwenye "{title}". Una uhakika unataka kuendelea?',
+  "learning.enroll": "Jiandikishe",
+  "learning.tryAgain": "Tafadhali jaribu tena.",
+
+  // ── Opportunities ──
+  "opportunities.title": "Fursa",
+  "opportunities.subtitle": "Tazama na chunguza fursa zinazopatikana",
+  "opportunities.tabOpportunities": "Fursa",
+  "opportunities.tabFunding": "Ufadhili",
+  "opportunities.beforeApply": "Kabla ya kuomba",
+  "opportunities.beforeApplyText":
+    "Hakikisha umesajiliwa kwenye e-GP kabla ya kuomba zabuni. Vinjari zabuni za hivi karibuni hapa chini.",
+  "opportunities.loadingPortal": "Inapakia Mfumo wa e-GP…",
+  "opportunities.governmentFunding": "Ufadhili wa Serikali",
+  "opportunities.governmentFundingText":
+    "Chunguza fursa mbalimbali za ufadhili wa serikali zinazopatikana kwa vijana na wajasiriamali. Endelea kujua ruzuku, mikopo, na mipango ya usaidizi wa kifedha inayotolewa na serikali ili kukuza biashara yako au kufikia ndoto zako za ujasiriamali.",
+  "opportunities.externalFunding": "Ufadhili wa Nje (Benki)",
+  "opportunities.externalFundingText":
+    "Chunguza fursa mbalimbali za ufadhili wa nje zinazopatikana kwa vijana na wajasiriamali. Endelea kujua mikopo na mipango ya usaidizi wa kifedha inayotolewa na benki ili kukuza biashara yako au kufikia ndoto zako za ujasiriamali.",
+  "opportunities.backToFunding": "Rudi kwenye ufadhili",
+  "opportunities.governmentOptions": "Chaguo za ufadhili wa serikali",
+  "opportunities.governmentOptionsSub":
+    "Chunguza mikopo, ruzuku, na mipango ya usaidizi wa kifedha inayoungwa mkono na serikali",
+  "opportunities.externalOptions": "Chaguo za ufadhili wa nje",
+  "opportunities.externalOptionsSub":
+    "Chunguza mikopo na mipango ya usaidizi wa kifedha inayotolewa na benki kuu",
+  "opportunities.governmentOpportunity": "Fursa ya ufadhili wa serikali.",
+  "opportunities.bankOpportunity": "Fursa ya ufadhili wa benki.",
+  "opportunities.applyNow": "Omba sasa",
+  "opportunities.applyModalTitle": "Omba sasa",
+  "opportunities.applyModalSubtitle": "Chagua huduma ya benki kuomba ufadhili:",
+  "opportunities.lpoFinancing": "Ufadhili wa LPO",
+  "opportunities.lpoFinancingText":
+    "Pata ufadhili dhidi ya Maagizo ya Ununuzi ya Ndani (LPO) yaliyothibitishwa ili kutimiza mikataba mikubwa bila kusumbua mtaji wako.",
+  "opportunities.overdraft": "Overdrafti",
+  "opportunities.overdraftText":
+    "Pata huduma rahisi za overdrafti kusimamia mtiririko wako wa pesa na kufidia mapungufu ya muda mfupi ya ufadhili yanapotokea.",
+  "opportunities.assetFinancing": "Ufadhili wa Mali",
+  "opportunities.assetFinancingText":
+    "Pata vifaa muhimu vya biashara, magari, na mashine kwa suluhisho rahisi za ufadhili wa mali zinazolingana na mahitaji yako.",
+  "opportunities.failedLoad": "Imeshindikana kupakia chaguo za ufadhili.",
+
+  // ── Webinars ──
+  "webinars.title": "Mikutano ya Mtandaoni",
+  "webinars.subtitle":
+    "Jiunge na mikutano ya moja kwa moja na vipindi shirikishi vinavyoongozwa na wataalam wa sekta",
+  "webinars.live": "Moja kwa moja",
+  "webinars.upcoming": "Inakuja",
+  "webinars.past": "Iliyopita",
+  "webinars.ended": "Imemalizika",
+  "webinars.attending": "{count} wanaohudhuria",
+  "webinars.joinMeeting": "Jiunge na mkutano",
+  "webinars.watchRecording": "Tazama rekodi",
+  "webinars.noRecording": "Hakuna rekodi",
+  "webinars.registered": "Umesajiliwa",
+  "webinars.rsvpNow": "Jisajili sasa",
+  "webinars.meetingLinkAvailable": "Kiungo cha mkutano kinapatikana",
+  "webinars.recordingAvailable": "Rekodi inapatikana",
+  "webinars.noLinkAvailable": "Hakuna kiungo kinachopatikana",
+  "webinars.noWebinars": "Hakuna mikutano iliyopatikana",
+  "webinars.checkBack": "Rudi baadaye kwa vipindi vipya.",
+  "webinars.failedLoad": "Imeshindikana kupakia mikutano.",
+  "webinars.unableIdentify":
+    "Imeshindikana kutambua akaunti yako. Tafadhali ingia tena.",
+  "webinars.registeredMsg": "Umesajiliwa kwa mkutano huu wa mtandaoni.",
+  "webinars.unableRegister": "Imeshindikana kujisajili. Tafadhali jaribu tena.",
+
+  // ── Settings ──
+  "settings.title": "Mipangilio",
+  "settings.profile": "Wasifu",
+  "settings.support": "Msaada",
+  "settings.dataPolicy": "Sera ya Data",
+  "settings.terms": "Sheria na Masharti",
+  "settings.notifications": "Arifa",
+  "settings.emailNotif": "Arifa za Barua Pepe",
+  "settings.emailNotifSub": "Pokea masasisho na matangazo kupitia barua pepe",
+  "settings.smsNotif": "Arifa za SMS",
+  "settings.smsNotifSub": "Pata arifa muhimu na vikumbusho kupitia SMS",
+  "settings.pushNotif": "Arifa za Push",
+  "settings.pushNotifSub": "Wezesha arifa za wakati halisi kwenye kifaa chako",
+  "settings.whyInfo": "Kwa nini tunahitaji taarifa hii",
+  "settings.whyInfoText":
+    "Tunatumia taarifa hii kukutumia masasisho muhimu, vikumbusho, na maudhui maalum kulingana na mapendeleo yako.",
+  "settings.language": "Lugha",
+  "settings.languageSub": "Dhibiti mapendeleo yako ya lugha",
+  "settings.english": "Kiingereza",
+  "settings.swahili": "Kiswahili",
+
+  // ── Certificates ──
+  "certificates.subtitle": "Tazama na upakue vyeti vyako",
+  "certificates.lessonsCompleted": "Masomo yaliyokamilika",
+  "certificates.duration": "Muda",
+  "certificates.certificateId": "Nambari ya Cheti",
+  "certificates.viewCertificate": "Tazama cheti",
+  "certificates.none": "Hakuna vyeti bado",
+  "certificates.noneSub": "Kamilisha kozi ili kupata cheti chako cha kwanza.",
+  "certificates.share": "Shirikisha mafanikio yako",
+  "certificates.shareSub":
+    "Waruhusu watu wa mtandao wako wajue kuhusu ujuzi wako. Shirikisha vyeti vyako kwenye LinkedIn, Twitter, au vipakue kama PDF ili ujumuishe kwenye wasifu wako wa kitaalamu.",
+  "certificates.yourCertificate": "Cheti Chako:",
+  "certificates.republic": "JAMHURI YA KENYA",
+  "certificates.ministry1":
+    "WIZARA YA VYAMA VYA USHIRIKA NA BIASHARA NDOGO NA ZA KATI",
+  "certificates.ministry2": "MAENDELEO YA BIASHARA",
+  "certificates.program": "FURSA ZA TAIFA ZA VIJANA KUELEKEA MAENDELEO",
+  "certificates.certificate": "CHETI",
+  "certificates.ofCompletion": "CHA KUKAMILISHA",
+  "certificates.certify": "Hii inathibitisha kwamba",
+  "certificates.completedTraining": "Amekamilisha kwa mafanikio mafunzo ya:",
+  "certificates.heldOn": "Kilifanyika tarehe {date}",
+  "certificates.director": "MKURUGENZI",
+  "certificates.signature": "SAHIHI",
+  "certificates.date": "TAREHE",
+  "certificates.disclaimer": "Hiki si cheti cha AGPO",
+  "certificates.download": "Pakua Cheti",
+  "certificates.completedCourse": "Kozi iliyokamilika",
+  "certificates.lessonsLabel": "Masomo yaliyokamilika",
+  "certificates.whatNext": "Nini kinafuata?",
+  "certificates.whatNextSub":
+    "Endelea na safari yako ya kujifunza au chunguza kozi zaidi.",
+  "certificates.browseLessons": "Vinjari masomo",
+  "certificates.goHome": "Nenda nyumbani",
+
+  // ── Digital tools ──
+  "digitalTools.subtitle":
+    "Chunguza na ujiandikishe kwenye zana na suluhisho muhimu za biashara ili kuboresha tija, kurahisisha michakato na ufikiaji wa soko.",
+  "digitalTools.bulkSms": "SMS kwa Wingi",
+  "digitalTools.bookKeeping": "Uwekaji wa Hesabu",
+  "digitalTools.ecommerce": "E-commerce",
+  "digitalTools.website": "Kijenzi cha Tovuti",
+  "digitalTools.bulkSmsText":
+    "Tuma maelfu ya ujumbe wa SMS maalum kwa wateja wako kwa wakati mmoja. Inafaa kwa matangazo, arifa, vikumbusho, na taarifa.",
+  "digitalTools.bookKeepingText":
+    "Rahisisha uwekaji wa rekodi zako za kifedha. Fuatilia kila muamala, simamia ankara, na zalisha ripoti za kitaalamu za kifedha bila shida.",
+  "digitalTools.ecommerceText":
+    "Anzisha na simamia duka lako la mtandaoni kwa urahisi. Tunaunda duka la mtindo wa Shopify lenye katalogi za bidhaa, milango ya malipo ikiwemo M-Pesa, usimamizi wa orodha, na ufuatiliaji wa maagizo — yote yakibinafsishwa kwa chapa yako.",
+  "digitalTools.websiteText":
+    "Jenga uwepo wako kamili mtandaoni. Pata tovuti nzuri, jina la kitaalamu la kikoa, na barua pepe ya biashara — yote kwenye kifurushi kimoja.",
+  "digitalTools.whatsIncluded": "Kinachojumuishwa",
+  "digitalTools.onboard": "Jiandikishe",
+  "digitalTools.notAvailable":
+    "Kipengele hiki hakipatikani kwenye programu kwa sasa. Tafadhali tembelea tovuti yetu kuu kwenye kivinjari chako ili kuanza.",
+  "digitalTools.checklist.instantDelivery":
+    "Uwasilishaji wa papo hapo kwa mitandao yote",
+  "digitalTools.checklist.personalized": "Ujumbe maalum kwa kiwango kikubwa",
+  "digitalTools.checklist.deliveryReports":
+    "Ripoti za kina za uwasilishaji na uchambuzi",
+  "digitalTools.checklist.trackTransactions":
+    "Fuatilia kila muamala kwa urahisi",
+  "digitalTools.checklist.invoices": "Simamia ankara na malipo",
+  "digitalTools.checklist.reports": "Zalisha ripoti za kitaalamu za kifedha",
+  "digitalTools.checklist.shopify": "Uundaji wa duka la mtindo wa Shopify",
+  "digitalTools.checklist.mpesa": "Milango ya malipo ya M-Pesa na kadi",
+  "digitalTools.checklist.inventory": "Ufuatiliaji wa orodha na maagizo",
+  "digitalTools.checklist.responsive": "Tovuti nzuri na shirikishi",
+  "digitalTools.checklist.domain": "Jina la kitaalamu la kikoa",
+  "digitalTools.checklist.email": "Barua pepe ya biashara imejumuishwa",
+
+  // ── Financing (shared) ──
+  "financing.companyInfo": "Taarifa za Kampuni",
+  "financing.companyName": "Jina la Kampuni",
+  "financing.companyNamePlaceholder": "Weka jina la kampuni",
+  "financing.phoneNumber": "Nambari ya Simu",
+  "financing.phonePlaceholder": "mf. +254 712 345 678",
+  "financing.emailAddress": "Barua Pepe",
+  "financing.emailPlaceholder": "mf. jina@kampuni.co.ke",
+  "financing.contactPerson": "Mtu wa Mawasiliano",
+  "financing.contactPersonPlaceholder": "Weka jina kamili",
+  "financing.companyAddress": "Anwani ya Kampuni",
+  "financing.companyAddressPlaceholder": "Weka anwani ya kampuni",
+  "financing.registrationNumber": "Nambari ya Usajili wa Kampuni",
+  "financing.registrationPlaceholder": "Weka nambari ya usajili",
+  "financing.vatNumber": "Nambari ya VAT",
+  "financing.vatPlaceholder": "Weka nambari ya VAT (hiari)",
+  "financing.financingRequest": "Ombi la Ufadhili",
+  "financing.requestedAmount": "Kiasi Kilichoombwa cha Ufadhili (KES)",
+  "financing.requestedAmountPlaceholder": "Weka kiasi kilichoombwa",
+  "financing.interestRate": "Kiwango cha Riba (%)",
+  "financing.interestRatePlaceholder": "mf. 12%",
+  "financing.repaymentPeriod": "Kipindi cha Ulipaji",
+  "financing.repaymentPeriodPlaceholder": "mf. miezi 12",
+  "financing.collateralDetails": "Maelezo ya Dhamana",
+  "financing.collateralPlaceholder": "Eleza dhamana inayotolewa",
+  "financing.declarations": "Tamko na Makubaliano",
+  "financing.declaration1":
+    "Ninathibitisha kwamba taarifa zote zilizotolewa ni za kweli na sahihi kwa kadiri ya ujuzi wangu.",
+  "financing.declaration2":
+    "Ninaidhinisha benki mshirika kuthibitisha taarifa zilizotolewa na kufanya ukaguzi wa mikopo.",
+  "financing.declaration3":
+    "Ninaelewa kuwa idhini inategemea sheria na masharti ya benki mshirika.",
+  "financing.declaration4": "Ninakubali Sheria na Masharti na Sera ya Faragha.",
+  "financing.submitApplication": "Wasilisha Ombi",
+  "financing.fillRequired":
+    "Tafadhali jaza sehemu zote zinazohitajika kwa usahihi.",
+  "financing.acceptTerms":
+    "Tafadhali kubali tamko na masharti yote kabla ya kuwasilisha.",
+  "financing.companyNameRequired": "Jina la kampuni linahitajika",
+  "financing.phoneRequired": "Nambari ya simu inahitajika",
+  "financing.contactPersonRequired": "Mtu wa mawasiliano anahitajika",
+  "financing.registrationRequired": "Nambari ya usajili inahitajika",
+  "financing.addressRequired": "Anwani ya kampuni inahitajika",
+  "financing.emailRequired": "Barua pepe inahitajika",
+  "financing.validEmail": "Weka barua pepe sahihi",
+  "financing.validAmount": "Weka kiasi sahihi",
+  "financing.requestedRequired": "Kiasi kilichoombwa cha ufadhili kinahitajika",
+  "financing.repaymentRequired": "Kipindi cha ulipaji kinahitajika",
+  "financing.interestRequired": "Kiwango cha riba kinahitajika",
+  "financing.collateralRequired": "Maelezo ya dhamana yanahitajika",
+  "financing.submissionFailed":
+    "Uwasilishaji umeshindikana. Tafadhali jaribu tena.",
+
+  // ── Asset financing ──
+  "assetFin.subtitle":
+    "Pata vifaa muhimu vya biashara, magari, na mashine kwa suluhisho rahisi za ufadhili wa mali zinazolingana na mahitaji yako.",
+  "assetFin.assetDetails": "Maelezo ya Mali",
+  "assetFin.assetType": "Aina ya Mali",
+  "assetFin.assetTypePlaceholder": "mf. Gari, Mashine, Vifaa",
+  "assetFin.assetDescription": "Maelezo ya Mali",
+  "assetFin.assetDescriptionPlaceholder":
+    "Eleza mali ikijumuisha muundo, mfano, na vipimo",
+  "assetFin.assetCost": "Gharama ya Mali (KES)",
+  "assetFin.assetCostPlaceholder": "Weka gharama ya mali",
+  "assetFin.assetInvoice": "Pakia Ankara / Nukuu ya Mali",
+  "assetFin.assetInvoicePlaceholder": "Pakia ankara au nukuu",
+  "assetFin.supplierName": "Jina la Msambazaji",
+  "assetFin.supplierNamePlaceholder": "Weka jina la msambazaji",
+  "assetFin.supplierContact": "Taarifa za Mawasiliano ya Msambazaji",
+  "assetFin.downPayment": "Malipo ya Awali (KES)",
+  "assetFin.downPaymentPlaceholder": "Weka kiasi cha malipo ya awali",
+  "assetFin.supportingDocs": "Nyaraka za Kuunga Mkono",
+  "assetFin.nationalId": "Kitambulisho cha Taifa",
+  "assetFin.nationalIdPlaceholder": "Pakia kitambulisho cha taifa",
+  "assetFin.proofIncome": "Uthibitisho wa Mapato (mf. Paylipu)",
+  "assetFin.proofIncomePlaceholder": "Pakia uthibitisho wa mapato",
+  "assetFin.taxCertificate": "Cheti cha Kufuata Kodi",
+  "assetFin.taxCertificatePlaceholder": "Pakia cheti cha kufuata kodi",
+  "assetFin.assetTypeRequired": "Aina ya mali inahitajika",
+  "assetFin.assetDescriptionRequired": "Maelezo ya mali yanahitajika",
+  "assetFin.assetCostRequired": "Gharama ya mali inahitajika",
+  "assetFin.validCost": "Weka gharama sahihi",
+  "assetFin.invoiceRequired": "Ankara/nukuu ya mali inahitajika",
+  "assetFin.supplierNameRequired": "Jina la msambazaji linahitajika",
+  "assetFin.supplierContactRequired": "Mawasiliano ya msambazaji yanahitajika",
+  "assetFin.downPaymentRequired": "Malipo ya awali yanahitajika",
+  "assetFin.submitted":
+    "Ombi lako la ufadhili wa mali limewasilishwa kwa mafanikio.",
+
+  // ── LPO financing ──
+  "lpo.subtitle":
+    "Pata ufadhili dhidi ya Maagizo ya Ununuzi ya Ndani (LPO) yaliyothibitishwa ili kutimiza mikataba mikubwa bila kusumbua mtaji wako.",
+  "lpo.applyingTo": "Unaomba kwa ",
+  "lpo.profilePicture": "Picha ya Wasifu wa Kampuni",
+  "lpo.profilePicturePlaceholder": "Pakia picha ya wasifu",
+  "lpo.taxCertificate": "Cheti cha Kufuata Kodi",
+  "lpo.taxCertificatePlaceholder": "Pakia cheti cha kufuata kodi",
+  "lpo.lpoDetails": "Maelezo ya LPO",
+  "lpo.lpoNumber": "Nambari ya LPO",
+  "lpo.lpoNumberPlaceholder": "Weka nambari ya LPO",
+  "lpo.lpoAmount": "Kiasi cha LPO (KES)",
+  "lpo.lpoAmountPlaceholder": "Weka kiasi cha LPO",
+  "lpo.lpoDate": "Tarehe ya LPO",
+  "lpo.lpoDatePlaceholder": "YYYY-MM-DD",
+  "lpo.lpoDocument": "Hati ya LPO",
+  "lpo.lpoDocumentPlaceholder": "Pakia hati ya LPO",
+  "lpo.buyerName": "Jina la Mnunuzi",
+  "lpo.buyerNamePlaceholder": "Weka jina la mnunuzi",
+  "lpo.amountPlaceholder": "Weka kiasi",
+  "lpo.lpoNumberRequired": "Nambari ya LPO inahitajika",
+  "lpo.lpoAmountRequired": "Kiasi cha LPO kinahitajika",
+  "lpo.lpoDateRequired": "Tarehe ya LPO inahitajika",
+  "lpo.lpoDocumentRequired": "Hati ya LPO inahitajika",
+  "lpo.buyerRequired": "Jina la mnunuzi linahitajika",
+  "lpo.noBank":
+    "Hakuna benki iliyochaguliwa. Tafadhali rudi nyuma na uchague mtoaji wa ufadhili.",
+  "lpo.submitted": "Ombi lako la ufadhili wa LPO limewasilishwa kwa mafanikio.",
+
+  // ── Overdraft ──
+  "overdraft.subtitle":
+    "Pata huduma rahisi za overdrafti kusimamia mtiririko wako wa pesa na kufidia mapungufu ya muda mfupi ya ufadhili yanapotokea.",
+  "overdraft.accountHolder": "Mmiliki wa Akaunti",
+  "overdraft.accountHolderName": "Jina la Mmiliki wa Akaunti",
+  "overdraft.accountHolderNamePlaceholder": "Weka jina la mmiliki wa akaunti",
+  "overdraft.accountNumber": "Nambari ya Akaunti",
+  "overdraft.accountNumberPlaceholder": "Weka nambari ya akaunti",
+  "overdraft.tradingName": "Jina la Biashara",
+  "overdraft.tradingNamePlaceholder": "Weka jina la biashara (hiari)",
+  "overdraft.contactInfo": "Taarifa za Mawasiliano",
+  "overdraft.overdraftRequest": "Maelezo ya Ombi la Overdrafti",
+  "overdraft.requestedAmount": "Kiasi Kilichoombwa cha Overdrafti (KES)",
+  "overdraft.requestedAmountPlaceholder": "Weka kiasi kilichoombwa",
+  "overdraft.purpose": "Madhumuni ya Overdrafti",
+  "overdraft.purposePlaceholder": "Eleza madhumuni ya overdrafti",
+  "overdraft.currentBalance": "Salio la Sasa la Akaunti (KES)",
+  "overdraft.currentBalancePlaceholder": "Weka salio la sasa",
+  "overdraft.avgMonthly": "Wastani wa Mapato ya Kila Mwezi (KES)",
+  "overdraft.avgMonthlyPlaceholder": "Weka wastani wa mapato ya kila mwezi",
+  "overdraft.repaymentPeriod": "Kipindi Kilichopendekezwa cha Ulipaji",
+  "overdraft.repaymentPeriodPlaceholder": "mf. miezi 6",
+  "overdraft.collateral": "Dhamana",
+  "overdraft.collateralValuation": "Thamani ya Dhamana (KES)",
+  "overdraft.collateralValuationPlaceholder": "Weka kiasi cha thamani",
+  "overdraft.uploadDocs": "Pakia Nyaraka za Kuunga Mkono",
+  "overdraft.uploadDocsPlaceholder": "Pakia nyaraka za kuunga mkono",
+  "overdraft.accountHolderRequired": "Jina la mmiliki wa akaunti linahitajika",
+  "overdraft.accountNumberRequired": "Nambari ya akaunti inahitajika",
+  "overdraft.contactRequired": "Taarifa za mawasiliano zinahitajika",
+  "overdraft.requestedRequired":
+    "Kiasi kilichoombwa cha overdrafti kinahitajika",
+  "overdraft.purposeRequired": "Madhumuni ya overdrafti yanahitajika",
+  "overdraft.balanceRequired": "Salio la sasa la akaunti linahitajika",
+  "overdraft.validBalance": "Weka salio sahihi",
+  "overdraft.avgRequired": "Wastani wa mapato ya kila mwezi unahitajika",
+  "overdraft.collateralValuationRequired": "Thamani ya dhamana inahitajika",
+  "overdraft.validValuation": "Weka thamani sahihi",
+  "overdraft.docsRequired": "Nyaraka za kuunga mkono zinahitajika",
+  "overdraft.submitted":
+    "Ombi lako la overdrafti limewasilishwa kwa mafanikio.",
+
+  // ── Lesson ──
+  "lesson.notFound": "Somo halijapatikana.",
+  "lesson.failedLoad": "Imeshindikana kupakia somo.",
+  "lesson.about": "Kuhusu somo hili",
+  "lesson.content": "Maudhui ya Somo",
+  "lesson.completed": "Somo limekamilika!",
+  "lesson.completedText": "Vizuri! Somo linalofuata sasa limefunguliwa.",
+  "lesson.nextLesson": "Endelea kwenye somo linalofuata",
+  "lesson.backToLessons": "Rudi kwenye masomo",
+  "lesson.markComplete": "Weka alama ya kukamilika",
+  "lesson.completing": "Inakamilisha...",
+  "lesson.failedComplete": "Imeshindikana kukamilisha somo.",
+  "lesson.missingCourse": "Taarifa za kozi hazipo.",
+
+  // ── Lessons list ──
+  "lessons.notFound": "Kozi haijapatikana.",
+  "lessons.failedLoad": "Imeshindikana kupakia masomo.",
+  "lessons.courseProgress": "Maendeleo ya kozi",
+  "lessons.lessonsCompleted": "{completed} kati ya {total} masomo yamekamilika",
+  "lessons.remaining": "{count} somo{s} limebaki",
+  "lessons.completedLessons": "Masomo yaliyokamilika",
+  "lessons.completedAlert":
+    "Kozi Imekamilika! Umefanikiwa kukamilisha masomo yote ya kozi hii.",
+  "lessons.goToCertificates": "Nenda kwenye vyeti",
+  "lessons.lessons": "Masomo",
+  "lessons.lesson": "Somo la {number}:",
+  "lessons.current": "La sasa",
+  "lessons.upcoming": "Linalofuata",
+  "lessons.locked": "Imefungwa",
+  "lessons.startLesson": "Anza somo",
+  "lessons.noLessons": "Hakuna masomo yanayopatikana.",
+
+  // ── My applications ──
+  "applications.subtitle":
+    "Fuatilia na simamia maombi yako yote ya Suluhisho za Biashara Jumuishi",
+  "applications.all": "Zote",
+  "applications.needsAction": "Inahitaji hatua",
+  "applications.underReview": "Inakaguliwa",
+  "applications.approved": "Imeidhinishwa",
+  "applications.declined": "Imekataliwa",
+  "applications.application": "Ombi",
+  "applications.date": "Tarehe",
+  "applications.service": "Huduma",
+  "applications.status": "Hali",
+  "applications.amount": "Kiasi",
+  "applications.provider": "Mtoaji",
+  "applications.action": "Hatua",
+  "applications.resolve": "Suluhisha",
+  "applications.view": "Tazama",
+  "applications.reapply": "Omba tena",
+  "applications.empty": "Hakuna maombi yaliyopatikana katika aina hii.",
+  "applications.details": "Maelezo ya ombi",
+  "applications.dateApplied": "Tarehe ya kuomba",
+
+  // ── Profile ──
+  "profile.subtitle": "Sasisha taarifa zako binafsi na mipangilio ya akaunti",
+  "profile.personalInfo": "Taarifa Binafsi",
+  "profile.firstName": "Jina la kwanza",
+  "profile.middleName": "Jina la kati",
+  "profile.lastName": "Jina la mwisho",
+  "profile.email": "Barua pepe",
+  "profile.phone": "Nambari ya simu",
+  "profile.county": "Kaunti",
+  "profile.whyInfo": "Kwa nini tunahitaji taarifa hii",
+  "profile.whyInfoText":
+    "Tunakusanya taarifa hii ili kubinafsisha uzoefu wako wa kujifunza, kukulinganisha na fursa muhimu katika eneo lako, na kuhakikisha uzingatiaji wa mahitaji ya ustahiki wa ununuzi. Maelezo yako ya kaunti hutusaidia kuonyesha zabuni na mipango ya mafunzo inayopatikana katika eneo lako.",
+
+  // ── Quiz ──
+  "quiz.needToPass": "Unahitaji {mark}% ili kufaulu",
+  "quiz.instructions": "Maelekezo ya Mtihani",
+  "quiz.timeLimit": "Kikomo cha muda: ",
+  "quiz.minutes": "dakika",
+  "quiz.questions": "Maswali: ",
+  "quiz.multipleChoice": "chaguo nyingi",
+  "quiz.passMark": "Alama ya kufaulu: ",
+  "quiz.warning": "Usiache skrini au kubadilisha programu wakati wa mtihani",
+  "quiz.starting": "Inaanza...",
+  "quiz.startNow": "Anza sasa",
+  "quiz.backToLesson": "Rudi kwenye somo",
+  "quiz.question": "Swali la {current} kati ya {total}",
+  "quiz.submitting": "Inawasilisha...",
+  "quiz.submitExam": "Wasilisha mtihani",
+  "quiz.nextQuestion": "Swali linalofuata",
+  "quiz.flagged":
+    "Kubadilisha programu wakati wa mtihani kumeashiriwa ({count}×). Hii inaweza kuathiri matokeo yako.",
+  "quiz.finalScore": "Alama ya mwisho",
+  "quiz.passed": "Hongera! Umefaulu kwa {score}",
+  "quiz.failed": "Umepata {score}. Alama ya kufaulu ni {mark}%.",
+  "quiz.status": "Hali",
+  "quiz.passedLabel": "Imefaulu",
+  "quiz.failedLabel": "Imeshindwa",
+  "quiz.attempt": "Jaribio",
+  "quiz.completedAt": "Ilimalizika saa",
+  "quiz.nextAttempt": "Jaribio linalofuata",
+  "quiz.performance": "Muhtasari wa utendaji",
+  "quiz.score": "Alama",
+  "quiz.points": "{score}/{total} pointi",
+  "quiz.correctAnswers": "Majibu sahihi",
+  "quiz.retake": "Rudia mtihani",
+  "quiz.failedLoad": "Imeshindikana kupakia mtihani.",
+  "quiz.failedStart": "Imeshindikana kuanza mtihani.",
+  "quiz.failedSubmit": "Imeshindikana kuwasilisha mtihani.",
+
+  // ── Support ──
+  "support.subtitle": "Wasiliana na timu yetu ya msaada kwa usaidizi",
+  "support.call": "Piga simu",
+  "support.email": "Barua pepe",
+  "support.whatsapp": "WhatsApp",
+  "support.allCategories": "Aina Zote",
+  "support.allStatus": "Hali Zote",
+  "support.allPriority": "Kipaumbele Chote",
+  "support.creating": "Inaunda...",
+  "support.newTicket": "Tiketi mpya",
+  "support.subject": "Mada",
+  "support.category": "Aina",
+  "support.priority": "Kipaumbele",
+  "support.status": "Hali",
+  "support.date": "Tarehe",
+  "support.noTickets": "Hakuna tiketi zilizopatikana",
+  "support.noTicketsSub":
+    "Unda tiketi mpya ili kupata msaada kutoka kwa timu yetu.",
+  "support.failedLoad": "Imeshindikana kupakia tiketi.",
+  "support.ticketCreated": "Tiketi imeundwa kwa mafanikio.",
+  "support.failedCreate": "Imeshindikana kuunda tiketi.",
+  "support.inProgress": "Inaendelea",
+  "support.open": "Wazi",
+  "support.resolved": "Imetatuliwa",
+  "support.closed": "Imefungwa",
+
+  // ── New ticket modal ──
+  "newTicket.title": "Unda Tiketi Mpya",
+  "newTicket.subject": "Mada",
+  "newTicket.subjectPlaceholder": "Weka mada ya tiketi",
+  "newTicket.category": "Aina",
+  "newTicket.selectCategory": "Chagua aina",
+  "newTicket.priority": "Kipaumbele",
+  "newTicket.selectPriority": "Chagua kipaumbele",
+  "newTicket.description": "Maelezo",
+  "newTicket.descriptionPlaceholder": "Eleza suala lako kwa kina...",
+  "newTicket.submit": "Wasilisha Tiketi",
+
+  // ── Ticket preview ──
+  "ticket.ticket": "Tiketi",
+  "ticket.conversation": "Mazungumzo",
+  "ticket.typeMessage": "Andika ujumbe wako...",
+  "ticket.failedLoad": "Imeshindikana kupakia tiketi.",
+  "ticket.failedReply": "Imeshindikana kutuma jibu.",
+
+  // ── Data policy ──
+  "dataPolicy.lastUpdated": "Imesasishwa mwisho: Agosti 11, 2026",
+  "dataPolicy.intro":
+    "Katika Nyota, tunachukulia faragha yako kwa uzito. Sera hii ya Data inaeleza jinsi tunavyokusanya, kutumia, kuhifadhi, na kulinda taarifa zako za kibinafsi unapotumia mfumo wetu.",
+  "dataPolicy.s1Title": "1. Taarifa Tunazokusanya",
+  "dataPolicy.s1Intro":
+    "Tunakusanya taarifa unazotupatia moja kwa moja, zikiwemo lakini sio tu:",
+  "dataPolicy.s1b1":
+    "Maelezo ya kitambulisho cha kibinafsi (jina, barua pepe, nambari ya simu, kitambulisho cha taifa)",
+  "dataPolicy.s1b2":
+    "Taarifa za biashara (jina la kampuni, maelezo ya usajili, PIN ya KRA)",
+  "dataPolicy.s1b3": "Data ya wasifu (picha ya wasifu, wasifu, mapendeleo)",
+  "dataPolicy.s1b4":
+    "Data ya matumizi (kozi ulizojiandikisha, vyeti ulivyopata, mahudhurio ya mikutano ya mtandaoni)",
+  "dataPolicy.s1b5":
+    "Taarifa za kifaa (aina ya kifaa, mfumo wa uendeshaji, anwani ya IP)",
+  "dataPolicy.s2Title": "2. Jinsi Tunavyotumia Taarifa Zako",
+  "dataPolicy.s2Intro":
+    "Taarifa zako hutusaidia kutoa na kuboresha huduma zetu:",
+  "dataPolicy.s2b1": "Kuunda na kusimamia akaunti yako",
+  "dataPolicy.s2b2":
+    "Kutoa kozi, mikutano ya mtandaoni, na maudhui ya kujifunza",
+  "dataPolicy.s2b3": "Kushughulikia maombi ya ufadhili na fursa",
+  "dataPolicy.s2b4": "Kutuma arifa kuhusu masasisho, matukio, na fursa muhimu",
+  "dataPolicy.s2b5": "Kutii mahitaji ya kisheria na kisheria",
+  "dataPolicy.s3Title": "3. Kushiriki Data",
+  "dataPolicy.s3Intro":
+    "Hatuuzi data yako ya kibinafsi. Tunaweza kushiriki taarifa zako na:",
+  "dataPolicy.s3b1":
+    "Mashirika ya serikali kwa maombi ya ufadhili na zabuni unazoanzisha",
+  "dataPolicy.s3b2":
+    "Benki washirika na taasisi za kifedha kwa maombi ya ufadhili",
+  "dataPolicy.s3b3": "Watoa huduma wanaotusaidia katika uendeshaji wa mfumo",
+  "dataPolicy.s4Title": "4. Uhifadhi na Usalama wa Data",
+  "dataPolicy.s4Text":
+    "Tunatumia hatua za usalama za kiwango cha sekta kulinda data yako, zikiwemo usimbaji fiche, seva salama, na ukaguzi wa mara kwa mara wa usalama. Data yako inahifadhiwa kwenye seva salama zilizopo Kenya, kwa kuzingatia Sheria ya Ulinzi wa Data ya 2019.",
+  "dataPolicy.s5Title": "5. Haki Zako",
+  "dataPolicy.s5Intro":
+    "Chini ya Sheria ya Ulinzi wa Data ya Kenya, una haki ya:",
+  "dataPolicy.s5b1": "Kufikia data yako ya kibinafsi",
+  "dataPolicy.s5b2": "Kuomba marekebisho ya data isiyo sahihi",
+  "dataPolicy.s5b3": "Kuomba kufutwa kwa data yako",
+  "dataPolicy.s5b4": "Kupinga au kuzuia usindikaji wa data yako",
+  "dataPolicy.s5b5": "Kuondoa idhini wakati wowote",
+  "dataPolicy.s6Title": "6. Wasiliana Nasi",
+  "dataPolicy.s6Text":
+    "Kama una maswali kuhusu Sera hii ya Data au unataka kutumia haki zako za data, wasiliana na Afisa wetu wa Ulinzi wa Data kupitia:",
+
+  // ── Terms & conditions ──
+  "terms.lastUpdated": "Imesasishwa mwisho: Agosti 11, 2026",
+  "terms.intro":
+    "Karibu kwenye Tovuti yetu ya Mafunzo. Kwa kufikia au kutumia huduma zetu, unakubali kufuata sheria na masharti yafuatayo. Tafadhali yasome kwa makini kabla ya kuendelea.",
+  "terms.s1Title": "1. Kukubali Masharti",
+  "terms.s1Text":
+    "Kwa kuunda akaunti, kufikia, au kutumia sehemu yoyote ya mfumo huu, unathibitisha kuwa umesoma, umeelewa, na unakubali kufungwa na Sheria na Masharti haya. Kama hukubaliani na sehemu yoyote ya masharti haya, lazima uache kutumia huduma zetu mara moja.",
+  "terms.s2Title": "2. Ustahiki",
+  "terms.s2Text":
+    "Lazima uwe na angalau miaka 18 kutumia huduma zetu. Kwa kutumia mfumo huu, unathibitisha kwamba unakidhi mahitaji ya umri na una uwezo wa kisheria wa kuingia makubaliano yanayofunga.",
+  "terms.s3Title": "3. Usajili wa Akaunti na Usalama",
+  "terms.s3Text":
+    "Unawajibika kutoa taarifa sahihi, za sasa, na kamili wakati wa usajili. Lazima udumishe na usasishe taarifa zako za akaunti mara moja ili ziwe sahihi. Unawajibika pekee kwa kulinda usiri wa kitambulisho chako cha kuingia na kwa shughuli zote zinazotokea chini ya akaunti yako. Unakubali kutujulisha mara moja kuhusu ufikiaji wowote usioidhinishwa wa akaunti yako.",
+  "terms.s4Title": "4. Mwenendo wa Mtumiaji na Wajibu",
+  "terms.s4Text":
+    "Unakubali kutotumia huduma zetu kwa madhumuni yoyote haramu, ya udanganyifu, au yasiyoidhinishwa. Hutajihusisha na shughuli yoyote inayoingilia au kuvuruga mfumo, seva zake, au mitandao. Huwezi kupakia, kuchapisha, au kusambaza maudhui yoyote ya kashfa, ya uchafu, ya unyanyasaji, au yenye kuchukiza.",
+  "terms.s5Title": "5. Haki za Haki Miliki",
+  "terms.s5Text":
+    "Maudhui yote, nyenzo, nembo, alama za biashara, na haki miliki zinazoonyeshwa kwenye mfumo huu zinamilikiwa na sisi au zimepewa leseni kwetu. Huwezi kunakili, kusambaza, kurekebisha, au kuunda kazi zinazotokana na maudhui yoyote bila idhini yetu ya maandishi. Matumizi yasiyoidhinishwa ya haki miliki yetu yanaweza kusababisha hatua za kisheria.",
+  "terms.s6Title": "6. Malipo na Bili",
+  "terms.s6Text":
+    "Baadhi ya huduma kwenye mfumo huu zinaweza kuhitaji malipo ya ada. Unakubali kulipa gharama zote husika kwa kuzingatia masharti ya bili yanayotumika wakati ada hizo zinapaswa kulipwa. Malipo yote hayarejeshwi isipokuwa imesemwa vinginevyo. Tunahifadhi haki ya kubadilisha bei zetu wakati wowote kwa notisi ya kutosha.",
+  "terms.s7Title": "7. Faragha na Ulinzi wa Data",
+  "terms.s7Text":
+    "Faragha yako ni muhimu kwetu. Ukusanyaji wetu, matumizi, na ufichuzi wa taarifa za kibinafsi unasimamiwa na Sera yetu ya Faragha, ambayo imejumuishwa kwenye Masharti haya kwa rejea. Kwa kutumia huduma zetu, unakubali ukusanyaji na matumizi ya data yako kama ilivyoelezwa kwenye Sera yetu ya Faragha.",
+  "terms.s8Title": "8. Huduma na Viungo vya Watu wa Tatu",
+  "terms.s8Text":
+    "Mfumo wetu unaweza kuwa na viungo vya tovuti, programu, au huduma za watu wa tatu ambazo hazimilikiwi wala kudhibitiwi na sisi. Hatuchukui jukumu lolote kwa maudhui, sera za faragha, au mazoea ya tovuti zozote za watu wa tatu. Unafikia huduma hizo za watu wa tatu kwa hatari yako mwenyewe.",
+  "terms.s9Title": "9. Upeo wa Dhima",
+  "terms.s9Text":
+    "Kwa kiwango kamili kinachoruhusiwa na sheria, hatutawajibika kwa uharibifu wowote usio wa moja kwa moja, wa bahati mbaya, maalum, wa matokeo, au wa adhabu unaotokana na au kuhusiana na matumizi yako ya mfumo. Dhima yetu ya jumla kwa madai yoyote haitazidi kiasi ulicholipa, kama kipo, kwa huduma katika miezi kumi na miwili kabla ya dai hilo.",
+  "terms.s10Title": "10. Kanusho la Dhamana",
+  "terms.s10Text":
+    'Mfumo na maudhui yote, huduma, na vipengele vinatolewa kwa misingi ya "kama ilivyo" na "kama inavyopatikana" bila dhamana za aina yoyote, iwe za wazi au zilizodokezwa. Hatuthibitishi kuwa huduma zitakuwa bila kukatizwa, bila makosa, salama, au bila virusi au vipengele vingine vyenye madhara.',
+  "terms.s11Title": "11. Kukomesha",
+  "terms.s11Text":
+    "Tunahifadhi haki ya kusimamisha au kukomesha akaunti yako na ufikiaji wa mfumo kwa uamuzi wetu pekee, bila notisi ya awali, kwa ukiukaji wowote wa Masharti haya au kwa sababu nyingine yoyote. Baada ya kukomesha, haki yako ya kutumia mfumo itaisha mara moja, na data yoyote inayohusiana na akaunti yako inaweza kufutwa.",
+  "terms.s12Title": "12. Marekebisho ya Masharti",
+  "terms.s12Text":
+    "Tunahifadhi haki ya kurekebisha au kusasisha Sheria na Masharti haya wakati wowote bila notisi ya awali. Mabadiliko yoyote yataanza kutumika mara moja baada ya kuchapishwa. Kuendelea kwako kutumia mfumo baada ya marekebisho yoyote kunathibitisha kukubali kwako masharti yaliyorekebishwa. Ni jukumu lako kukagua Masharti haya mara kwa mara kwa masasisho.",
+  "terms.s13Title": "13. Sheria Inayotumika na Usuluhishi wa Migogoro",
+  "terms.s13Text":
+    "Sheria na Masharti haya yatasimamiwa na kufasiriwa kwa mujibu wa sheria za Jamhuri ya Kenya. Migogoro yoyote inayotokana na au kuhusiana na Masharti haya itajaribiwa kwanza kutatuliwa kupitia mazungumzo ya nia njema. Kama suluhu haitapatikana, mgogoro huo utapelekwa kwa upatanishi au usuluhishi kwa mujibu wa sheria husika.",
+  "terms.s14Title": "14. Taarifa za Mawasiliano",
+  "terms.s14Text":
+    "Kama una maswali yoyote, wasiwasi, au maoni kuhusu Sheria na Masharti haya, tafadhali wasiliana nasi kupitia njia za msaada zilizotolewa kwenye mfumo wetu. Tumejitolea kushughulikia maswali yako kwa wakati unaofaa.",
+  "terms.footer":
+    "Kwa kuendelea kutumia huduma zetu, unathibitisha kuwa umesoma, umeelewa, na umekubali kufungwa na Sheria na Masharti haya. Kama hukubaliani, tafadhali acha kutumia mfumo mara moja.",
+};
+
+export const translations = { en, sw } as const;

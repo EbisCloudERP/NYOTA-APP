@@ -12,8 +12,9 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { verifyPhone, sendSms } from "../../services/api";
+import { sendSms, verifyPhone } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 export default function VerifyPhoneScreen() {
@@ -21,10 +22,11 @@ export default function VerifyPhoneScreen() {
   const [loading, setLoading] = useState(false);
   const { password } = useLocalSearchParams<{ password: string }>();
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   const handleVerify = async () => {
     if (phone.trim().length < 9) {
-      showToast("Please enter a valid phone number.", "error");
+      showToast(t("auth.verifyPhone.invalidPhone"), "error");
       return;
     }
 
@@ -39,10 +41,14 @@ export default function VerifyPhoneScreen() {
       });
 
       verifyPhone(phone.trim()).catch(() => {});
-      sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(() => {});
+      sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
+        () => {},
+      );
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Verification failed. Please try again.";
+        error instanceof Error
+          ? error.message
+          : t("auth.create.verificationFailed");
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -60,17 +66,15 @@ export default function VerifyPhoneScreen() {
       >
         {/* Title */}
         <LanguageSelector />
-        <Text style={styles.title}>Verify your phone number</Text>
+        <Text style={styles.title}>{t("auth.verifyPhone.title")}</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Enter your phone number to verify your account
-        </Text>
+        <Text style={styles.subtitle}>{t("auth.verifyPhone.subtitle")}</Text>
 
         {/* Form */}
         <View style={styles.form}>
           {/* Phone Field */}
-          <Text style={styles.label}>Phone number</Text>
+          <Text style={styles.label}>{t("auth.verifyPhone.phoneNumber")}</Text>
           <View style={styles.phoneRow}>
             <View style={styles.prefixContainer}>
               <Text style={styles.prefix}>+254</Text>
@@ -85,9 +89,7 @@ export default function VerifyPhoneScreen() {
               onChangeText={setPhone}
             />
           </View>
-          <Text style={styles.infoText}>
-            Example: +254 712 345 678 → enter 712345678
-          </Text>
+          <Text style={styles.infoText}>{t("auth.verifyPhone.info")}</Text>
 
           {/* Verify Button */}
           <TouchableOpacity
@@ -98,7 +100,9 @@ export default function VerifyPhoneScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.verifyButtonText}>Verify</Text>
+              <Text style={styles.verifyButtonText}>
+                {t("auth.create.verify")}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -107,12 +111,14 @@ export default function VerifyPhoneScreen() {
             style={styles.goBackContainer}
             onPress={() => router.back()}
           >
-            <Text style={styles.goBackText}>Wrong details? Go back</Text>
+            <Text style={styles.goBackText}>
+              {t("auth.verifyPhone.wrongDetails")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        <Text style={styles.footer}>{t("common.footer")}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

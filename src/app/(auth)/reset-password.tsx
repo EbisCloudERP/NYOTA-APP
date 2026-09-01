@@ -14,6 +14,7 @@ import {
 import LanguageSelector from "../../components/LanguageSelector";
 import { resetPassword } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 export default function ResetPasswordScreen() {
@@ -21,6 +22,7 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
   const { contact: contactParam, type: typeParam } = useLocalSearchParams<{
     contact?: string;
     type?: string;
@@ -30,15 +32,15 @@ export default function ResetPasswordScreen() {
 
   const handleResetPassword = async () => {
     if (!contact) {
-      showToast("Missing account details. Please start over.", "error");
+      showToast(t("auth.reset.missingDetails"), "error");
       return;
     }
     if (!password || password.length < 8) {
-      showToast("Password must be at least 8 characters.", "error");
+      showToast(t("auth.register.passwordLength"), "error");
       return;
     }
     if (password !== confirmPassword) {
-      showToast("Passwords do not match.", "error");
+      showToast(t("auth.register.passwordMismatch"), "error");
       return;
     }
 
@@ -47,11 +49,11 @@ export default function ResetPasswordScreen() {
       await resetPassword(type, contact, password, confirmPassword);
       router.replace("/login");
       setTimeout(() => {
-        showToast("Password reset successfully. Please log in.", "success");
+        showToast(t("auth.reset.success"), "success");
       }, 300);
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Reset failed. Please try again.";
+        error instanceof Error ? error.message : t("auth.reset.failed");
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -69,18 +71,18 @@ export default function ResetPasswordScreen() {
       >
         {/* Title */}
         <LanguageSelector />
-        <Text style={styles.title}>Reset password</Text>
+        <Text style={styles.title}>{t("auth.reset.title")}</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>Enter your new password below</Text>
+        <Text style={styles.subtitle}>{t("auth.reset.subtitle")}</Text>
 
         {/* Form */}
         <View style={styles.form}>
           {/* Password Field */}
-          <Text style={styles.label}>New password</Text>
+          <Text style={styles.label}>{t("auth.reset.newPassword")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your new password"
+            placeholder={t("auth.reset.newPasswordPlaceholder")}
             placeholderTextColor="#9CA3AF"
             secureTextEntry
             value={password}
@@ -88,10 +90,10 @@ export default function ResetPasswordScreen() {
           />
 
           {/* Confirm Password Field */}
-          <Text style={styles.label}>Confirm password</Text>
+          <Text style={styles.label}>{t("auth.reset.confirmPassword")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Confirm your new password"
+            placeholder={t("auth.reset.confirmPasswordPlaceholder")}
             placeholderTextColor="#9CA3AF"
             secureTextEntry
             value={confirmPassword}
@@ -107,21 +109,23 @@ export default function ResetPasswordScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.resetButtonText}>Reset password</Text>
+              <Text style={styles.resetButtonText}>
+                {t("auth.reset.reset")}
+              </Text>
             )}
           </TouchableOpacity>
 
           {/* Login Link */}
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account? </Text>
+            <Text style={styles.loginText}>{t("auth.create.alreadyHave")}</Text>
             <TouchableOpacity onPress={() => router.replace("/login")}>
-              <Text style={styles.loginLink}>Login</Text>
+              <Text style={styles.loginLink}>{t("auth.create.logIn")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        <Text style={styles.footer}>{t("common.footer")}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -16,6 +16,7 @@ import {
 import LanguageSelector from "../../components/LanguageSelector";
 import { getCounties, registerUser, type County } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 const PICKER_ITEM_HEIGHT = 48;
@@ -33,6 +34,8 @@ function PickerModal({
   onClose: () => void;
   label: string;
 }) {
+  const { t } = useLanguage();
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
@@ -40,7 +43,7 @@ function PickerModal({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{label}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.modalClose}>Done</Text>
+              <Text style={styles.modalClose}>{t("common.done")}</Text>
             </TouchableOpacity>
           </View>
           <FlatList
@@ -74,19 +77,30 @@ export default function RegisterScreen() {
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [nationalId, setNationalId] = useState("");
-  const [selectedCounty, setSelectedCounty] = useState<{ label: string; value: string } | null>(null);
-  const [selectedConstituency, setSelectedConstituency] = useState<{ label: string; value: string } | null>(null);
-  const [selectedWard, setSelectedWard] = useState<{ label: string; value: string } | null>(null);
+  const [selectedCounty, setSelectedCounty] = useState<{
+    label: string;
+    value: string;
+  } | null>(null);
+  const [selectedConstituency, setSelectedConstituency] = useState<{
+    label: string;
+    value: string;
+  } | null>(null);
+  const [selectedWard, setSelectedWard] = useState<{
+    label: string;
+    value: string;
+  } | null>(null);
   const [counties, setCounties] = useState<County[]>([]);
   const [loadingCounties, setLoadingCounties] = useState(true);
   const [countyPickerVisible, setCountyPickerVisible] = useState(false);
-  const [constituencyPickerVisible, setConstituencyPickerVisible] = useState(false);
+  const [constituencyPickerVisible, setConstituencyPickerVisible] =
+    useState(false);
   const [wardPickerVisible, setWardPickerVisible] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { email } = useLocalSearchParams<{ email: string }>();
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   useEffect(() => {
     getCounties()
@@ -97,7 +111,7 @@ export default function RegisterScreen() {
 
   const countyItems = useMemo(
     () => counties.map((c) => ({ label: c.county_name, value: String(c.id) })),
-    [counties]
+    [counties],
   );
 
   const constituencyItems = useMemo(() => {
@@ -109,7 +123,10 @@ export default function RegisterScreen() {
     for (const sc of county.sub_counties) {
       if (!seen.has(sc.constituency_name)) {
         seen.add(sc.constituency_name);
-        unique.push({ label: sc.constituency_name, value: sc.constituency_name });
+        unique.push({
+          label: sc.constituency_name,
+          value: sc.constituency_name,
+        });
       }
     }
     return unique;
@@ -137,24 +154,29 @@ export default function RegisterScreen() {
   };
 
   const strength = getPasswordStrength(password);
-  const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
+  const strengthLabels = [
+    t("auth.register.weak"),
+    t("auth.register.fair"),
+    t("auth.register.good"),
+    t("auth.register.strong"),
+  ];
   const strengthColors = ["#EF4444", "#F59E0B", "#208AEF", "#10B981"];
 
   const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim() || !nationalId.trim()) {
-      showToast("Please fill in all personal information fields.", "error");
+      showToast(t("auth.register.fillPersonal"), "error");
       return;
     }
     if (!selectedCounty || !selectedConstituency) {
-      showToast("Please select your county and constituency.", "error");
+      showToast(t("auth.register.selectCountyError"), "error");
       return;
     }
     if (!password || password.length < 8) {
-      showToast("Password must be at least 8 characters.", "error");
+      showToast(t("auth.register.passwordLength"), "error");
       return;
     }
     if (password !== confirmPassword) {
-      showToast("Passwords do not match.", "error");
+      showToast(t("auth.register.passwordMismatch"), "error");
       return;
     }
 
@@ -179,7 +201,9 @@ export default function RegisterScreen() {
       });
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Registration failed. Please try again.";
+        error instanceof Error
+          ? error.message
+          : t("auth.register.registrationFailed");
       showToast(message, "error");
     } finally {
       setSubmitting(false);
@@ -197,67 +221,67 @@ export default function RegisterScreen() {
       >
         {/* Title */}
         <LanguageSelector />
-        <Text style={styles.title}>Finish setting up your account</Text>
+        <Text style={styles.title}>{t("auth.register.title")}</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Almost there! Please complete the form below to create your account.
-        </Text>
+        <Text style={styles.subtitle}>{t("auth.register.subtitle")}</Text>
 
         {/* Form */}
         <View style={styles.form}>
           {/* ── Personal Information ── */}
-          <Text style={styles.sectionHeader}>Personal Information</Text>
+          <Text style={styles.sectionHeader}>
+            {t("auth.register.personalInfo")}
+          </Text>
 
           {/* First Name */}
-          <Text style={styles.label}>First name</Text>
+          <Text style={styles.label}>{t("auth.register.firstName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your first name"
+            placeholder={t("auth.register.firstNamePlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={firstName}
             onChangeText={setFirstName}
           />
 
           {/* Middle Name */}
-          <Text style={styles.label}>Middle name</Text>
+          <Text style={styles.label}>{t("auth.register.middleName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your middle name"
+            placeholder={t("auth.register.middleNamePlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={middleName}
             onChangeText={setMiddleName}
           />
 
           {/* Last Name */}
-          <Text style={styles.label}>Last name</Text>
+          <Text style={styles.label}>{t("auth.register.lastName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your last name"
+            placeholder={t("auth.register.lastNamePlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={lastName}
             onChangeText={setLastName}
           />
 
           {/* National ID */}
-          <Text style={styles.label}>National ID number</Text>
+          <Text style={styles.label}>{t("auth.register.nationalId")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your national ID number"
+            placeholder={t("auth.register.nationalIdPlaceholder")}
             placeholderTextColor="#9CA3AF"
             keyboardType="number-pad"
             value={nationalId}
             onChangeText={setNationalId}
           />
-          <Text style={styles.infoText}>
-            We'll use this to verify your identity
-          </Text>
+          <Text style={styles.infoText}>{t("auth.register.identityInfo")}</Text>
 
           {/* ── County Information ── */}
-          <Text style={styles.sectionHeader}>County Information</Text>
+          <Text style={styles.sectionHeader}>
+            {t("auth.register.countyInfo")}
+          </Text>
 
           {/* County */}
-          <Text style={styles.label}>County</Text>
+          <Text style={styles.label}>{t("auth.register.county")}</Text>
           <TouchableOpacity
             style={styles.pickerButton}
             onPress={() => !loadingCounties && setCountyPickerVisible(true)}
@@ -266,72 +290,94 @@ export default function RegisterScreen() {
             {loadingCounties ? (
               <ActivityIndicator size="small" color={Colors.brand} />
             ) : (
-              <Text style={selectedCounty ? styles.pickerText : styles.pickerPlaceholder}>
-                {selectedCounty?.label ?? "Select your county"}
+              <Text
+                style={
+                  selectedCounty ? styles.pickerText : styles.pickerPlaceholder
+                }
+              >
+                {selectedCounty?.label ?? t("auth.register.selectCounty")}
               </Text>
             )}
             <Text style={styles.pickerChevron}>▼</Text>
           </TouchableOpacity>
 
           {/* Constituency */}
-          <Text style={styles.label}>Constituency</Text>
+          <Text style={styles.label}>{t("auth.register.constituency")}</Text>
           <TouchableOpacity
-            style={[styles.pickerButton, !selectedCounty && styles.pickerButtonDisabled]}
+            style={[
+              styles.pickerButton,
+              !selectedCounty && styles.pickerButtonDisabled,
+            ]}
             onPress={() => selectedCounty && setConstituencyPickerVisible(true)}
             disabled={!selectedCounty}
           >
-            <Text style={selectedConstituency ? styles.pickerText : styles.pickerPlaceholder}>
-              {selectedConstituency?.label ?? "Select your constituency"}
+            <Text
+              style={
+                selectedConstituency
+                  ? styles.pickerText
+                  : styles.pickerPlaceholder
+              }
+            >
+              {selectedConstituency?.label ??
+                t("auth.register.selectConstituency")}
             </Text>
             <Text style={styles.pickerChevron}>▼</Text>
           </TouchableOpacity>
 
           {/* Ward */}
-          <Text style={styles.label}>Ward</Text>
+          <Text style={styles.label}>{t("auth.register.ward")}</Text>
           <TouchableOpacity
-            style={[styles.pickerButton, !selectedConstituency && styles.pickerButtonDisabled]}
+            style={[
+              styles.pickerButton,
+              !selectedConstituency && styles.pickerButtonDisabled,
+            ]}
             onPress={() => selectedConstituency && setWardPickerVisible(true)}
             disabled={!selectedConstituency}
           >
-            <Text style={selectedWard ? styles.pickerText : styles.pickerPlaceholder}>
-              {selectedWard?.label ?? "Select your ward"}
+            <Text
+              style={
+                selectedWard ? styles.pickerText : styles.pickerPlaceholder
+              }
+            >
+              {selectedWard?.label ?? t("auth.register.selectWard")}
             </Text>
             <Text style={styles.pickerChevron}>▼</Text>
           </TouchableOpacity>
 
           {/* ── Password ── */}
-          <Text style={styles.sectionHeader}>Password</Text>
+          <Text style={styles.sectionHeader}>
+            {t("auth.register.passwordSection")}
+          </Text>
 
           {/* Password */}
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>{t("auth.login.password")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your password"
+            placeholder={t("auth.register.passwordPlaceholder")}
             placeholderTextColor="#9CA3AF"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
           />
-          <Text style={styles.infoText}>
-            Must be at least 8 characters and include a mix of letters and
-            numbers
-          </Text>
+          <Text style={styles.infoText}>{t("auth.register.passwordInfo")}</Text>
 
           {/* Confirm Password */}
-          <Text style={styles.label}>Confirm password</Text>
+          <Text style={styles.label}>{t("auth.register.confirmPassword")}</Text>
           <TextInput
             style={[styles.input, passwordsMismatch && styles.inputError]}
-            placeholder="Confirm your password"
+            placeholder={t("auth.register.confirmPasswordPlaceholder")}
             placeholderTextColor="#9CA3AF"
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}
           />
           {passwordsMismatch ? (
-            <Text style={styles.errorText}>Passwords do not match</Text>
+            <Text style={styles.errorText}>
+              {t("auth.register.passwordsDoNotMatch")}
+            </Text>
           ) : (
             <Text style={styles.infoText}>
-              Must match the password entered above
+              {t("auth.register.confirmPasswordInfo")}
             </Text>
           )}
 
@@ -362,33 +408,38 @@ export default function RegisterScreen() {
 
           {/* Register Button */}
           <TouchableOpacity
-            style={[styles.registerButton, submitting && styles.registerButtonDisabled]}
+            style={[
+              styles.registerButton,
+              submitting && styles.registerButtonDisabled,
+            ]}
             onPress={handleRegister}
             disabled={submitting}
           >
             {submitting ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.registerButtonText}>Register</Text>
+              <Text style={styles.registerButtonText}>
+                {t("auth.register.register")}
+              </Text>
             )}
           </TouchableOpacity>
 
           {/* Login Link */}
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account? </Text>
+            <Text style={styles.loginText}>{t("auth.create.alreadyHave")}</Text>
             <TouchableOpacity onPress={() => router.replace("/login")}>
-              <Text style={styles.loginLink}>Login</Text>
+              <Text style={styles.loginLink}>{t("auth.create.logIn")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        <Text style={styles.footer}>{t("common.footer")}</Text>
       </ScrollView>
 
       <PickerModal
         visible={countyPickerVisible}
-        label="Select County"
+        label={t("auth.register.selectCountyModal")}
         items={countyItems}
         onSelect={(item) => {
           setSelectedCounty(item);
@@ -400,7 +451,7 @@ export default function RegisterScreen() {
 
       <PickerModal
         visible={constituencyPickerVisible}
-        label="Select Constituency"
+        label={t("auth.register.selectConstituencyModal")}
         items={constituencyItems}
         onSelect={(item) => {
           setSelectedConstituency(item);
@@ -411,7 +462,7 @@ export default function RegisterScreen() {
 
       <PickerModal
         visible={wardPickerVisible}
-        label="Select Ward"
+        label={t("auth.register.selectWardModal")}
         items={wardItems}
         onSelect={setSelectedWard}
         onClose={() => setWardPickerVisible(false)}

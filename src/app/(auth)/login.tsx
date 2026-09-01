@@ -2,17 +2,18 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
 import { login, sendEmailOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -25,6 +26,7 @@ export default function LoginScreen() {
   const [showForm, setShowForm] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   const isFormValid = contact.trim().length > 0 && password.trim().length > 0;
   const isLoginDisabled = showForm && !isFormValid;
@@ -39,7 +41,7 @@ export default function LoginScreen() {
     const trimmedPassword = password.trim();
 
     if (!trimmedContact || !trimmedPassword) {
-      showToast("Please enter your email and password", "error");
+      showToast(t("auth.login.enterCredentials"), "error");
       return;
     }
 
@@ -60,12 +62,12 @@ export default function LoginScreen() {
       if (phone) {
         const mobile = `254${phone.replace(/^\+|^0+/, "")}`;
         sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
-          () => {}
+          () => {},
         );
       }
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Login failed. Please try again.";
+        error instanceof Error ? error.message : t("auth.login.failed");
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -97,19 +99,17 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <LanguageSelector />
-          <Text style={styles.title}>Welcome back!</Text>
+          <Text style={styles.title}>{t("auth.login.welcome")}</Text>
 
-          <Text style={styles.subtitle}>
-            Log into your account
-          </Text>
+          <Text style={styles.subtitle}>{t("auth.login.subtitle")}</Text>
 
           {/* Hidden fields — revealed on first Login tap */}
           {showForm && (
             <View style={styles.form}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t("auth.login.email")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder={t("auth.login.emailPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -120,10 +120,10 @@ export default function LoginScreen() {
                 onBlur={() => setIsFocused(false)}
               />
 
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>{t("auth.login.password")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder={t("auth.login.passwordPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry
                 value={password}
@@ -136,7 +136,9 @@ export default function LoginScreen() {
                 style={styles.forgotPasswordContainer}
                 onPress={() => router.push("/forgot-password")}
               >
-                <Text style={styles.forgotPassword}>Forgot Password?</Text>
+                <Text style={styles.forgotPassword}>
+                  {t("auth.login.forgotPassword")}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -153,7 +155,9 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.loginButtonText}>
+                {t("auth.login.login")}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -162,7 +166,9 @@ export default function LoginScreen() {
             style={styles.signUpButton}
             onPress={() => router.push("/create-account")}
           >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
+            <Text style={styles.signUpButtonText}>
+              {t("auth.login.signUp")}
+            </Text>
           </TouchableOpacity>
 
           {/* <TouchableOpacity
@@ -174,7 +180,7 @@ export default function LoginScreen() {
           </TouchableOpacity> */}
 
           {/* Footer */}
-          <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+          <Text style={styles.footer}>{t("common.footer")}</Text>
         </ScrollView>
       </View>
     </View>

@@ -14,6 +14,7 @@ import {
     type EligibilityQuestion,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -96,6 +97,7 @@ export default function KycScreen() {
   const { uuid: paramUuid } = useLocalSearchParams<{ uuid: string }>();
   const [uuid, setUuid] = useState<string>(paramUuid ?? "");
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (uuid) return;
@@ -107,7 +109,7 @@ export default function KycScreen() {
   useEffect(() => {
     getEligibilityQuestions()
       .then((res) => setQuestions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => showToast("Failed to load questions. Please try again.", "error"))
+      .catch(() => showToast(t("kyc.loadFailed"), "error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -122,7 +124,7 @@ export default function KycScreen() {
 
   const handleSubmit = async () => {
     if (!uuid) {
-      showToast("Missing user UUID. Please log in again.", "error");
+      showToast(t("kyc.missingUuid"), "error");
       return;
     }
 
@@ -136,7 +138,7 @@ export default function KycScreen() {
       });
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Submission failed. Please try again.";
+        error instanceof Error ? error.message : t("kyc.submissionFailed");
       showToast(message, "error");
     } finally {
       setSubmitting(false);
@@ -145,7 +147,7 @@ export default function KycScreen() {
 
   const sorted = useMemo(
     () => [...questions].sort((a, b) => a.order - b.order),
-    [questions]
+    [questions],
   );
 
   return (
@@ -154,7 +156,10 @@ export default function KycScreen() {
       <View style={styles.progressHeader}>
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>
-            Question {currentStep + 1} of {sorted.length}
+            {t("kyc.progress", {
+              current: currentStep + 1,
+              total: sorted.length,
+            })}
           </Text>
           <Text style={styles.progressPercent}>
             {Math.round(((currentStep + 1) / sorted.length) * 100)}%
@@ -174,15 +179,15 @@ export default function KycScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Eligibility & Context</Text>
-        <Text style={styles.subtitle}>
-          Help us match you with the right opportunities
-        </Text>
+        <Text style={styles.title}>{t("kyc.title")}</Text>
+        <Text style={styles.subtitle}>{t("kyc.subtitle")}</Text>
 
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.brand} />
-            <Text style={styles.loadingText}>Loading questions...</Text>
+            <Text style={styles.loadingText}>
+              {t("common.loadingQuestions")}
+            </Text>
           </View>
         ) : (
           <View style={styles.questionsContainer}>
@@ -196,43 +201,51 @@ export default function KycScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.questionLabel}>
                         {q.question}
-                        {q.is_required && <Text style={styles.required}> *</Text>}
+                        {q.is_required && (
+                          <Text style={styles.required}> *</Text>
+                        )}
                       </Text>
                       {q.description ? (
                         <Text style={styles.questionDesc}>{q.description}</Text>
                       ) : null}
+                    </View>
+                    {isAnswered && <Text style={styles.checkmark}>✓</Text>}
                   </View>
-                  {isAnswered && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                {q.type?.toLowerCase() === "likert_scale" ? (
-                  <LikertScale
-                    question={q}
-                    selectedValue={answers[q.key]}
-                    onSelect={(value) => handleSelect(q.key, value)}
-                  />
-                ) : (
-                  <View style={styles.optionsList}>
-                    {(q.q_options ?? []).map((option) => {
-                      const selected = answers[q.key] === option.value;
-                      return (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={[styles.option, selected && styles.optionSelected]}
-                          onPress={() => handleSelect(q.key, option.value)}
-                        >
-                          <View style={styles.radio}>
-                            {selected && <View style={styles.radioFill} />}
-                          </View>
-                          <Text
-                            style={[styles.optionText, selected && styles.optionTextSelected]}
+                  {q.type?.toLowerCase() === "likert_scale" ? (
+                    <LikertScale
+                      question={q}
+                      selectedValue={answers[q.key]}
+                      onSelect={(value) => handleSelect(q.key, value)}
+                    />
+                  ) : (
+                    <View style={styles.optionsList}>
+                      {(q.q_options ?? []).map((option) => {
+                        const selected = answers[q.key] === option.value;
+                        return (
+                          <TouchableOpacity
+                            key={option.id}
+                            style={[
+                              styles.option,
+                              selected && styles.optionSelected,
+                            ]}
+                            onPress={() => handleSelect(q.key, option.value)}
                           >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                )}
+                            <View style={styles.radio}>
+                              {selected && <View style={styles.radioFill} />}
+                            </View>
+                            <Text
+                              style={[
+                                styles.optionText,
+                                selected && styles.optionTextSelected,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -243,19 +256,20 @@ export default function KycScreen() {
       {/* Fixed Bottom */}
       <View style={styles.bottomFixed}>
         <TouchableOpacity
-          style={[styles.submitButton, !allAnswered && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+            !allAnswered && styles.submitButtonDisabled,
+          ]}
           disabled={!allAnswered || submitting}
           onPress={handleSubmit}
         >
           {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit</Text>
+            <Text style={styles.submitButtonText}>{t("kyc.submit")}</Text>
           )}
         </TouchableOpacity>
-        <Text style={styles.footer}>
-          You can update your profile anytime from the dashboard
-        </Text>
+        <Text style={styles.footer}>{t("kyc.footer")}</Text>
       </View>
     </View>
   );
@@ -278,34 +292,84 @@ const styles = StyleSheet.create({
   },
   progressLabel: { fontSize: 13, fontWeight: "600", color: "#6B7280" },
   progressPercent: { fontSize: 13, fontWeight: "600", color: Colors.brand },
-  progressBar: { height: 4, backgroundColor: "#E5E7EB", borderRadius: 2, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: Colors.brand, borderRadius: 2 },
+  progressBar: {
+    height: 4,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: Colors.brand,
+    borderRadius: 2,
+  },
   scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 20 },
   title: { fontSize: 22, fontWeight: "700", color: "#1F2937", marginBottom: 6 },
   subtitle: {
-    fontSize: 15, color: "#6B7280", marginBottom: 24, lineHeight: 21,
+    fontSize: 15,
+    color: "#6B7280",
+    marginBottom: 24,
+    lineHeight: 21,
   },
   loadingContainer: { alignItems: "center", paddingVertical: 60 },
   loadingText: { marginTop: 14, fontSize: 14, color: "#9CA3AF" },
   questionsContainer: { marginTop: 8 },
   questionCard: { marginBottom: 16 },
-  questionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  questionLabel: { flex: 1, fontSize: 15, fontWeight: "600", color: "#1F2937", marginBottom: 4, lineHeight: 21 },
-  questionDesc: { fontSize: 13, color: "#6B7280", marginBottom: 10, lineHeight: 18 },
-  checkmark: { fontSize: 16, color: "#10B981", fontWeight: "700", marginLeft: 8 },
+  questionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  questionLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
+    lineHeight: 21,
+  },
+  questionDesc: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 10,
+    lineHeight: 18,
+  },
+  checkmark: {
+    fontSize: 16,
+    color: "#10B981",
+    fontWeight: "700",
+    marginLeft: 8,
+  },
   required: { color: "#EF4444" },
   optionsList: { marginTop: 8 },
   option: {
-    flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 14,
-    borderRadius: 10, borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
     marginBottom: 8,
   },
   optionSelected: { borderColor: Colors.brand, backgroundColor: "#F5F3FF" },
   radio: {
-    width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: "#D1D5DB",
-    alignItems: "center", justifyContent: "center", marginRight: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#D1D5DB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
-  radioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.brand },
+  radioFill: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.brand,
+  },
   optionText: { flex: 1, fontSize: 14, color: "#374151", lineHeight: 20 },
   optionTextSelected: { fontWeight: "500", color: Colors.brand },
   likertContainer: { marginTop: 8, marginBottom: 4 },
@@ -325,7 +389,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  likertCircleSelected: { borderColor: Colors.brand, backgroundColor: Colors.brand },
+  likertCircleSelected: {
+    borderColor: Colors.brand,
+    backgroundColor: Colors.brand,
+  },
   likertNumber: { fontSize: 16, fontWeight: "600", color: "#374151" },
   likertNumberSelected: { color: "#FFFFFF" },
   likertValueLabel: {
@@ -337,14 +404,23 @@ const styles = StyleSheet.create({
   },
   likertValueLabelSelected: { color: Colors.brand, fontWeight: "600" },
   submitButton: {
-    width: "100%", height: 50, backgroundColor: Colors.brand, borderRadius: 12,
-    alignItems: "center", justifyContent: "center", marginBottom: 12,
+    width: "100%",
+    height: 50,
+    backgroundColor: Colors.brand,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
   },
   submitButtonDisabled: { opacity: 0.4 },
   submitButtonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
   bottomFixed: {
-    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40,
-    borderTopWidth: 1, borderTopColor: "#F3F4F6", backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   footer: { fontSize: 12, color: "#9CA3AF", textAlign: "center" },
 });

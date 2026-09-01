@@ -1,25 +1,27 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { verifyEmail, sendEmailOtp } from "../../services/api";
+import { sendEmailOtp, verifyEmail } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 export default function CreateAccountScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast, confirm } = useFeedback();
+  const { t } = useLanguage();
 
   const isFormValid = email.trim() !== "";
 
@@ -32,11 +34,10 @@ export default function CreateAccountScreen() {
 
       if (response.data.exists) {
         const goLogin = await confirm({
-          title: "Account Exists",
-          message:
-            "An account with this email already exists. Please log in instead.",
-          confirmText: "Log in",
-          cancelText: "Cancel",
+          title: t("auth.create.accountExists"),
+          message: t("auth.create.accountExistsMessage"),
+          confirmText: t("auth.create.logIn"),
+          cancelText: t("common.cancel"),
         });
         if (goLogin) router.replace("/login");
         return;
@@ -51,7 +52,9 @@ export default function CreateAccountScreen() {
       sendEmailOtp(email.trim(), otp).catch(() => {});
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Verification failed. Please try again.";
+        error instanceof Error
+          ? error.message
+          : t("auth.create.verificationFailed");
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -69,20 +72,18 @@ export default function CreateAccountScreen() {
       >
         {/* Title */}
         <LanguageSelector />
-        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.title}>{t("auth.create.title")}</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Join thousands of businesses building their future
-        </Text>
+        <Text style={styles.subtitle}>{t("auth.create.subtitle")}</Text>
 
         {/* Form */}
         <View style={styles.form}>
           {/* Email Field */}
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t("auth.login.email")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email"
+            placeholder={t("auth.login.emailPlaceholder")}
             placeholderTextColor="#9CA3AF"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -92,9 +93,7 @@ export default function CreateAccountScreen() {
           />
 
           {/* Info text */}
-          <Text style={styles.infoText}>
-            We'll send a verification code to this email
-          </Text>
+          <Text style={styles.infoText}>{t("auth.create.info")}</Text>
 
           {/* Verify Button */}
           <TouchableOpacity
@@ -109,21 +108,23 @@ export default function CreateAccountScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.verifyButtonText}>Verify</Text>
+              <Text style={styles.verifyButtonText}>
+                {t("auth.create.verify")}
+              </Text>
             )}
           </TouchableOpacity>
 
           {/* Login Link */}
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account? </Text>
+            <Text style={styles.loginText}>{t("auth.create.alreadyHave")}</Text>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.loginLink}>Log in</Text>
+              <Text style={styles.loginLink}>{t("auth.create.logIn")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>© 2026 EbisCloud Solutions</Text>
+        <Text style={styles.footer}>{t("common.footer")}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

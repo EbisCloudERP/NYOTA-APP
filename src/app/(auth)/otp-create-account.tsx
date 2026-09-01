@@ -12,6 +12,7 @@ import {
     View,
 } from "react-native";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -31,7 +32,11 @@ export default function OtpCreateAccountScreen() {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const { showToast } = useFeedback();
-  const { otp: expectedOtp, email } = useLocalSearchParams<{ email: string; otp: string }>();
+  const { t } = useLanguage();
+  const { otp: expectedOtp, email } = useLocalSearchParams<{
+    email: string;
+    otp: string;
+  }>();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -78,7 +83,7 @@ export default function OtpCreateAccountScreen() {
 
     if (fullCode !== expectedOtp) {
       setLoading(false);
-      showToast("The verification code you entered is incorrect. Please try again.", "error");
+      showToast(t("otp.incorrectCode"), "error");
       return;
     }
 
@@ -108,10 +113,8 @@ export default function OtpCreateAccountScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <LanguageSelector />
-        <Text style={styles.title}>Enter verification code</Text>
-        <Text style={styles.subtitle}>
-          We've sent a 6-digit code to your email
-        </Text>
+        <Text style={styles.title}>{t("otp.title")}</Text>
+        <Text style={styles.subtitle}>{t("otp.subtitleEmail")}</Text>
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
@@ -128,26 +131,25 @@ export default function OtpCreateAccountScreen() {
         </View>
 
         {loading && (
-          <ActivityIndicator
-            color={Colors.brand}
-            style={styles.loader}
-          />
+          <ActivityIndicator color={Colors.brand} style={styles.loader} />
         )}
 
         <View style={styles.timerContainer}>
           <Text style={styles.clockIcon}>⏳</Text>
           <Text style={styles.timerText}>
-            Code expire in: {formatTime(timeLeft)}
+            {t("otp.expiresIn", { time: formatTime(timeLeft) })}
           </Text>
         </View>
 
         {timeLeft > 0 ? (
           <Text style={styles.waitText}>
-            Didn't receive the code? Wait: {formatTime(timeLeft)} to resend
+            {t("otp.waitResend", { time: formatTime(timeLeft) })}
           </Text>
         ) : (
           <TouchableOpacity onPress={handleResend} disabled={loading}>
-            <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>Resend code</Text>
+            <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>
+              {t("otp.resend")}
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -156,7 +158,7 @@ export default function OtpCreateAccountScreen() {
           onPress={() => router.back()}
           disabled={loading}
         >
-          <Text style={styles.goBackText}>Wrong details? Go back</Text>
+          <Text style={styles.goBackText}>{t("otp.wrongDetails")}</Text>
         </TouchableOpacity>
       </ScrollView>
 

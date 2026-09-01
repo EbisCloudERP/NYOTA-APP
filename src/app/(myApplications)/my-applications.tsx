@@ -9,6 +9,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useLanguage } from "../../services/LanguageContext";
+import type { TranslationKey } from "../../services/translations";
 import { Colors } from "../../theme/colors";
 
 type Status = "Needs action" | "Under review" | "Approved" | "Declined";
@@ -81,12 +83,12 @@ const APPLICATIONS: Application[] = [
   },
 ];
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "needs-action", label: "Needs action" },
-  { key: "under-review", label: "Under review" },
-  { key: "approved", label: "Approved" },
-  { key: "declined", label: "Declined" },
+const TABS: { key: TabKey; labelKey: TranslationKey }[] = [
+  { key: "all", labelKey: "applications.all" },
+  { key: "needs-action", labelKey: "applications.needsAction" },
+  { key: "under-review", labelKey: "applications.underReview" },
+  { key: "approved", labelKey: "applications.approved" },
+  { key: "declined", labelKey: "applications.declined" },
 ];
 
 const STATUS_STYLES: Record<Status, { bg: string; fg: string }> = {
@@ -97,20 +99,34 @@ const STATUS_STYLES: Record<Status, { bg: string; fg: string }> = {
 };
 
 const COLUMNS = [
-  { key: "application", label: "Application", width: 150 },
-  { key: "date", label: "Date", width: 100 },
-  { key: "service", label: "Service", width: 140 },
-  { key: "status", label: "Status", width: 170 },
-  { key: "amount", label: "Amount", width: 118 },
-  { key: "provider", label: "Provider", width: 135 },
-  { key: "action", label: "Action", width: 112 },
+  { key: "application", labelKey: "applications.application", width: 150 },
+  { key: "date", labelKey: "applications.date", width: 100 },
+  { key: "service", labelKey: "applications.service", width: 140 },
+  { key: "status", labelKey: "applications.status", width: 170 },
+  { key: "amount", labelKey: "applications.amount", width: 118 },
+  { key: "provider", labelKey: "applications.provider", width: 135 },
+  { key: "action", labelKey: "applications.action", width: 112 },
 ] as const;
 
 const TOTAL_WIDTH = COLUMNS.reduce((sum, column) => sum + column.width, 0);
 
 export default function MyApplicationsScreen() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [selected, setSelected] = useState<Application | null>(null);
+
+  const statusLabel = (s: Status): string => {
+    switch (s) {
+      case "Needs action":
+        return t("applications.needsAction");
+      case "Under review":
+        return t("applications.underReview");
+      case "Approved":
+        return t("applications.approved");
+      case "Declined":
+        return t("applications.declined");
+    }
+  };
 
   const filtered = APPLICATIONS.filter((application) => {
     switch (activeTab) {
@@ -136,14 +152,18 @@ export default function MyApplicationsScreen() {
             activeOpacity={0.7}
             onPress={() => router.push(application.serviceRoute as any)}
           >
-            <Text style={styles.resolveButtonText}>Resolve</Text>
+            <Text style={styles.resolveButtonText}>
+              {t("applications.resolve")}
+            </Text>
           </TouchableOpacity>
         );
       case "Under review":
         return (
           <View style={styles.reviewButton}>
             <Ionicons name="hourglass-outline" size={12} color="#B45309" />
-            <Text style={styles.reviewButtonText}>Under review</Text>
+            <Text style={styles.reviewButtonText}>
+              {t("applications.underReview")}
+            </Text>
           </View>
         );
       case "Approved":
@@ -153,7 +173,7 @@ export default function MyApplicationsScreen() {
             activeOpacity={0.7}
             onPress={() => setSelected(application)}
           >
-            <Text style={styles.viewButtonText}>View</Text>
+            <Text style={styles.viewButtonText}>{t("applications.view")}</Text>
           </TouchableOpacity>
         );
       case "Declined":
@@ -163,7 +183,9 @@ export default function MyApplicationsScreen() {
             activeOpacity={0.7}
             onPress={() => router.push(application.serviceRoute as any)}
           >
-            <Text style={styles.reapplyButtonText}>Reapply</Text>
+            <Text style={styles.reapplyButtonText}>
+              {t("applications.reapply")}
+            </Text>
           </TouchableOpacity>
         );
     }
@@ -177,9 +199,7 @@ export default function MyApplicationsScreen() {
     >
       {/* ── Header ── */}
       {/* <Text style={styles.title}>My applications</Text> */}
-      <Text style={styles.subtitle}>
-        Track and manage all your Integrated Business Solutions applications
-      </Text>
+      <Text style={styles.subtitle}>{t("applications.subtitle")}</Text>
 
       {/* ── Tabs ── */}
       <ScrollView
@@ -201,7 +221,7 @@ export default function MyApplicationsScreen() {
                 activeTab === tab.key && styles.tabTextActive,
               ]}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -215,7 +235,9 @@ export default function MyApplicationsScreen() {
             <View style={styles.tableHeaderRow}>
               {COLUMNS.map((column) => (
                 <View key={column.key} style={{ width: column.width }}>
-                  <Text style={styles.tableHeaderText}>{column.label}</Text>
+                  <Text style={styles.tableHeaderText}>
+                    {t(column.labelKey)}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -223,9 +245,7 @@ export default function MyApplicationsScreen() {
             {/* Data rows */}
             {filtered.length === 0 ? (
               <View style={styles.emptyRow}>
-                <Text style={styles.emptyText}>
-                  No applications found in this category.
-                </Text>
+                <Text style={styles.emptyText}>{t("applications.empty")}</Text>
               </View>
             ) : (
               filtered.map((application, index) => (
@@ -260,7 +280,7 @@ export default function MyApplicationsScreen() {
                           { color: STATUS_STYLES[application.status].fg },
                         ]}
                       >
-                        {application.status}
+                        {statusLabel(application.status)}
                       </Text>
                     </View>
                     {application.note ? (
@@ -302,7 +322,7 @@ export default function MyApplicationsScreen() {
               >
                 <Ionicons name="close" size={24} color="#111827" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Application details</Text>
+              <Text style={styles.modalTitle}>{t("applications.details")}</Text>
               <View style={styles.modalHeaderSpacer} />
             </View>
 
@@ -326,7 +346,7 @@ export default function MyApplicationsScreen() {
                       { color: STATUS_STYLES[selected.status].fg },
                     ]}
                   >
-                    {selected.status}
+                    {statusLabel(selected.status)}
                   </Text>
                 </View>
               </View>
@@ -339,7 +359,9 @@ export default function MyApplicationsScreen() {
                     color={Colors.brand}
                   />
                   <View style={styles.modalDetailText}>
-                    <Text style={styles.modalDetailLabel}>Service</Text>
+                    <Text style={styles.modalDetailLabel}>
+                      {t("applications.service")}
+                    </Text>
                     <Text style={styles.modalDetailValue}>
                       {selected.service}
                     </Text>
@@ -352,7 +374,9 @@ export default function MyApplicationsScreen() {
                     color={Colors.brand}
                   />
                   <View style={styles.modalDetailText}>
-                    <Text style={styles.modalDetailLabel}>Date applied</Text>
+                    <Text style={styles.modalDetailLabel}>
+                      {t("applications.dateApplied")}
+                    </Text>
                     <Text style={styles.modalDetailValue}>{selected.date}</Text>
                   </View>
                 </View>
@@ -363,7 +387,9 @@ export default function MyApplicationsScreen() {
                     color={Colors.brand}
                   />
                   <View style={styles.modalDetailText}>
-                    <Text style={styles.modalDetailLabel}>Amount</Text>
+                    <Text style={styles.modalDetailLabel}>
+                      {t("applications.amount")}
+                    </Text>
                     <Text style={styles.modalDetailValue}>
                       KES {selected.amount.toLocaleString()}
                     </Text>
@@ -378,7 +404,9 @@ export default function MyApplicationsScreen() {
                     color={Colors.brand}
                   />
                   <View style={styles.modalDetailText}>
-                    <Text style={styles.modalDetailLabel}>Provider</Text>
+                    <Text style={styles.modalDetailLabel}>
+                      {t("applications.provider")}
+                    </Text>
                     <Text style={styles.modalDetailValue}>
                       {selected.provider}
                     </Text>
@@ -394,7 +422,7 @@ export default function MyApplicationsScreen() {
                 activeOpacity={0.7}
                 onPress={() => setSelected(null)}
               >
-                <Text style={styles.modalCloseText}>Done</Text>
+                <Text style={styles.modalCloseText}>{t("common.done")}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -1,23 +1,24 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Linking,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Linking,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  getWebinarRecordings,
-  getWebinars,
-  rsvpWebinar,
-  type Webinar,
-  type WebinarRecording,
+    getWebinarRecordings,
+    getWebinars,
+    rsvpWebinar,
+    type Webinar,
+    type WebinarRecording,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -103,26 +104,30 @@ export default function WebinarsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [rsvpingId, setRsvpingId] = useState<number | null>(null);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
-  const loadWebinars = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    try {
-      const [webinarsRes, recordingsRes] = await Promise.all([
-        getWebinars(),
-        getWebinarRecordings(),
-      ]);
-      setWebinars(webinarsRes.data ?? []);
-      setRecordings(recordingsRes.data ?? []);
-    } catch (e) {
-      showToast(
-        e instanceof Error ? e.message : "Failed to load webinars.",
-        "error",
-      );
-    } finally {
-      setLoading(false);
-      if (isRefresh) setRefreshing(false);
-    }
-  }, [showToast]);
+  const loadWebinars = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+      try {
+        const [webinarsRes, recordingsRes] = await Promise.all([
+          getWebinars(),
+          getWebinarRecordings(),
+        ]);
+        setWebinars(webinarsRes.data ?? []);
+        setRecordings(recordingsRes.data ?? []);
+      } catch (e) {
+        showToast(
+          e instanceof Error ? e.message : t("webinars.failedLoad"),
+          "error",
+        );
+      } finally {
+        setLoading(false);
+        if (isRefresh) setRefreshing(false);
+      }
+    },
+    [showToast],
+  );
 
   useEffect(() => {
     loadWebinars();
@@ -138,10 +143,7 @@ export default function WebinarsScreen() {
     try {
       const uuid = (await getUuid()) ?? "";
       if (!uuid) {
-        showToast(
-          "Unable to identify your account. Please log in again.",
-          "error",
-        );
+        showToast(t("webinars.unableIdentify"), "error");
         return;
       }
       await rsvpWebinar(webinar.id, uuid);
@@ -152,10 +154,10 @@ export default function WebinarsScreen() {
             : w,
         ),
       );
-      showToast("You're registered for this webinar.", "success");
+      showToast(t("webinars.registeredMsg"), "success");
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Unable to register. Please try again.",
+        e instanceof Error ? e.message : t("webinars.unableRegister"),
         "error",
       );
     } finally {
@@ -168,7 +170,7 @@ export default function WebinarsScreen() {
     try {
       await Linking.openURL(url);
     } catch {
-      showToast("Unable to open the link.", "error");
+      showToast(t("home.unableOpenLink"), "error");
     }
   };
 
@@ -198,10 +200,8 @@ export default function WebinarsScreen() {
       }
     >
       {/* ── Header ── */}
-      <Text style={styles.title}>Webinars</Text>
-      <Text style={styles.subtitle}>
-        Join live webinars and interactive sessions led by industry experts
-      </Text>
+      <Text style={styles.title}>{t("webinars.title")}</Text>
+      <Text style={styles.subtitle}>{t("webinars.subtitle")}</Text>
 
       {/* ── Tabs ── */}
       <View style={styles.tabBar}>
@@ -219,10 +219,10 @@ export default function WebinarsScreen() {
               ]}
             >
               {tab === "live"
-                ? "Live"
+                ? t("webinars.live")
                 : tab === "upcoming"
-                  ? "Upcoming"
-                  : "Past"}
+                  ? t("webinars.upcoming")
+                  : t("webinars.past")}
             </Text>
           </TouchableOpacity>
         ))}
@@ -256,7 +256,11 @@ export default function WebinarsScreen() {
                       : styles.badgeTextUpcoming
                 }
               >
-                {isLive ? "● Live" : isPast ? "Ended" : "Upcoming"}
+                {isLive
+                  ? "● " + t("webinars.live")
+                  : isPast
+                    ? t("webinars.ended")
+                    : t("webinars.upcoming")}
               </Text>
             </View>
 
@@ -278,7 +282,7 @@ export default function WebinarsScreen() {
                 <View style={styles.infoItem}>
                   <Ionicons name="people-outline" size={14} color="#6B7280" />
                   <Text style={styles.infoText}>
-                    {webinar.rsvpCount} attending
+                    {t("webinars.attending", { count: webinar.rsvpCount })}
                   </Text>
                 </View>
               )}
@@ -301,14 +305,13 @@ export default function WebinarsScreen() {
                 onPress={() => openUrl(webinar.meetingUrl)}
               >
                 <Ionicons name="videocam-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Join meeting</Text>
+                <Text style={styles.buttonText}>
+                  {t("webinars.joinMeeting")}
+                </Text>
               </TouchableOpacity>
             ) : isPast ? (
               <TouchableOpacity
-                style={[
-                  styles.outlineButton,
-                  !hasVod && styles.buttonDisabled,
-                ]}
+                style={[styles.outlineButton, !hasVod && styles.buttonDisabled]}
                 activeOpacity={0.7}
                 disabled={!hasVod}
                 onPress={() => openUrl(webinar.vodUrl)}
@@ -324,7 +327,9 @@ export default function WebinarsScreen() {
                     !hasVod && styles.buttonTextOutlineDisabled,
                   ]}
                 >
-                  {hasVod ? "Watch recording" : "No recording"}
+                  {hasVod
+                    ? t("webinars.watchRecording")
+                    : t("webinars.noRecording")}
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -343,9 +348,7 @@ export default function WebinarsScreen() {
                 ) : (
                   <Ionicons
                     name={
-                      webinar.isRsvped
-                        ? "checkmark-circle"
-                        : "calendar-outline"
+                      webinar.isRsvped ? "checkmark-circle" : "calendar-outline"
                     }
                     size={18}
                     color={webinar.isRsvped ? "#16A34A" : Colors.brand}
@@ -357,7 +360,9 @@ export default function WebinarsScreen() {
                     webinar.isRsvped && styles.buttonTextRegistered,
                   ]}
                 >
-                  {webinar.isRsvped ? "Registered" : "RSVP now"}
+                  {webinar.isRsvped
+                    ? t("webinars.registered")
+                    : t("webinars.rsvpNow")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -367,10 +372,10 @@ export default function WebinarsScreen() {
               <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
               <Text style={styles.linkText}>
                 {webinar.meetingUrl
-                  ? "Meeting link available"
+                  ? t("webinars.meetingLinkAvailable")
                   : webinar.vodUrl
-                    ? "Recording available"
-                    : "No link available"}
+                    ? t("webinars.recordingAvailable")
+                    : t("webinars.noLinkAvailable")}
               </Text>
             </View>
           </View>
@@ -381,10 +386,8 @@ export default function WebinarsScreen() {
       {filtered.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="tv-outline" size={48} color="#D1D5DB" />
-          <Text style={styles.emptyTitle}>No webinars found</Text>
-          <Text style={styles.emptySubtitle}>
-            Check back later for new sessions.
-          </Text>
+          <Text style={styles.emptyTitle}>{t("webinars.noWebinars")}</Text>
+          <Text style={styles.emptySubtitle}>{t("webinars.checkBack")}</Text>
         </View>
       )}
 

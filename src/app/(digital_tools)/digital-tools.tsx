@@ -7,70 +7,66 @@ import {
     View,
 } from "react-native";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
+import type { TranslationKey } from "../../services/translations";
 import { Colors } from "../../theme/colors";
 
 interface DigitalTool {
   icon: string;
-  title: string;
-  subtext: string;
-  checklist: string[];
+  titleKey: TranslationKey;
+  subtextKey: TranslationKey;
+  checklistKeys: TranslationKey[];
 }
 
 const TOOLS: DigitalTool[] = [
   {
     icon: "chatbubble-ellipses-outline",
-    title: "Bulk SMS",
-    subtext:
-      "Send thousands of personalized SMS messages to your customers at once. Perfect for promotions, alerts, reminders, and notifications.",
-    checklist: [
-      "Instant delivery to all networks",
-      "Personalized messaging at scale",
-      "Detailed delivery reports & analytics",
+    titleKey: "digitalTools.bulkSms",
+    subtextKey: "digitalTools.bulkSmsText",
+    checklistKeys: [
+      "digitalTools.checklist.instantDelivery",
+      "digitalTools.checklist.personalized",
+      "digitalTools.checklist.deliveryReports",
     ],
   },
   {
     icon: "calculator-outline",
-    title: "Book Keeping",
-    subtext:
-      "Simplify your financial record-keeping. Track every transaction, manage invoices, and generate professional financial reports effortlessly.",
-    checklist: [
-      "Track every transaction effortlessly",
-      "Manage invoices & payments",
-      "Generate professional financial reports",
+    titleKey: "digitalTools.bookKeeping",
+    subtextKey: "digitalTools.bookKeepingText",
+    checklistKeys: [
+      "digitalTools.checklist.trackTransactions",
+      "digitalTools.checklist.invoices",
+      "digitalTools.checklist.reports",
     ],
   },
   {
     icon: "storefront-outline",
-    title: "E-commerce",
-    subtext:
-      "Launch and manage your online store with ease. We set up a Shopify-style storefront with product catalogs, payment gateways including M-Pesa, inventory management, and order tracking — all tailored to your brand.",
-    checklist: [
-      "Shopify-style storefront setup",
-      "M-Pesa & card payment gateways",
-      "Inventory & order tracking",
+    titleKey: "digitalTools.ecommerce",
+    subtextKey: "digitalTools.ecommerceText",
+    checklistKeys: [
+      "digitalTools.checklist.shopify",
+      "digitalTools.checklist.mpesa",
+      "digitalTools.checklist.inventory",
     ],
   },
   {
     icon: "globe-outline",
-    title: "Website Builder",
-    subtext:
-      "Build your complete online presence. Get a stunning website, a professional domain name, and business email — all in one seamless package.",
-    checklist: [
-      "Stunning, responsive website",
-      "Professional domain name",
-      "Business email included",
+    titleKey: "digitalTools.website",
+    subtextKey: "digitalTools.websiteText",
+    checklistKeys: [
+      "digitalTools.checklist.responsive",
+      "digitalTools.checklist.domain",
+      "digitalTools.checklist.email",
     ],
   },
 ];
 
 function ToolCard({ tool }: { tool: DigitalTool }) {
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
 
   const handleOnboard = () => {
-    showToast(
-      "This feature is not available in the app at the moment. Please visit our main website on your browser to get started.",
-      "info",
-    );
+    showToast(t("digitalTools.notAvailable"), "info");
   };
 
   return (
@@ -80,18 +76,20 @@ function ToolCard({ tool }: { tool: DigitalTool }) {
         <View style={styles.cardIcon}>
           <Ionicons name={tool.icon as any} size={20} color={Colors.brand} />
         </View>
-        <Text style={styles.cardTitle}>{tool.title}</Text>
+        <Text style={styles.cardTitle}>{t(tool.titleKey)}</Text>
       </View>
 
       {/* Subtext */}
-      <Text style={styles.cardSubtext}>{tool.subtext}</Text>
+      <Text style={styles.cardSubtext}>{t(tool.subtextKey)}</Text>
 
       {/* Checklist */}
-      <Text style={styles.checklistLabel}>What's included</Text>
-      {tool.checklist.map((item) => (
-        <View key={item} style={styles.checklistItem}>
+      <Text style={styles.checklistLabel}>
+        {t("digitalTools.whatsIncluded")}
+      </Text>
+      {tool.checklistKeys.map((itemKey) => (
+        <View key={itemKey} style={styles.checklistItem}>
           <Ionicons name="checkmark-circle" size={16} color="#059669" />
-          <Text style={styles.checklistText}>{item}</Text>
+          <Text style={styles.checklistText}>{t(itemKey)}</Text>
         </View>
       ))}
 
@@ -101,7 +99,9 @@ function ToolCard({ tool }: { tool: DigitalTool }) {
         activeOpacity={0.7}
         onPress={handleOnboard}
       >
-        <Text style={styles.onboardButtonText}>Onboard</Text>
+        <Text style={styles.onboardButtonText}>
+          {t("digitalTools.onboard")}
+        </Text>
         <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
@@ -109,19 +109,18 @@ function ToolCard({ tool }: { tool: DigitalTool }) {
 }
 
 export default function DigitalToolsScreen() {
+  const { t } = useLanguage();
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.subtitle}>
-        Explore and onboard to essential business tools and solutions to improve
-        productivity, streamline workflows and access to market.
-      </Text>
+      <Text style={styles.subtitle}>{t("digitalTools.subtitle")}</Text>
 
       {TOOLS.map((tool) => (
-        <ToolCard key={tool.title} tool={tool} />
+        <ToolCard key={tool.titleKey} tool={tool} />
       ))}
 
       <View style={styles.bottomSpacer} />

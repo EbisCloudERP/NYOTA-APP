@@ -7,15 +7,28 @@ import {
     type ReactNode,
 } from "react";
 import { getLanguage, setLanguage as persistLanguage } from "./storage";
+import { translations, type TranslationKey } from "./translations";
 
 export type Language = "en" | "sw";
+
+type TranslateParams = Record<string, string | number>;
 
 interface LanguageState {
   language: Language;
   setLanguage: (language: Language) => Promise<void>;
+  t: (key: TranslationKey, params?: TranslateParams) => string;
 }
 
 const LanguageContext = createContext<LanguageState | undefined>(undefined);
+
+const interpolate = (template: string, params?: TranslateParams): string => {
+  if (!params) return template;
+  return Object.keys(params).reduce(
+    (result, key) =>
+      result.replace(new RegExp(`\\{${key}\\}`, "g"), String(params[key])),
+    template,
+  );
+};
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
@@ -40,8 +53,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     await persistLanguage(next);
   }, []);
 
+  const t = useCallback(
+    (key: TranslationKey, params?: TranslateParams) => {
+      const template =
+        translations[language][key] ?? translations.en[key] ?? key;
+      return interpolate(template, params);
+    },
+    [language],
+  );
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );

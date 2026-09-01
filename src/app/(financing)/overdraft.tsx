@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
 
 interface FormData {
@@ -63,6 +64,7 @@ export default function OverdraftScreen() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const { showToast, confirm } = useFeedback();
+  const { t } = useLanguage();
 
   // File upload state
   const [collateralDoc, setCollateralDoc] = useState<string | null>(null);
@@ -81,12 +83,15 @@ export default function OverdraftScreen() {
     }
   };
 
-  const handleUpload = async (label: string, setter: (v: string | null) => void) => {
+  const handleUpload = async (
+    label: string,
+    setter: (v: string | null) => void,
+  ) => {
     const ok = await confirm({
       title: `Upload ${label}`,
-      message: "This will open the file picker.",
-      confirmText: "Select file",
-      cancelText: "Cancel",
+      message: t("common.filePickerMessage"),
+      confirmText: t("common.selectFile"),
+      cancelText: t("common.cancel"),
     });
     if (ok) setter("selected-file.pdf");
   };
@@ -96,53 +101,55 @@ export default function OverdraftScreen() {
 
     // Account Holder
     if (!form.accountHolderName.trim())
-      e.accountHolderName = "Account holder name is required";
+      e.accountHolderName = t("overdraft.accountHolderRequired");
     if (!form.accountNumber.trim())
-      e.accountNumber = "Account number is required";
-    if (!form.contactInfo.trim()) e.contactInfo = "Contact info is required";
+      e.accountNumber = t("overdraft.accountNumberRequired");
+    if (!form.contactInfo.trim())
+      e.contactInfo = t("overdraft.contactRequired");
 
     // Overdraft Request
     if (!form.requestedAmount.trim()) {
-      e.requestedAmount = "Requested overdraft amount is required";
+      e.requestedAmount = t("overdraft.requestedRequired");
     } else if (
       isNaN(Number(form.requestedAmount)) ||
       Number(form.requestedAmount) <= 0
     ) {
-      e.requestedAmount = "Enter a valid amount";
+      e.requestedAmount = t("financing.validAmount");
     }
-    if (!form.purpose.trim()) e.purpose = "Purpose of overdraft is required";
+    if (!form.purpose.trim()) e.purpose = t("overdraft.purposeRequired");
     if (!form.currentBalance.trim()) {
-      e.currentBalance = "Current account balance is required";
+      e.currentBalance = t("overdraft.balanceRequired");
     } else if (
       isNaN(Number(form.currentBalance)) ||
       Number(form.currentBalance) < 0
     ) {
-      e.currentBalance = "Enter a valid balance";
+      e.currentBalance = t("overdraft.validBalance");
     }
     if (!form.avgMonthlyRevenue.trim()) {
-      e.avgMonthlyRevenue = "Average monthly revenue is required";
+      e.avgMonthlyRevenue = t("overdraft.avgRequired");
     } else if (
       isNaN(Number(form.avgMonthlyRevenue)) ||
       Number(form.avgMonthlyRevenue) <= 0
     ) {
-      e.avgMonthlyRevenue = "Enter a valid amount";
+      e.avgMonthlyRevenue = t("financing.validAmount");
     }
     if (!form.repaymentPeriod.trim())
-      e.repaymentPeriod = "Repayment period is required";
-    if (!form.interestRate.trim()) e.interestRate = "Interest rate is required";
+      e.repaymentPeriod = t("financing.repaymentRequired");
+    if (!form.interestRate.trim())
+      e.interestRate = t("financing.interestRequired");
 
     // Collateral
     if (!form.collateralDetails.trim())
-      e.collateralDetails = "Collateral details are required";
+      e.collateralDetails = t("financing.collateralRequired");
     if (!form.collateralValuation.trim()) {
-      e.collateralValuation = "Collateral valuation is required";
+      e.collateralValuation = t("overdraft.collateralValuationRequired");
     } else if (
       isNaN(Number(form.collateralValuation)) ||
       Number(form.collateralValuation) <= 0
     ) {
-      e.collateralValuation = "Enter a valid valuation";
+      e.collateralValuation = t("overdraft.validValuation");
     }
-    if (!collateralDoc) e.collateralDoc = "Supporting documents are required";
+    if (!collateralDoc) e.collateralDoc = t("overdraft.docsRequired");
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -150,16 +157,16 @@ export default function OverdraftScreen() {
 
   const handleSubmit = () => {
     if (!validate()) {
-      showToast("Please fill in all required fields correctly.", "error");
+      showToast(t("financing.fillRequired"), "error");
       return;
     }
 
     if (!declaration || !authorizeChecks || !approvalTerms || !agreeTerms) {
-      showToast("Please accept all declarations and terms before submitting.", "error");
+      showToast(t("financing.acceptTerms"), "error");
       return;
     }
 
-    showToast("Your overdraft application has been submitted successfully.", "success");
+    showToast(t("overdraft.submitted"), "success");
   };
 
   return (
@@ -170,27 +177,22 @@ export default function OverdraftScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
-        Access flexible overdraft facilities to manage your day-to-day cash flow
-        and cover short-term funding gaps as they arise.
-      </Text>
+      <Text style={styles.subtitle}>{t("overdraft.subtitle")}</Text>
 
       {/* Required fields note */}
-      <Text style={styles.requiredNote}>
-        All fields marked with <Text style={styles.asterisk}>*</Text> are
-        required
-      </Text>
+      <Text style={styles.requiredNote}>{t("common.requiredNote")}</Text>
 
       {/* ── Account Holder ── */}
-      <Text style={styles.sectionTitle}>Account Holder</Text>
+      <Text style={styles.sectionTitle}>{t("overdraft.accountHolder")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Account Holder's Name <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.accountHolderName")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.accountHolderName && styles.inputError]}
-          placeholder="Enter account holder's name"
+          placeholder={t("overdraft.accountHolderNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.accountHolderName}
           onChangeText={(v) => updateField("accountHolderName", v)}
@@ -202,11 +204,11 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Account Number <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.accountNumber")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.accountNumber && styles.inputError]}
-          placeholder="Enter account number"
+          placeholder={t("overdraft.accountNumberPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.accountNumber}
           onChangeText={(v) => updateField("accountNumber", v)}
@@ -217,10 +219,10 @@ export default function OverdraftScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Business / Trading Name</Text>
+        <Text style={styles.label}>{t("overdraft.tradingName")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter business or trading name (optional)"
+          placeholder={t("overdraft.tradingNamePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.tradingName}
           onChangeText={(v) => updateField("tradingName", v)}
@@ -229,11 +231,11 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Contact Info <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.contactInfo")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.contactInfo && styles.inputError]}
-          placeholder="e.g. +254 712 345 678"
+          placeholder={t("financing.phonePlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="phone-pad"
           value={form.contactInfo}
@@ -246,16 +248,16 @@ export default function OverdraftScreen() {
 
       {/* ── Overdraft Request Details ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Overdraft Request Details</Text>
+      <Text style={styles.sectionTitle}>{t("overdraft.overdraftRequest")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Requested Overdraft Amount (KES){" "}
+          {t("overdraft.requestedAmount")}{" "}
           <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.requestedAmount && styles.inputError]}
-          placeholder="Enter requested amount"
+          placeholder={t("overdraft.requestedAmountPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.requestedAmount}
@@ -268,7 +270,7 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Purpose of Overdraft <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.purpose")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -276,7 +278,7 @@ export default function OverdraftScreen() {
             styles.textArea,
             errors.purpose && styles.inputError,
           ]}
-          placeholder="Describe the purpose of the overdraft"
+          placeholder={t("overdraft.purposePlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -291,11 +293,11 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Current Account Balance (KES) <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.currentBalance")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.currentBalance && styles.inputError]}
-          placeholder="Enter current balance"
+          placeholder={t("overdraft.currentBalancePlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.currentBalance}
@@ -308,11 +310,11 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Average Monthly Revenue (KES) <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.avgMonthly")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.avgMonthlyRevenue && styles.inputError]}
-          placeholder="Enter average monthly revenue"
+          placeholder={t("overdraft.avgMonthlyPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.avgMonthlyRevenue}
@@ -325,11 +327,12 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Proposed Repayment Period <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.repaymentPeriod")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.repaymentPeriod && styles.inputError]}
-          placeholder="e.g. 6 months"
+          placeholder={t("overdraft.repaymentPeriodPlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.repaymentPeriod}
           onChangeText={(v) => updateField("repaymentPeriod", v)}
@@ -341,11 +344,11 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Interest Rate (%) <Text style={styles.asterisk}>*</Text>
+          {t("financing.interestRate")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[styles.input, errors.interestRate && styles.inputError]}
-          placeholder="e.g. 12%"
+          placeholder={t("financing.interestRatePlaceholder")}
           placeholderTextColor="#9CA3AF"
           value={form.interestRate}
           onChangeText={(v) => updateField("interestRate", v)}
@@ -357,11 +360,12 @@ export default function OverdraftScreen() {
 
       {/* ── Collateral ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Collateral</Text>
+      <Text style={styles.sectionTitle}>{t("overdraft.collateral")}</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Collateral Details <Text style={styles.asterisk}>*</Text>
+          {t("financing.collateralDetails")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
@@ -369,7 +373,7 @@ export default function OverdraftScreen() {
             styles.textArea,
             errors.collateralDetails && styles.inputError,
           ]}
-          placeholder="Describe the collateral being offered"
+          placeholder={t("financing.collateralPlaceholder")}
           placeholderTextColor="#9CA3AF"
           multiline
           numberOfLines={3}
@@ -384,14 +388,15 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Valuation of Collateral (KES) <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.collateralValuation")}{" "}
+          <Text style={styles.asterisk}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
             errors.collateralValuation && styles.inputError,
           ]}
-          placeholder="Enter valuation amount"
+          placeholder={t("overdraft.collateralValuationPlaceholder")}
           placeholderTextColor="#9CA3AF"
           keyboardType="numeric"
           value={form.collateralValuation}
@@ -404,7 +409,7 @@ export default function OverdraftScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>
-          Upload Supporting Documents <Text style={styles.asterisk}>*</Text>
+          {t("overdraft.uploadDocs")} <Text style={styles.asterisk}>*</Text>
         </Text>
         <TouchableOpacity
           style={[
@@ -425,12 +430,10 @@ export default function OverdraftScreen() {
               collateralDoc && styles.uploadTextSelected,
             ]}
           >
-            {collateralDoc || "Upload supporting documents"}
+            {collateralDoc || t("overdraft.uploadDocsPlaceholder")}
           </Text>
         </TouchableOpacity>
-        <Text style={styles.uploadHint}>
-          Accepted formats: PDF, JPG, PNG, DOC (Max 10MB)
-        </Text>
+        <Text style={styles.uploadHint}>{t("common.acceptedFormats")}</Text>
         {errors.collateralDoc && (
           <Text style={styles.errorText}>{errors.collateralDoc}</Text>
         )}
@@ -438,7 +441,7 @@ export default function OverdraftScreen() {
 
       {/* ── Declarations ── */}
       <View style={styles.sectionDivider} />
-      <Text style={styles.sectionTitle}>Declarations & Agreements</Text>
+      <Text style={styles.sectionTitle}>{t("financing.declarations")}</Text>
 
       <TouchableOpacity
         style={styles.checkboxRow}
@@ -450,10 +453,7 @@ export default function OverdraftScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I declare that all information provided is true and accurate to the
-          best of my knowledge.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration1")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -468,10 +468,7 @@ export default function OverdraftScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I authorize the partner bank to verify the information provided and
-          conduct credit checks.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration2")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -486,10 +483,7 @@ export default function OverdraftScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I understand that approval is subject to the partner bank's terms and
-          conditions.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration3")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -502,9 +496,7 @@ export default function OverdraftScreen() {
             <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>
-          I agree to the Terms and Conditions and Privacy Policy.
-        </Text>
+        <Text style={styles.checkboxLabel}>{t("financing.declaration4")}</Text>
       </TouchableOpacity>
 
       {/* ── Submit Button ── */}
@@ -514,7 +506,9 @@ export default function OverdraftScreen() {
         onPress={handleSubmit}
       >
         <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-        <Text style={styles.submitButtonText}>Submit Application</Text>
+        <Text style={styles.submitButtonText}>
+          {t("financing.submitApplication")}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.bottomSpacer} />

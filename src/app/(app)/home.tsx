@@ -2,31 +2,32 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Linking,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Linking,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useAuth } from "../../services/AuthContext";
 import {
-  getAnnouncements,
-  getCourseRecommendations,
-  getEnrolledCourses,
-  getWebinarFaqs,
-  getWebinarRecordings,
-  getWebinars,
-  rsvpWebinar,
-  type Announcement,
-  type CatalogueCourse,
-  type Faq,
-  type Webinar,
-  type WebinarRecording,
+    getAnnouncements,
+    getCourseRecommendations,
+    getEnrolledCourses,
+    getWebinarFaqs,
+    getWebinarRecordings,
+    getWebinars,
+    rsvpWebinar,
+    type Announcement,
+    type CatalogueCourse,
+    type Faq,
+    type Webinar,
+    type WebinarRecording,
 } from "../../services/api";
+import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
+import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
@@ -67,7 +68,8 @@ const formatWebinarTime = (value: string) => {
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const firstName = user?.first_name || "User";
+  const { t } = useLanguage();
+  const firstName = user?.first_name || t("header.user");
   const isOnboarded = user?.is_onboarded;
   const county = user?.county;
 
@@ -143,7 +145,7 @@ export default function HomeScreen() {
     try {
       await Linking.openURL(url);
     } catch {
-      showToast("Unable to open the link.", "error");
+      showToast(t("home.unableOpenLink"), "error");
     }
   };
 
@@ -160,10 +162,10 @@ export default function HomeScreen() {
             : w,
         ),
       );
-      showToast("You're registered for this webinar.", "success");
+      showToast(t("home.registeredWebinar"), "success");
     } catch (e) {
       showToast(
-        e instanceof Error ? e.message : "Unable to register. Please try again.",
+        e instanceof Error ? e.message : t("home.unableRegister"),
         "error",
       );
     } finally {
@@ -176,9 +178,8 @@ export default function HomeScreen() {
     (c) => (c.completed_lessons ?? 0) >= (c.total_lessons || 0),
   ).length;
   const activeCourse =
-    enrolled.find(
-      (c) => (c.completed_lessons ?? 0) < (c.total_lessons || 0),
-    ) ?? enrolled[0];
+    enrolled.find((c) => (c.completed_lessons ?? 0) < (c.total_lessons || 0)) ??
+    enrolled[0];
   const active = activeCourse ? courseProgress(activeCourse) : null;
 
   const liveWebinar = webinars.find((w) => webinarStatus(w.status) === "live");
@@ -197,10 +198,10 @@ export default function HomeScreen() {
       }
     >
       {/* Greeting */}
-      <Text style={styles.greeting}>Welcome back, {firstName}! 👋</Text>
-      <Text style={styles.subtitle}>
-        Here's a summary of your recent activity.
+      <Text style={styles.greeting}>
+        {t("home.greeting", { name: firstName })}
       </Text>
+      <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
 
       {/* Badges */}
       <View style={styles.badges}>
@@ -211,7 +212,7 @@ export default function HomeScreen() {
             color={isOnboarded ? "#10B981" : "#F59E0B"}
           />
           <Text style={styles.badgeText}>
-            {isOnboarded ? "Onboarded" : "Profile incomplete"}
+            {isOnboarded ? t("home.onboarded") : t("home.profileIncomplete")}
           </Text>
         </View>
         {county ? (
@@ -223,26 +224,26 @@ export default function HomeScreen() {
       </View>
 
       {/* Quick Access */}
-      <Text style={styles.sectionTitle}>Quick Access</Text>
+      <Text style={styles.sectionTitle}>{t("home.quickAccess")}</Text>
       <View style={styles.quickGrid}>
         {[
           {
-            label: "Certificates",
+            label: t("home.certificates"),
             icon: "ribbon-outline",
             route: "/(certificates)/certificates",
           },
           {
-            label: "Digital Tools",
+            label: t("home.digitalTools"),
             icon: "hardware-chip-outline",
             route: "/(digital_tools)/digital-tools",
           },
           {
-            label: "Profile",
+            label: t("home.profile"),
             icon: "person-outline",
             route: "/(profile)/profile",
           },
           {
-            label: "Support",
+            label: t("home.support"),
             icon: "headset-outline",
             route: "/(support)/support",
           },
@@ -262,7 +263,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Continue Learning */}
-      <Text style={styles.sectionTitle}>Continue Learning</Text>
+      <Text style={styles.sectionTitle}>{t("home.continueLearning")}</Text>
 
       {loadingLearning ? (
         <View style={styles.courseCard}>
@@ -275,7 +276,10 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.courseTitle}>{activeCourse.title}</Text>
               <Text style={styles.courseSubtitle}>
-                {active.completed}/{active.total} lessons completed
+                {t("home.lessonsCompleted", {
+                  completed: active.completed,
+                  total: active.total,
+                })}
               </Text>
             </View>
             <View style={styles.progressBadge}>
@@ -289,21 +293,21 @@ export default function HomeScreen() {
               style={[styles.progressFill, { width: `${active.progress}%` }]}
             />
           </View>
-          <Text style={styles.progressLabel}>Overall progress</Text>
+          <Text style={styles.progressLabel}>{t("home.overallProgress")}</Text>
 
           {/* Stats */}
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{enrolledCount}</Text>
-              <Text style={styles.statLabel}>Enrolled</Text>
+              <Text style={styles.statLabel}>{t("home.enrolled")}</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{doneCount}</Text>
-              <Text style={styles.statLabel}>Done</Text>
+              <Text style={styles.statLabel}>{t("home.done")}</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{availableCount}</Text>
-              <Text style={styles.statLabel}>Available</Text>
+              <Text style={styles.statLabel}>{t("home.available")}</Text>
             </View>
           </View>
 
@@ -311,8 +315,10 @@ export default function HomeScreen() {
           <View style={styles.recommendRow}>
             <Ionicons name="book-outline" size={14} color="#6B7280" />
             <Text style={styles.recommendText}>
-              {availableCount} course
-              {availableCount !== 1 ? "s" : ""} available
+              {t("home.coursesAvailable", {
+                count: availableCount,
+                s: availableCount !== 1 ? "s" : "",
+              })}
             </Text>
           </View>
 
@@ -326,25 +332,29 @@ export default function HomeScreen() {
               })
             }
           >
-            <Text style={styles.continueButtonText}>Continue learning</Text>
+            <Text style={styles.continueButtonText}>
+              {t("home.continueLearningBtn")}
+            </Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.courseCard}>
-          <Text style={styles.courseSubtitle}>No courses in progress.</Text>
+          <Text style={styles.courseSubtitle}>{t("home.noCourses")}</Text>
           <TouchableOpacity
             style={styles.continueButton}
             onPress={() => router.navigate("/my-learning")}
           >
-            <Text style={styles.continueButtonText}>Browse courses</Text>
+            <Text style={styles.continueButtonText}>
+              {t("home.browseCourses")}
+            </Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       )}
 
       {/* ── Announcements ── */}
-      <Text style={styles.sectionTitle}>Announcements</Text>
+      <Text style={styles.sectionTitle}>{t("home.announcements")}</Text>
       {announcements.map((item) => (
         <View key={item.id} style={styles.announcementCard}>
           <Text style={styles.announceTitle}>{item.title}</Text>
@@ -359,25 +369,30 @@ export default function HomeScreen() {
       ))}
       {announcements.length === 0 && (
         <View style={styles.announcementCard}>
-          <Text style={styles.announceSub}>No announcements right now.</Text>
+          <Text style={styles.announceSub}>{t("home.noAnnouncements")}</Text>
         </View>
       )}
 
       {/* ── Webinars ── */}
-      <Text style={styles.sectionTitle}>Webinars</Text>
+      <Text style={styles.sectionTitle}>{t("home.webinars")}</Text>
 
       {/* Live */}
       {liveWebinar ? (
         <View style={styles.webinarCard}>
           <View style={styles.webinarHeader}>
             <View style={[styles.webinarBadge, styles.webinarBadgeLive]}>
-              <Text style={styles.webinarBadgeText}>● Live</Text>
+              <Text style={styles.webinarBadgeText}>{t("home.live")}</Text>
             </View>
           </View>
           <Text style={styles.webinarTitle}>{liveWebinar.title}</Text>
           <Text style={styles.webinarHost}>
-            Hosted by {liveWebinar.speaker ?? liveWebinar.speakers[0]?.name ?? "Host"} •{" "}
-            {liveWebinar.rsvp_count} attending
+            {t("home.hostedBy", {
+              host:
+                liveWebinar.speaker ??
+                liveWebinar.speakers[0]?.name ??
+                t("common.host"),
+              count: liveWebinar.rsvp_count,
+            })}
           </Text>
           <View style={styles.webinarMeta}>
             <Ionicons name="calendar-outline" size={14} color="#6B7280" />
@@ -391,11 +406,15 @@ export default function HomeScreen() {
             onPress={() => openUrl(liveWebinar.meeting_url)}
           >
             <Ionicons name="videocam-outline" size={18} color={Colors.brand} />
-            <Text style={styles.webinarWatchButtonText}>Join meeting</Text>
+            <Text style={styles.webinarWatchButtonText}>
+              {t("home.joinMeeting")}
+            </Text>
           </TouchableOpacity>
           <View style={styles.webinarLinkRow}>
             <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
-            <Text style={styles.webinarLinkText}>Meeting link available</Text>
+            <Text style={styles.webinarLinkText}>
+              {t("home.meetingLinkAvailable")}
+            </Text>
           </View>
         </View>
       ) : null}
@@ -405,13 +424,20 @@ export default function HomeScreen() {
         <View style={styles.webinarCard}>
           <View style={styles.webinarHeader}>
             <View style={[styles.webinarBadge, styles.webinarBadgeUpcoming]}>
-              <Text style={styles.webinarBadgeTextUpcoming}>Upcoming</Text>
+              <Text style={styles.webinarBadgeTextUpcoming}>
+                {t("home.upcoming")}
+              </Text>
             </View>
           </View>
           <Text style={styles.webinarTitle}>{upcomingWebinar.title}</Text>
           <Text style={styles.webinarHost}>
-            Hosted by {upcomingWebinar.speaker ?? upcomingWebinar.speakers[0]?.name ?? "Host"} •{" "}
-            {upcomingWebinar.rsvp_count} attending
+            {t("home.hostedBy", {
+              host:
+                upcomingWebinar.speaker ??
+                upcomingWebinar.speakers[0]?.name ??
+                t("common.host"),
+              count: upcomingWebinar.rsvp_count,
+            })}
           </Text>
           <View style={styles.webinarMeta}>
             <Ionicons name="calendar-outline" size={14} color="#6B7280" />
@@ -422,25 +448,35 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={styles.webinarWatchButton}
-            disabled={upcomingWebinar.is_rsvped || rsvpingId === upcomingWebinar.id}
+            disabled={
+              upcomingWebinar.is_rsvped || rsvpingId === upcomingWebinar.id
+            }
             onPress={() => handleRsvp(upcomingWebinar)}
           >
             {rsvpingId === upcomingWebinar.id ? (
               <ActivityIndicator color={Colors.brand} size="small" />
             ) : (
               <Ionicons
-                name={upcomingWebinar.is_rsvped ? "checkmark-circle" : "calendar-outline"}
+                name={
+                  upcomingWebinar.is_rsvped
+                    ? "checkmark-circle"
+                    : "calendar-outline"
+                }
                 size={18}
                 color={upcomingWebinar.is_rsvped ? "#16A34A" : Colors.brand}
               />
             )}
             <Text style={styles.webinarWatchButtonText}>
-              {upcomingWebinar.is_rsvped ? "Registered" : "RSVP now"}
+              {upcomingWebinar.is_rsvped
+                ? t("home.registered")
+                : t("home.rsvpNow")}
             </Text>
           </TouchableOpacity>
           <View style={styles.webinarLinkRow}>
             <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
-            <Text style={styles.webinarLinkText}>Meeting link available</Text>
+            <Text style={styles.webinarLinkText}>
+              {t("home.meetingLinkAvailable")}
+            </Text>
           </View>
         </View>
       ) : null}
@@ -450,17 +486,21 @@ export default function HomeScreen() {
         <View style={styles.webinarCard}>
           <View style={styles.webinarHeader}>
             <View style={[styles.webinarBadge, styles.webinarBadgePast]}>
-              <Text style={styles.webinarBadgeTextPast}>Past</Text>
+              <Text style={styles.webinarBadgeTextPast}>{t("home.past")}</Text>
             </View>
           </View>
           <Text style={styles.webinarTitle}>{pastRecording.title}</Text>
           <Text style={styles.webinarHost}>
-            Hosted by {pastRecording.speakers[0]?.name ?? "Host"}
+            {t("home.hostedByOnly", {
+              host: pastRecording.speakers[0]?.name ?? t("common.host"),
+            })}
           </Text>
           <View style={styles.webinarMeta}>
             <Ionicons name="calendar-outline" size={14} color="#6B7280" />
             <Text style={styles.webinarMetaText}>
-              {formatWebinarDate(pastRecording.scheduled_at?.split(/\s+/)[0] ?? "")}
+              {formatWebinarDate(
+                pastRecording.scheduled_at?.split(/\s+/)[0] ?? "",
+              )}
             </Text>
           </View>
           <TouchableOpacity
@@ -468,15 +508,23 @@ export default function HomeScreen() {
             disabled={!pastRecording.vod_url}
             onPress={() => openUrl(pastRecording.vod_url)}
           >
-            <Ionicons name="play-circle-outline" size={18} color={Colors.brand} />
+            <Ionicons
+              name="play-circle-outline"
+              size={18}
+              color={Colors.brand}
+            />
             <Text style={styles.webinarWatchButtonText}>
-              {pastRecording.vod_url ? "Watch recording" : "No recording"}
+              {pastRecording.vod_url
+                ? t("home.watchRecording")
+                : t("home.noRecording")}
             </Text>
           </TouchableOpacity>
           <View style={styles.webinarLinkRow}>
             <Ionicons name="videocam-outline" size={14} color="#9CA3AF" />
             <Text style={styles.webinarLinkText}>
-              {pastRecording.vod_url ? "Recording available" : "No link available"}
+              {pastRecording.vod_url
+                ? t("home.recordingAvailable")
+                : t("home.noLinkAvailable")}
             </Text>
           </View>
         </View>
@@ -487,25 +535,27 @@ export default function HomeScreen() {
         style={styles.continueButton}
         onPress={() => router.navigate("/webinars")}
       >
-        <Text style={styles.continueButtonText}>Browse all webinars</Text>
+        <Text style={styles.continueButtonText}>
+          {t("home.browseAllWebinars")}
+        </Text>
         <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
       </TouchableOpacity>
 
       {/* ── Sector Specific Training ── */}
       <View style={styles.sectorHeader}>
         <View>
-          <Text style={styles.sectionTitle}>Sector Specific Training</Text>
-          <Text style={styles.sectorSubtitle}>Construction</Text>
+          <Text style={styles.sectionTitle}>{t("home.sectorTraining")}</Text>
+          <Text style={styles.sectorSubtitle}>{t("home.construction")}</Text>
         </View>
         <TouchableOpacity onPress={() => router.navigate("/webinars")}>
-          <Text style={styles.viewAllText}>View all</Text>
+          <Text style={styles.viewAllText}>{t("home.viewAll")}</Text>
         </TouchableOpacity>
       </View>
 
       {/* FAQ Card */}
       <View style={styles.faqCard}>
-        <Text style={styles.faqCardTitle}>Frequently Asked Questions</Text>
-        <Text style={styles.faqCardSubtitle}>Webinar FAQs</Text>
+        <Text style={styles.faqCardTitle}>{t("home.faq")}</Text>
+        <Text style={styles.faqCardSubtitle}>{t("home.webinarFaqs")}</Text>
         {faqs.map((item) => (
           <View key={item.id} style={styles.faqItem}>
             <Ionicons name="help-circle-outline" size={16} color="#6B7280" />
@@ -516,14 +566,16 @@ export default function HomeScreen() {
           </View>
         ))}
         {faqs.length === 0 && (
-          <Text style={styles.faqAnswer}>No FAQs available yet.</Text>
+          <Text style={styles.faqAnswer}>{t("home.noFaqs")}</Text>
         )}
       </View>
 
       {/* Pre‑recorded Webinars Card */}
       <View style={styles.prerecordCard}>
-        <Text style={styles.prerecordTitle}>Pre-recorded Webinars</Text>
-        <Text style={styles.prerecordSubtitle}>Recorded sessions</Text>
+        <Text style={styles.prerecordTitle}>{t("home.prerecorded")}</Text>
+        <Text style={styles.prerecordSubtitle}>
+          {t("home.recordedSessions")}
+        </Text>
         {recordings.map((item) => (
           <View key={item.id} style={styles.prerecordItem}>
             <View style={styles.prerecordInfo}>
@@ -549,7 +601,9 @@ export default function HomeScreen() {
           </View>
         ))}
         {recordings.length === 0 && (
-          <Text style={styles.courseSubtitle}>No recorded sessions yet.</Text>
+          <Text style={styles.courseSubtitle}>
+            {t("home.noRecordedSessions")}
+          </Text>
         )}
       </View>
     </ScrollView>

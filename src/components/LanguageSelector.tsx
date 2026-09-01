@@ -1,19 +1,20 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
 import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useLanguage, type Language } from "../services/LanguageContext";
+import type { TranslationKey } from "../services/translations";
 import { Colors } from "../theme/colors";
 
-const OPTIONS: { value: Language; label: string }[] = [
-  { value: "en", label: "English" },
-  { value: "sw", label: "Kiswahili" },
+const OPTIONS: { value: Language; labelKey: TranslationKey }[] = [
+  { value: "en", labelKey: "lang.optionEnglish" },
+  { value: "sw", labelKey: "lang.optionSwahili" },
 ];
 
 interface LanguageSelectorProps {
@@ -23,7 +24,7 @@ interface LanguageSelectorProps {
 export default function LanguageSelector({
   variant = "pill",
 }: LanguageSelectorProps) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const handleSelect = async (value: Language) => {
@@ -63,7 +64,7 @@ export default function LanguageSelector({
       >
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
           <Pressable style={styles.card} onPress={() => {}}>
-            <Text style={styles.title}>Select language</Text>
+            <Text style={styles.title}>{t("common.selectLanguage")}</Text>
             {OPTIONS.map((option) => {
               const selected = language === option.value;
               return (
@@ -79,7 +80,7 @@ export default function LanguageSelector({
                       selected && styles.optionLabelSelected,
                     ]}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </Text>
                   {selected && (
                     <Ionicons
