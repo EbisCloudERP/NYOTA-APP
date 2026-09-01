@@ -150,6 +150,7 @@ export default function OpportunitiesScreen() {
             <WebView
               source={{ uri: "https://egpkenya.go.ke/tender" }}
               style={styles.webview}
+              javaScriptEnabled={false}
               startInLoadingState
               renderLoading={() => (
                 <View style={styles.webviewLoading}>

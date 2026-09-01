@@ -31,6 +31,7 @@
     "expo-system-ui": "~55.0.21",
     "expo-video": "~55.0.20",
     "expo-web-browser": "~55.0.19",
+    "jail-monkey": "^3.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.10",

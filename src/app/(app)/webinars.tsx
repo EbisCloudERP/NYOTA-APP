@@ -2,7 +2,6 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Linking,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -20,6 +19,7 @@ import {
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
+import { openExternalUrl } from "../../services/urlSafety";
 import { Colors } from "../../theme/colors";
 
 type Tab = "live" | "upcoming" | "past";
@@ -167,9 +167,8 @@ export default function WebinarsScreen() {
 
   const openUrl = async (url: string | null) => {
     if (!url) return;
-    try {
-      await Linking.openURL(url);
-    } catch {
+    const opened = await openExternalUrl(url);
+    if (!opened) {
       showToast(t("home.unableOpenLink"), "error");
     }
   };

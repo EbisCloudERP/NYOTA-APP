@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
-    Linking,
     RefreshControl,
     StyleSheet,
     Text,
@@ -21,6 +20,7 @@ import {
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
+import { openExternalUrl } from "../../services/urlSafety";
 import { Colors } from "../../theme/colors";
 
 // ── Helpers ──
@@ -187,9 +187,9 @@ export default function SupportScreen() {
     });
   }, [tickets, search, categoryFilter, statusFilter, priorityFilter]);
 
-  const handleCall = () => Linking.openURL("tel:+254700000000");
-  const handleEmail = () => Linking.openURL("mailto:support@nyota.com");
-  const handleWhatsApp = () => Linking.openURL("https://wa.me/254700000000");
+  const handleCall = () => openExternalUrl("tel:+254700000000");
+  const handleEmail = () => openExternalUrl("mailto:support@nyota.com");
+  const handleWhatsApp = () => openExternalUrl("https://wa.me/254700000000");
 
   const handleCreateTicket = async (ticket: {
     subject: string;

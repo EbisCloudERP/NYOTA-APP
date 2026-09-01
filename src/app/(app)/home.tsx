@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Linking,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -29,6 +28,7 @@ import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
 import { getUuid } from "../../services/storage";
+import { openExternalUrl } from "../../services/urlSafety";
 import { Colors } from "../../theme/colors";
 
 const courseProgress = (c: CatalogueCourse) => {
@@ -142,9 +142,8 @@ export default function HomeScreen() {
 
   const openUrl = async (url: string | null) => {
     if (!url) return;
-    try {
-      await Linking.openURL(url);
-    } catch {
+    const opened = await openExternalUrl(url);
+    if (!opened) {
       showToast(t("home.unableOpenLink"), "error");
     }
   };
