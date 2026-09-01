@@ -973,7 +973,7 @@ export async function sendSms(
       Accept: "application/json",
     },
     body: JSON.stringify({
-      api_key: "igFS48Ip9YLGHh0NAKojOtBnR7TaWZM5dzqPxCs3rDv1f2Vylm",
+      api_key: process.env.EXPO_PUBLIC_SMS_API_KEY,
       service_id: 0,
       mobile,
       response_type: "json",
