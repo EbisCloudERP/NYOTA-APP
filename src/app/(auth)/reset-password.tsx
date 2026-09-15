@@ -22,13 +22,18 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast } = useFeedback();
-  const { contact: contactParam, type: typeParam, otp: otpParam, uuid: uuidParam } =
-    useLocalSearchParams<{
-      contact?: string;
-      type?: string;
-      otp?: string;
-      uuid?: string;
-    }>();
+  const { t } = useLanguage();
+  const {
+    contact: contactParam,
+    type: typeParam,
+    otp: otpParam,
+    uuid: uuidParam,
+  } = useLocalSearchParams<{
+    contact?: string;
+    type?: string;
+    otp?: string;
+    uuid?: string;
+  }>();
   const contact = contactParam ?? "";
   const type = typeParam ?? (contact.includes("@") ? "email" : "phone");
   const otp = otpParam ?? "";

@@ -11,7 +11,11 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { passwordResetInitiate, sendEmailOtp, sendSms } from "../../services/api";
+import {
+    passwordResetInitiate,
+    sendEmailOtp,
+    sendSms,
+} from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
 import { Colors } from "../../theme/colors";
@@ -33,6 +37,7 @@ export default function OtpResetPassScreen() {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const { showToast } = useFeedback();
+  const { t } = useLanguage();
   const {
     contact,
     type,
@@ -120,7 +125,7 @@ export default function OtpResetPassScreen() {
       } else {
         const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
         sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
-          () => {}
+          () => {},
         );
       }
       showToast("A new verification code has been sent.", "info");
