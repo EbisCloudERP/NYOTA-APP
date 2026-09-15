@@ -51,7 +51,7 @@ function HeaderRight() {
     <View style={styles.headerRight}>
       <TouchableOpacity
         style={styles.iconButton}
-        onPress={() => router.push("/my-applications")}
+        onPress={() => router.push("/notifications" as any)}
       >
         <Ionicons name="notifications-outline" size={20} color="#374151" />
       </TouchableOpacity>

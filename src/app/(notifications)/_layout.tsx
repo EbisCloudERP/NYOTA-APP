@@ -1,13 +1,13 @@
 import { Stack } from "expo-router";
 
-export default function MyApplicationsLayout() {
+export default function NotificationsLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="my-applications"
+        name="notifications"
         options={{
           headerShown: true,
-          headerTitle: "My applications",
+          headerTitle: "Notifications",
           headerBackTitle: "Back",
           headerTintColor: "#4D2A7C",
           headerTitleStyle: {

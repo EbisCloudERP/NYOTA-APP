@@ -2,27 +2,27 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    getAnnouncements,
-    getCourseRecommendations,
-    getEnrolledCourses,
-    getWebinarFaqs,
-    getWebinarRecordings,
-    getWebinars,
-    rsvpWebinar,
-    type Announcement,
-    type CatalogueCourse,
-    type Faq,
-    type Webinar,
-    type WebinarRecording,
+  getAnnouncements,
+  getCourseRecommendations,
+  getEnrolledCourses,
+  getWebinarFaqs,
+  getWebinarRecordings,
+  getWebinars,
+  rsvpWebinar,
+  type Announcement,
+  type CatalogueCourse,
+  type Faq,
+  type Webinar,
+  type WebinarRecording,
 } from "../../services/api";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
@@ -187,6 +187,35 @@ export default function HomeScreen() {
   );
   const pastRecording = recordings[0];
 
+  const quickItems: {
+    label: string;
+    icon: string;
+    route: string;
+    locked?: boolean;
+  }[] = [
+    {
+      label: t("home.certificates"),
+      icon: "ribbon-outline",
+      route: "/(certificates)/certificates",
+    },
+    {
+      label: t("home.digitalTools"),
+      icon: "hardware-chip-outline",
+      route: "/(digital_tools)/digital-tools",
+      locked: true,
+    },
+    {
+      label: t("home.profile"),
+      icon: "person-outline",
+      route: "/(profile)/profile",
+    },
+    {
+      label: t("home.support"),
+      icon: "headset-outline",
+      route: "/(support)/support",
+    },
+  ];
+
   return (
     <ScrollView
       style={styles.container}
@@ -225,38 +254,36 @@ export default function HomeScreen() {
       {/* Quick Access */}
       <Text style={styles.sectionTitle}>{t("home.quickAccess")}</Text>
       <View style={styles.quickGrid}>
-        {[
-          {
-            label: t("home.certificates"),
-            icon: "ribbon-outline",
-            route: "/(certificates)/certificates",
-          },
-          {
-            label: t("home.digitalTools"),
-            icon: "hardware-chip-outline",
-            route: "/(digital_tools)/digital-tools",
-          },
-          {
-            label: t("home.profile"),
-            icon: "person-outline",
-            route: "/(profile)/profile",
-          },
-          {
-            label: t("home.support"),
-            icon: "headset-outline",
-            route: "/(support)/support",
-          },
-        ].map((item) => (
+        {quickItems.map((item) => (
           <TouchableOpacity
             key={item.label}
-            style={styles.quickButton}
-            activeOpacity={0.7}
+            style={[
+              styles.quickButton,
+              item.locked && styles.quickButtonLocked,
+            ]}
+            activeOpacity={item.locked ? 1 : 0.7}
             onPress={() => {
-              if (item.route) router.push(item.route as any);
+              if (item.locked || !item.route) return;
+              router.push(item.route as any);
             }}
           >
-            <Ionicons name={item.icon as any} size={20} color={Colors.brand} />
-            <Text style={styles.quickLabel}>{item.label}</Text>
+            <Ionicons
+              name={item.icon as any}
+              size={20}
+              color={item.locked ? "#9CA3AF" : Colors.brand}
+            />
+            <Text
+              style={[
+                styles.quickLabel,
+                item.locked && styles.quickLabelLocked,
+              ]}
+              numberOfLines={1}
+            >
+              {item.label}
+            </Text>
+            {item.locked ? (
+              <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
+            ) : null}
           </TouchableOpacity>
         ))}
       </View>
@@ -668,10 +695,17 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     backgroundColor: "#F9FAFB",
   },
+  quickButtonLocked: {
+    opacity: 0.6,
+  },
   quickLabel: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "500",
     color: "#1F2937",
+  },
+  quickLabelLocked: {
+    color: "#9CA3AF",
   },
   sectionTitle: {
     fontSize: 18,

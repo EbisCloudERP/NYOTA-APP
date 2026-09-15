@@ -2,11 +2,11 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
@@ -22,7 +22,7 @@ type NotificationSettings = {
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { confirm } = useFeedback();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     email: true,
     sms: false,
@@ -234,34 +234,46 @@ export default function SettingsScreen() {
       <Text style={styles.languageSubtitle}>{t("settings.languageSub")}</Text>
 
       {/* English */}
-      <View style={[styles.langItem, styles.langItemDisabled]}>
+      <TouchableOpacity
+        style={styles.langItem}
+        activeOpacity={0.7}
+        onPress={() => setLanguage("en")}
+      >
         <View style={styles.langLeft}>
-          <View style={[styles.langIcon, styles.langIconDisabled]}>
-            <Ionicons name="language-outline" size={18} color="#9CA3AF" />
+          <View style={styles.langIcon}>
+            <Ionicons name="language-outline" size={18} color={Colors.brand} />
           </View>
-          <Text style={styles.langTitleDisabled}>{t("settings.english")}</Text>
+          <Text style={styles.langTitle}>{t("settings.english")}</Text>
         </View>
         <View
-          style={[
-            styles.checkbox,
-            styles.checkboxChecked,
-            styles.checkboxDisabled,
-          ]}
+          style={[styles.checkbox, language === "en" && styles.checkboxChecked]}
         >
-          <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+          {language === "en" && (
+            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Swahili */}
-      <View style={[styles.langItem, styles.langItemDisabled]}>
+      <TouchableOpacity
+        style={styles.langItem}
+        activeOpacity={0.7}
+        onPress={() => setLanguage("sw")}
+      >
         <View style={styles.langLeft}>
-          <View style={[styles.langIcon, styles.langIconDisabled]}>
-            <Ionicons name="language-outline" size={18} color="#9CA3AF" />
+          <View style={styles.langIcon}>
+            <Ionicons name="language-outline" size={18} color={Colors.brand} />
           </View>
-          <Text style={styles.langTitleDisabled}>{t("settings.swahili")}</Text>
+          <Text style={styles.langTitle}>{t("settings.swahili")}</Text>
         </View>
-        <View style={[styles.checkbox, styles.checkboxDisabled]} />
-      </View>
+        <View
+          style={[styles.checkbox, language === "sw" && styles.checkboxChecked]}
+        >
+          {language === "sw" && (
+            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+          )}
+        </View>
+      </TouchableOpacity>
 
       {/* Info bar */}
       <View style={styles.infoBar}>
@@ -442,6 +454,11 @@ const styles = StyleSheet.create({
   },
   langIconDisabled: {
     backgroundColor: "#F3F4F6",
+  },
+  langTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2937",
   },
   langTitleDisabled: {
     fontSize: 14,

@@ -357,6 +357,11 @@ const en = {
   "settings.english": "English",
   "settings.swahili": "Swahili",
 
+  // ── Notifications ──
+  "notifications.empty": "No new notifications",
+  "notifications.emptySub":
+    "You're all caught up. We'll let you know when something new arrives.",
+
   // ── Certificates ──
   "certificates.subtitle": "View and download your earned certificates",
   "certificates.lessonsCompleted": "Lessons completed",
@@ -1198,6 +1203,11 @@ const sw: Record<TranslationKey, string> = {
   "settings.languageSub": "Dhibiti mapendeleo yako ya lugha",
   "settings.english": "Kiingereza",
   "settings.swahili": "Kiswahili",
+
+  // ── Notifications ──
+  "notifications.empty": "Hakuna arifa mpya",
+  "notifications.emptySub":
+    "Uko sawa. Tutakujulisha pindi kunapokuwa na kitu kipya.",
 
   // ── Certificates ──
   "certificates.subtitle": "Tazama na upakue vyeti vyako",
