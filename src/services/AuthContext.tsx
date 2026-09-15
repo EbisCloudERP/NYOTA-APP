@@ -82,12 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const uuid = (await getUuid()) ?? "";
       const response = await loginOtp(otp, uuid);
       await signIn(response.data.token, response.data.user as UserData);
-
-      if (response.data.user.is_onboarded) {
-        router.replace("/home");
-      } else {
-        router.replace({ pathname: "/kyc", params: { uuid } });
-      }
+      router.replace("/home");
     },
     [signIn]
   );

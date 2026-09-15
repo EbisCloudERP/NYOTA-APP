@@ -1,15 +1,14 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { getFundProviders, type FundProvider } from "../../services/api";
@@ -20,17 +19,24 @@ import { Colors } from "../../theme/colors";
 type Tab = "opportunities" | "funding";
 type FundingView = null | "government" | "external";
 
-type ApplyModalType = null | "government" | "external";
+const FUNDING_WEBSITES: Record<string, string> = {
+  uwezo: "https://uwezo.go.ke",
+  // Add more providers here keyed by a lowercase substring of the provider name.
+};
+
+const resolveFundingUrl = (provider: FundProvider): string | null => {
+  const name = provider.name.toLowerCase();
+  for (const [key, url] of Object.entries(FUNDING_WEBSITES)) {
+    if (name.includes(key)) return url;
+  }
+  return null;
+};
 
 export default function OpportunitiesScreen() {
   const [activeTab, setActiveTab] = useState<Tab>("opportunities");
   const [fundingView, setFundingView] = useState<FundingView>(null);
-  const [applyModalType, setApplyModalType] = useState<ApplyModalType>(null);
   const [providers, setProviders] = useState<FundProvider[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState<FundProvider | null>(
-    null,
-  );
   const { showToast } = useFeedback();
   const { t } = useLanguage();
 
@@ -54,27 +60,15 @@ export default function OpportunitiesScreen() {
     setFundingView(null);
   };
 
-  const handleApplyNow = (
-    type: "government" | "external",
-    provider: FundProvider,
-  ) => {
-    setSelectedProvider(provider);
-    setApplyModalType(type);
-  };
-
-  const handleModalNavigate = (route: "lpo" | "assetFin" | "overdraft") => {
-    setApplyModalType(null);
-    // Small delay so the modal dismiss animation finishes before pushing
-    setTimeout(() => {
-      router.push({
-        pathname: `/(financing)/${route}`,
-        params: {
-          bankSlug: selectedProvider?.slug ?? "",
-          bankName: selectedProvider?.name ?? "",
-          providerType: selectedProvider?.type ?? "",
-        },
-      });
-    }, 200);
+  const handleApplyNow = (provider: FundProvider) => {
+    const url = resolveFundingUrl(provider);
+    if (!url) {
+      showToast(`No website available for ${provider.name}.`, "info");
+      return;
+    }
+    Linking.openURL(url).catch(() =>
+      showToast("Unable to open the website.", "error"),
+    );
   };
 
   return (
@@ -260,151 +254,16 @@ export default function OpportunitiesScreen() {
                 <TouchableOpacity
                   style={styles.applyButton}
                   activeOpacity={0.7}
-                  onPress={() => handleApplyNow("government", provider)}
+                  onPress={() => handleApplyNow(provider)}
                 >
-                  <Text style={styles.applyButtonText}>
-                    {t("opportunities.applyNow")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  <Text style={styles.applyButtonText}>Visit website</Text>
+                  <Ionicons name="open-outline" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             ))
           )}
         </>
       )}
-
-      {/* ── Apply Now Modal ── */}
-      <Modal
-        visible={applyModalType !== null}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setApplyModalType(null)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {t("opportunities.applyModalTitle")}
-              </Text>
-              <TouchableOpacity
-                onPress={() => setApplyModalType(null)}
-                activeOpacity={0.7}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Subtitle */}
-            <Text style={styles.modalSubtitle}>
-              {t("opportunities.applyModalSubtitle")}
-            </Text>
-
-            <ScrollView
-              style={styles.modalScroll}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* LPO Financing */}
-              <View style={styles.modalCard}>
-                <View style={styles.modalCardHeader}>
-                  <View style={styles.modalCardIcon}>
-                    <Ionicons
-                      name="document-text-outline"
-                      size={22}
-                      color={Colors.brand}
-                    />
-                  </View>
-                  <View style={styles.modalCardTitleRow}>
-                    <Text style={styles.modalCardTitle}>
-                      {t("opportunities.lpoFinancing")}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.modalCardSubtext}>
-                  {t("opportunities.lpoFinancingText")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.modalApplyButton}
-                  activeOpacity={0.7}
-                  onPress={() => handleModalNavigate("lpo")}
-                >
-                  <Text style={styles.modalApplyButtonText}>
-                    {t("opportunities.applyNow")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Overdraft */}
-              {applyModalType === "external" && (
-                <View style={styles.modalCard}>
-                  <View style={styles.modalCardHeader}>
-                    <View style={styles.modalCardIcon}>
-                      <Ionicons
-                        name="wallet-outline"
-                        size={22}
-                        color={Colors.brand}
-                      />
-                    </View>
-                    <View style={styles.modalCardTitleRow}>
-                      <Text style={styles.modalCardTitle}>
-                        {t("opportunities.overdraft")}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.modalCardSubtext}>
-                    {t("opportunities.overdraftText")}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.modalApplyButton}
-                    activeOpacity={0.7}
-                    onPress={() => handleModalNavigate("overdraft")}
-                  >
-                    <Text style={styles.modalApplyButtonText}>
-                      {t("opportunities.applyNow")}
-                    </Text>
-                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Asset Financing */}
-              {applyModalType === "external" && (
-                <View style={styles.modalCard}>
-                  <View style={styles.modalCardHeader}>
-                    <View style={styles.modalCardIcon}>
-                      <Ionicons
-                        name="construct-outline"
-                        size={22}
-                        color={Colors.brand}
-                      />
-                    </View>
-                    <View style={styles.modalCardTitleRow}>
-                      <Text style={styles.modalCardTitle}>
-                        {t("opportunities.assetFinancing")}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.modalCardSubtext}>
-                    {t("opportunities.assetFinancingText")}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.modalApplyButton}
-                    activeOpacity={0.7}
-                    onPress={() => handleModalNavigate("assetFin")}
-                  >
-                    <Text style={styles.modalApplyButtonText}>
-                      {t("opportunities.applyNow")}
-                    </Text>
-                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
       {/* ── External Funding Sub-view ── */}
       {activeTab === "funding" && fundingView === "external" && (
@@ -452,12 +311,10 @@ export default function OpportunitiesScreen() {
                 <TouchableOpacity
                   style={styles.applyButton}
                   activeOpacity={0.7}
-                  onPress={() => handleApplyNow("external", provider)}
+                  onPress={() => handleApplyNow(provider)}
                 >
-                  <Text style={styles.applyButtonText}>
-                    {t("opportunities.applyNow")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  <Text style={styles.applyButtonText}>Visit website</Text>
+                  <Ionicons name="open-outline" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
             ))
@@ -701,93 +558,6 @@ const styles = StyleSheet.create({
   },
   applyButtonText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-
-  // ── Apply Now Modal ──
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 20,
-    width: "100%",
-    maxWidth: 400,
-    maxHeight: "80%",
-  },
-  modalScroll: {
-    flexGrow: 0,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    lineHeight: 20,
-    marginBottom: 18,
-  },
-  modalCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 16,
-    marginBottom: 10,
-  },
-  modalCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 10,
-  },
-  modalCardIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#F3EFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalCardTitleRow: {
-    flex: 1,
-  },
-  modalCardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  modalCardSubtext: {
-    fontSize: 12,
-    color: "#6B7280",
-    lineHeight: 18,
-    marginBottom: 14,
-  },
-  modalApplyButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: Colors.brand,
-    paddingVertical: 11,
-    borderRadius: 10,
-  },
-  modalApplyButtonText: {
-    fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },

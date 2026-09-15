@@ -81,12 +81,8 @@ export default function OtpLoginScreen() {
     try {
       await signInWithOtp(fullCode);
       setVerified(true);
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t("auth.create.verificationFailed");
-      showToast(message, "error");
+    } catch {
+      showToast("Wrong OTP. Please try again.", "error");
     } finally {
       setLoading(false);
     }

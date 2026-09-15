@@ -13,10 +13,11 @@ import {
     View,
 } from "react-native";
 import {
-    getExams,
-    startExamAttempt,
-    submitExam,
-    type ExamSubmissionResult,
+  completeLesson,
+  getLesson,
+  startExamAttempt,
+  submitExam,
+  type ExamSubmissionResult,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
@@ -57,9 +58,13 @@ function formatDateTime(value: string): string {
 
 // ── Component ──────────────────────────────────────────
 export default function QuizScreen() {
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { lessonId, quizId } = useLocalSearchParams<{
+    lessonId: string;
+    quizId: string;
+  }>();
   const [examId, setExamId] = useState(0);
   const [examTitle, setExamTitle] = useState("");
+  const [courseSlug, setCourseSlug] = useState("");
   const [passMark, setPassMark] = useState(0);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -85,21 +90,26 @@ export default function QuizScreen() {
 
   // ── Fetch exam ──────────────────────────────────────
   useEffect(() => {
-    if (!courseId) {
+    if (!lessonId || !quizId) {
       setLoading(false);
       return;
     }
 
-    getUuid()
-      .then((uuid) => getExams(uuid ?? "", courseId))
+    getLesson(lessonId)
       .then((res) => {
-        const exam = res.data;
-        setExamId(exam.id);
-        setExamTitle(exam.title);
-        setPassMark(exam.pass_mark);
-        setTimeLimitSeconds((exam.time_limit_minutes ?? 0) * 60);
+        const lesson = res.data;
+        const quiz =
+          lesson.quizz?.find((q) => String(q.id) === quizId) ??
+          lesson.quizz?.[0];
+        if (!quiz) return;
+
+        setExamId(quiz.id);
+        setExamTitle(quiz.title);
+        setCourseSlug(lesson.course?.slug ?? "");
+        setPassMark(quiz.pass_mark);
+        setTimeLimitSeconds((quiz.time_limit_minutes ?? 0) * 60);
         setQuestions(
-          (exam.questions ?? []).map((q) => ({
+          (quiz.questions ?? []).map((q) => ({
             id: q.id,
             text: q.question,
             options: q.options.map((o) => ({ id: o.id, text: o.option_text })),
@@ -113,7 +123,7 @@ export default function QuizScreen() {
         ),
       )
       .finally(() => setLoading(false));
-  }, [courseId]);
+  }, [lessonId, quizId]);
 
   // ── Timer ──────────────────────────────────────────
   const clearTimer = useCallback(() => {
@@ -214,6 +224,10 @@ export default function QuizScreen() {
       const res = await submitExam(uuid, examId, selectedAnswers);
       setResult(res.data);
       setPhase("results");
+
+      if (lessonId) {
+        completeLesson(lessonId, uuid).catch(() => {});
+      }
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : t("quiz.failedSubmit"),
@@ -583,7 +597,16 @@ export default function QuizScreen() {
       <TouchableOpacity
         style={styles.backToLessonsButton}
         activeOpacity={0.7}
-        onPress={() => router.back()}
+        onPress={() => {
+          if (courseSlug) {
+            router.replace({
+              pathname: "/(lessons)/lessons",
+              params: { slug: courseSlug },
+            });
+          } else {
+            router.back();
+          }
+        }}
       >
         <Ionicons name="book-outline" size={18} color={Colors.brand} />
         <Text style={styles.backToLessonsText}>
