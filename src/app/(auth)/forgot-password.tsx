@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { sendEmailOtp, sendSms } from "../../services/api";
+import { passwordResetInitiate, sendEmailOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
@@ -33,12 +33,8 @@ export default function ForgotPasswordScreen() {
 
     setLoading(true);
     try {
-      const otp = String(Math.floor(100000 + Math.random() * 900000));
-
-      router.push({
-        pathname: "/otp-reset-pass",
-        params: { contact, type, otp },
-      });
+      const response = await passwordResetInitiate(type, contact);
+      const { otp, uuid } = response.data;
 
       if (type === "email") {
         sendEmailOtp(contact, otp).catch(() => {});
@@ -48,6 +44,15 @@ export default function ForgotPasswordScreen() {
           () => {}
         );
       }
+
+      router.push({
+        pathname: "/otp-reset-pass",
+        params: { contact, type, otp, uuid },
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Unable to send code. Please try again.";
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }

@@ -12,15 +12,13 @@ import {
 } from "react-native";
 import {
   enrollCourse,
-  getCourseRecommendations,
+  getCourseCatalogue,
   getEnrolledCourses,
-  type Course as ApiCourse,
+  type CatalogueCourse,
 } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { getUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
-
-type Tab = "all" | "recommended";
 
 interface Course {
   id: string;
@@ -40,9 +38,7 @@ const capitalize = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1);
 
 export default function MyLearningScreen() {
-  const [activeTab, setActiveTab] = useState<Tab>("recommended");
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { showToast, confirm } = useFeedback();
@@ -50,50 +46,42 @@ export default function MyLearningScreen() {
   const loadCourses = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const uuid = (await getUuid()) ?? "";
-      if (!uuid) {
-        setAllCourses([]);
-        setRecommendedCourses([]);
-        return;
-      }
-
-      const [recsRes, enrolledRes] = await Promise.all([
-        getCourseRecommendations(uuid),
+      const [catalogueRes, enrolledRes] = await Promise.all([
+        getCourseCatalogue(),
         getEnrolledCourses(),
       ]);
 
-        const enrolledById = new Map(
-          (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
-        );
+      const enrolledById = new Map(
+        (enrolledRes.data ?? []).map((c) => [String(c.id), c]),
+      );
 
-      const toView = (c: ApiCourse): Course => {
+      const toView = (c: CatalogueCourse): Course => {
         const enrolled = enrolledById.get(String(c.id));
-        const progress = enrolled
-          ? Math.min(100, Math.max(0, enrolled.completed_lessons ?? 0))
-          : 0;
+        const totalLessons = c.total_lessons || 0;
         const completedLessons = enrolled
-          ? Math.round((progress / 100) * (c.total_lessons || 0))
+          ? enrolled.completed_lessons ?? 0
           : 0;
+        const progress =
+          totalLessons > 0
+            ? Math.min(100, Math.round((completedLessons / totalLessons) * 100))
+            : 0;
 
         return {
           id: String(c.id),
           title: c.title,
           slug: c.slug,
-          description: c.short_description || c.description || "",
+          description: c.description || "",
           category: c.category?.name ?? "",
           level: capitalize(c.level),
           pace: "Self-paced",
           progress,
-          totalLessons: c.total_lessons,
+          totalLessons,
           completedLessons,
           isEnrolled: Boolean(enrolled),
         };
       };
 
-        setAllCourses((recsRes.data.courses ?? []).map(toView));
-        setRecommendedCourses(
-          (recsRes.data.suggested_tags?.suggested_courses ?? []).map(toView),
-        );
+      setCourses((catalogueRes.data ?? []).map(toView));
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Failed to load courses.",
@@ -125,12 +113,7 @@ export default function MyLearningScreen() {
     try {
       const uuid = (await getUuid()) ?? "";
       await enrollCourse(course.id, uuid);
-      setAllCourses((prev) =>
-        prev.map((c) =>
-          c.id === course.id ? { ...c, isEnrolled: true } : c,
-        ),
-      );
-      setRecommendedCourses((prev) =>
+      setCourses((prev) =>
         prev.map((c) =>
           c.id === course.id ? { ...c, isEnrolled: true } : c,
         ),
@@ -143,8 +126,7 @@ export default function MyLearningScreen() {
     }
   };
 
-  const filteredCourses =
-    activeTab === "all" ? allCourses : recommendedCourses;
+  const filteredCourses = courses;
 
   if (loading) {
     return (
@@ -169,37 +151,8 @@ export default function MyLearningScreen() {
         Complete courses to earn certificates and unlock opportunities
       </Text>
 
-      {/* ── Tabs ── */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "recommended" && styles.tabActive]}
-          onPress={() => setActiveTab("recommended")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "recommended" && styles.tabTextActive,
-            ]}
-          >
-            Recommended for you
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "all" && styles.tabActive]}
-          onPress={() => setActiveTab("all")}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "all" && styles.tabTextActive,
-            ]}
-          >
-            All courses
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* ── Courses ── */}
+      <Text style={styles.sectionTitle}>Courses</Text>
 
       {/* ── Course Cards ── */}
       {filteredCourses.map((course) => (
@@ -343,7 +296,7 @@ export default function MyLearningScreen() {
           <Ionicons name="book-outline" size={48} color="#D1D5DB" />
           <Text style={styles.emptyTitle}>No courses found</Text>
           <Text style={styles.emptySubtitle}>
-            Check back later for new recommendations.
+            Check back later for new courses.
           </Text>
         </View>
       )}
@@ -384,35 +337,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  // ── Tabs ──
-  tabBar: {
-    flexDirection: "row",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 10,
-    padding: 4,
-    marginBottom: 18,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  tabActive: {
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#9CA3AF",
-  },
-  tabTextActive: {
-    color: Colors.brand,
+  // ── Section title ──
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 14,
   },
 
   // ── Card ──

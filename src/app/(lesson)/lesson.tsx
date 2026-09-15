@@ -83,25 +83,25 @@ export default function LessonScreen() {
   const isAlreadyCompleted =
     currentIndex >= 0 && currentIndex < completedLessonsCount;
 
-  const handleCompleteLesson = async () => {
+  const hasQuiz = lesson.quizz?.length > 0;
+
+  const handlePrimaryAction = async () => {
+    if (hasQuiz) {
+      const quiz = lesson.quizz?.[0];
+      if (quiz) {
+        router.push({
+          pathname: "/(quiz)/quiz",
+          params: { lessonId: String(lesson.id), quizId: String(quiz.id) },
+        });
+      }
+      return;
+    }
+
     try {
       setSubmitting(true);
       const uuid = (await getUuid()) ?? "";
       await completeLesson(lesson.id, uuid);
-
-      if (lesson.quizz?.length) {
-        const courseId = lesson.course?.id;
-        if (!courseId) {
-          showToast("Course information is missing.", "error");
-          return;
-        }
-        router.push({
-          pathname: "/(quiz)/quiz",
-          params: { courseId: String(courseId) },
-        });
-      } else {
-        setCompleted(true);
-      }
+      setCompleted(true);
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Failed to complete lesson.",
@@ -197,19 +197,23 @@ export default function LessonScreen() {
           ]}
           activeOpacity={0.7}
           disabled={submitting}
-          onPress={handleCompleteLesson}
+          onPress={handlePrimaryAction}
         >
           {submitting ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
             <Ionicons
-              name="checkmark-circle-outline"
+              name={hasQuiz ? "help-circle-outline" : "checkmark-circle-outline"}
               size={20}
               color={Colors.white}
             />
           )}
           <Text style={styles.completeButtonText}>
-            {submitting ? "Completing..." : "Mark as complete"}
+            {hasQuiz
+              ? "Go to quiz"
+              : submitting
+                ? "Completing..."
+                : "Mark as complete"}
           </Text>
         </TouchableOpacity>
       )}

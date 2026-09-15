@@ -11,7 +11,7 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { sendEmailOtp, sendSms } from "../../services/api";
+import { passwordResetInitiate, sendEmailOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { Colors } from "../../theme/colors";
 
@@ -32,11 +32,19 @@ export default function OtpResetPassScreen() {
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const { showToast } = useFeedback();
-  const { contact, type, otp: expectedOtp } = useLocalSearchParams<{
+  const {
+    contact,
+    type,
+    otp: otpParam,
+    uuid: uuidParam,
+  } = useLocalSearchParams<{
     contact?: string;
     type?: string;
     otp?: string;
+    uuid?: string;
   }>();
+  const [expectedOtp, setExpectedOtp] = useState(otpParam ?? "");
+  const [resetUuid, setResetUuid] = useState(uuidParam ?? "");
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -91,20 +99,37 @@ export default function OtpResetPassScreen() {
     setLoading(false);
     router.push({
       pathname: "/reset-password",
-      params: { contact: contact ?? "", type: type ?? "" },
+      params: {
+        contact: contact ?? "",
+        type: type ?? "",
+        otp: fullCode,
+        uuid: resetUuid,
+      },
     });
   };
 
-  const handleResend = () => {
-    setTimeLeft(RESEND_COOLDOWN);
-    if (!expectedOtp) return;
-    if (type === "email" && contact) {
-      sendEmailOtp(contact, expectedOtp).catch(() => {});
-    } else if (contact) {
-      const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
-      sendSms(mobile, `Your NYOTA verification code is: ${expectedOtp}`).catch(
-        () => {}
-      );
+  const handleResend = async () => {
+    if (!contact || !type) return;
+    try {
+      const response = await passwordResetInitiate(type, contact);
+      const { otp, uuid } = response.data;
+      setExpectedOtp(otp);
+      setResetUuid(uuid);
+      setTimeLeft(RESEND_COOLDOWN);
+
+      if (type === "email") {
+        sendEmailOtp(contact, otp).catch(() => {});
+      } else {
+        const mobile = `254${contact.replace(/^\+|^0+/, "")}`;
+        sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
+          () => {}
+        );
+      }
+      showToast("A new verification code has been sent.", "info");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to resend code.";
+      showToast(message, "error");
     }
   };
 

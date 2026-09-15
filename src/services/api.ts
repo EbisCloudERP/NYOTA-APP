@@ -66,17 +66,41 @@ async function request<T>(
   }
 
   if (!response.ok || !json.success) {
-    const base =
-      json.message || `Request failed with status ${response.status}`;
-    const details = json.errors
-      ? `\n${typeof json.errors === "string"
-          ? json.errors
-          : JSON.stringify(json.errors, null, 2)}`
-      : "";
-    throw new Error(`${base}${details}`);
+    throw new Error(formatApiError(json, response.status));
   }
 
   return json;
+}
+
+function flattenErrorMessages(errors: unknown): string[] {
+  const messages: string[] = [];
+
+  const visit = (value: unknown): void => {
+    if (typeof value === "string") {
+      messages.push(value);
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value as Record<string, unknown>).forEach(visit);
+    }
+  };
+
+  visit(errors);
+  return messages;
+}
+
+function formatApiError(json: Record<string, unknown>, status: number): string {
+  const fieldErrors = flattenErrorMessages(json.errors);
+
+  if (fieldErrors.length > 0) {
+    return [...new Set(fieldErrors)].join("\n");
+  }
+
+  if (typeof json.message === "string" && json.message.trim()) {
+    return json.message;
+  }
+
+  return `Request failed with status ${status}`;
 }
 
 export async function login(
@@ -148,15 +172,42 @@ export async function verifyCreateAccountOtp(
   });
 }
 
-export async function resetPassword(
+export interface PasswordResetInitiateResponse {
+  otp: string;
+  uuid: string;
+}
+
+export async function passwordResetInitiate(
   type: string,
-  contact: string,
-  password: string,
-  password_confirmation: string
+  contact: string
+): Promise<ApiResponse<PasswordResetInitiateResponse>> {
+  return request<PasswordResetInitiateResponse>("/password_reset_initiate", {
+    method: "POST",
+    body: JSON.stringify({ type, contact }),
+  });
+}
+
+export interface ResetPasswordPayload {
+  type: string;
+  contact: string;
+  password: string;
+  password_confirmation: string;
+  uuid: string;
+  reset_key?: string;
+  otp: string;
+}
+
+const PASSWORD_RESET_KEY = "I1tEF2rYdgctgRge8SFm";
+
+export async function resetPassword(
+  payload: ResetPasswordPayload
 ): Promise<ApiResponse<unknown>> {
   return request("/password_reset", {
     method: "POST",
-    body: JSON.stringify({ type, contact, password, password_confirmation }),
+    body: JSON.stringify({
+      ...payload,
+      reset_key: payload.reset_key ?? PASSWORD_RESET_KEY,
+    }),
   });
 }
 
