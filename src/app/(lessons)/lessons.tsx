@@ -26,7 +26,10 @@ interface Lesson {
 }
 
 export default function LessonsScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, level } = useLocalSearchParams<{
+    slug: string;
+    level?: string;
+  }>();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -274,7 +277,11 @@ export default function LessonsScreen() {
                 if (!isLocked) {
                   router.push({
                     pathname: "/(lesson)/lesson",
-                    params: { id: String(lesson.id) },
+                    params: {
+                      id: String(lesson.id),
+                      completed: isCompleted ? "1" : "0",
+                      ...(level ? { level } : {}),
+                    },
                   });
                 }
               }}

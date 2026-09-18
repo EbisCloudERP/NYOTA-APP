@@ -261,7 +261,15 @@ function LessonVideo({
 }
 
 export default function LessonScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const {
+    id,
+    completed: completedParam,
+    level,
+  } = useLocalSearchParams<{
+    id: string;
+    completed?: string;
+    level?: string;
+  }>();
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -306,7 +314,14 @@ export default function LessonScreen() {
   }
 
   const contentText = lesson.content?.content?.replace(/\r/g, "") ?? "";
-  const video = lesson.videos?.[0];
+  const isBeginner =
+    (level ?? lesson.course?.level ?? "").toLowerCase() === "beginner";
+  const desiredDifficulty = isBeginner ? "beginner" : "intermediate";
+  const videos = lesson.videos ?? [];
+  const video =
+    videos.find((v) => v.difficulty === desiredDifficulty) ??
+    videos.find((v) => v.difficulty === "beginner") ??
+    videos[0];
   const videoUrl = video?.mux_playback_id
     ? `https://stream.mux.com/${video.mux_playback_id}.m3u8`
     : null;
@@ -314,15 +329,16 @@ export default function LessonScreen() {
   const currentIndex = courseLessons.findIndex(
     (l) => String(l.id) === String(lesson.id),
   );
-  const nextLesson =
-    currentIndex >= 0 ? courseLessons[currentIndex + 1] : undefined;
-  const completedLessonsCount = lesson.course?.completed_lessons ?? 0;
+  const completedLessonsCount =
+    lesson.course?.progress?.completed ?? lesson.course?.completed_lessons ?? 0;
   const isAlreadyCompleted =
-    currentIndex >= 0 && currentIndex < completedLessonsCount;
+    completedParam === "1" ||
+    lesson.is_completed === true ||
+    lesson.completed === true ||
+    (currentIndex >= 0 && currentIndex < completedLessonsCount);
 
   const hasQuiz = lesson.quizz?.length > 0;
   const { keyTakeaways } = parseLessonContent(contentText);
-  const isBeginner = (lesson.course?.level ?? "").toLowerCase() === "beginner";
 
   const handlePrimaryAction = async () => {
     if (hasQuiz) {
@@ -538,34 +554,16 @@ export default function LessonScreen() {
             <Text style={styles.completedTitle}>{t("lesson.completed")}</Text>
           </View>
           <Text style={styles.completedText}>{t("lesson.completedText")}</Text>
-          {nextLesson ? (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.7}
-              onPress={() =>
-                router.replace({
-                  pathname: "/(lesson)/lesson",
-                  params: { id: String(nextLesson.id) },
-                })
-              }
-            >
-              <Text style={styles.primaryButtonText}>
-                {t("lesson.nextLesson")}
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.7}
-              onPress={() => router.back()}
-            >
-              <Text style={styles.primaryButtonText}>
-                {t("lesson.backToLessons")}
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.primaryButton}
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.primaryButtonText}>
+              {t("lesson.backToLessons")}
+            </Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity

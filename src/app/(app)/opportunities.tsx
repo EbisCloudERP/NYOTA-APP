@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { getFundProviders, type FundProvider } from "../../services/api";
@@ -76,7 +76,6 @@ export default function OpportunitiesScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
-      scrollEnabled={activeTab !== "opportunities"}
     >
       {/* ── Header ── */}
       <Text style={styles.title}>{t("opportunities.title")}</Text>
@@ -145,6 +144,7 @@ export default function OpportunitiesScreen() {
               source={{ uri: "https://egpkenya.go.ke/tender" }}
               style={styles.webview}
               javaScriptEnabled={true}
+              nestedScrollEnabled
               startInLoadingState
               renderLoading={() => (
                 <View style={styles.webviewLoading}>

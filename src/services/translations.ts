@@ -254,6 +254,12 @@ const en = {
     "Complete courses to earn certificates and unlock opportunities",
   "learning.recommended": "Recommended for you",
   "learning.allCourses": "All courses",
+  "learning.moreContent": "Courses with more content",
+  "learning.beginner": "Beginner",
+  "learning.intermediate": "Intermediate",
+  "learning.intermediateBannerTitle": "Intermediate is a deeper learning path",
+  "learning.intermediateBannerText":
+    "This version covers the same topic with more detail. It is an alternative way to learn the content, not a separate course enrollment.",
   "learning.completed": "Completed",
   "learning.enrolled": "Enrolled",
   "learning.notEnrolled": "Not enrolled",
@@ -1114,6 +1120,13 @@ const sw: Record<TranslationKey, string> = {
   "learning.subtitle": "Kamilisha kozi ili kupata vyeti na kufungua fursa",
   "learning.recommended": "Imependekezwa kwako",
   "learning.allCourses": "Kozi zote",
+  "learning.moreContent": "Kozi zilizo na maudhui zaidi",
+  "learning.beginner": "Mwanzo",
+  "learning.intermediate": "Wastani",
+  "learning.intermediateBannerTitle":
+    "Wastani ni njia ya kujifunza ya kina zaidi",
+  "learning.intermediateBannerText":
+    "Toleo hili linashughulikia mada ile ile kwa maelezo zaidi. Ni njia mbadala ya kujifunza maudhui, si uandikishaji tofauti wa kozi.",
   "learning.completed": "Imekamilika",
   "learning.enrolled": "Umejiandikisha",
   "learning.notEnrolled": "Hujaandikishwa",

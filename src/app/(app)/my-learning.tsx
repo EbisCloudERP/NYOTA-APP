@@ -2,13 +2,13 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
   enrollCourse,
@@ -27,7 +27,6 @@ interface Course {
   slug: string;
   description: string;
   category: string;
-  level: string;
   pace: string;
   progress: number; // 0–100
   totalLessons: number;
@@ -35,13 +34,11 @@ interface Course {
   isEnrolled: boolean;
 }
 
-const capitalize = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1);
-
 export default function MyLearningScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"beginner" | "all">("beginner");
   const { showToast, confirm } = useFeedback();
   const { t } = useLanguage();
 
@@ -61,7 +58,7 @@ export default function MyLearningScreen() {
         const enrolled = enrolledById.get(String(c.id));
         const totalLessons = c.total_lessons || 0;
         const completedLessons = enrolled
-          ? enrolled.completed_lessons ?? 0
+          ? (enrolled.completed_lessons ?? 0)
           : 0;
         const progress =
           totalLessons > 0
@@ -74,7 +71,6 @@ export default function MyLearningScreen() {
           slug: c.slug,
           description: c.description || "",
           category: c.category?.name ?? "",
-          level: capitalize(c.level),
           pace: t("learning.selfPaced"),
           progress,
           totalLessons,
@@ -116,9 +112,7 @@ export default function MyLearningScreen() {
       const uuid = (await getUuid()) ?? "";
       await enrollCourse(course.id, uuid);
       setCourses((prev) =>
-        prev.map((c) =>
-          c.id === course.id ? { ...c, isEnrolled: true } : c,
-        ),
+        prev.map((c) => (c.id === course.id ? { ...c, isEnrolled: true } : c)),
       );
     } catch (e) {
       showToast(
@@ -150,6 +144,50 @@ export default function MyLearningScreen() {
       {/* ── Header ── */}
       <Text style={styles.title}>{t("learning.title")}</Text>
       <Text style={styles.subtitle}>{t("learning.subtitle")}</Text>
+
+      {/* ── Level tabs ── */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "beginner" && styles.tabActive]}
+          activeOpacity={0.7}
+          onPress={() => setActiveTab("beginner")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "beginner" && styles.tabTextActive,
+            ]}
+          >
+            {t("learning.allCourses")}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "all" && styles.tabActive]}
+          activeOpacity={0.7}
+          onPress={() => setActiveTab("all")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "all" && styles.tabTextActive,
+            ]}
+          >
+            {t("learning.moreContent")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Intermediate banner ── */}
+      {activeTab === "all" && (
+        <View style={styles.intermediateBanner}>
+          <Text style={styles.intermediateBannerTitle}>
+            {t("learning.intermediateBannerTitle")}
+          </Text>
+          <Text style={styles.intermediateBannerText}>
+            {t("learning.intermediateBannerText")}
+          </Text>
+        </View>
+      )}
 
       {/* ── Courses ── */}
       <Text style={styles.sectionTitle}>Courses</Text>
@@ -238,7 +276,11 @@ export default function MyLearningScreen() {
             </Text>
             <View style={styles.badgesRow}>
               <View style={styles.levelBadge}>
-                <Text style={styles.levelBadgeText}>{course.level}</Text>
+                <Text style={styles.levelBadgeText}>
+                  {activeTab === "beginner"
+                    ? t("learning.beginner")
+                    : t("learning.intermediate")}
+                </Text>
               </View>
               <View style={styles.paceBadge}>
                 <Text style={styles.paceBadgeText}>{course.pace}</Text>
@@ -261,7 +303,11 @@ export default function MyLearningScreen() {
               } else {
                 router.push({
                   pathname: "/(lessons)/lessons",
-                  params: { slug: course.slug },
+                  params: {
+                    slug: course.slug,
+                    level:
+                      activeTab === "beginner" ? "beginner" : "intermediate",
+                  },
                 });
               }
             }}
@@ -346,6 +392,56 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
     marginBottom: 14,
+  },
+
+  // ── Level tabs ──
+  tabBar: {
+    flexDirection: "row",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 10,
+    padding: 4,
+    marginBottom: 18,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  tabActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#9CA3AF",
+  },
+  tabTextActive: {
+    color: Colors.brand,
+  },
+
+  // ── Intermediate banner ──
+  intermediateBanner: {
+    backgroundColor: "#F3EFFF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 18,
+  },
+  intermediateBannerTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 6,
+  },
+  intermediateBannerText: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 19,
   },
 
   // ── Card ──

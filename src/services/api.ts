@@ -472,6 +472,8 @@ export interface LessonVideo {
   mux_asset_id: string;
   mux_playback_id: string;
   status: string;
+  difficulty: string;
+  difficulty_label: string;
 }
 
 export interface QuizOption {
@@ -510,6 +512,8 @@ export interface LessonDetail {
   order: number;
   is_preview: boolean;
   is_required: boolean;
+  is_completed?: boolean;
+  completed?: boolean;
   content: LessonContent | null;
   videos: LessonVideo[];
   quizz: LessonQuiz[];
@@ -524,6 +528,16 @@ export interface LessonDetail {
     total_lessons: number;
     completed_lessons: number | null;
     lessons: CourseDetailLesson[];
+    progress?: {
+      total: number;
+      completed: number;
+      current_lesson: {
+        id: number;
+        title: string;
+        order: number;
+      } | null;
+      percentage: number;
+    };
   } | null;
 }
 
