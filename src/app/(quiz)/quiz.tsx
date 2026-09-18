@@ -3,14 +3,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as ScreenCapture from "expo-screen-capture";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    AppState,
-    BackHandler,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  AppState,
+  BackHandler,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
   completeLesson,
@@ -66,6 +66,7 @@ export default function QuizScreen() {
   const [examTitle, setExamTitle] = useState("");
   const [courseSlug, setCourseSlug] = useState("");
   const [passMark, setPassMark] = useState(0);
+  const [maxAttempts, setMaxAttempts] = useState(0);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +108,7 @@ export default function QuizScreen() {
         setExamTitle(quiz.title);
         setCourseSlug(lesson.course?.slug ?? "");
         setPassMark(quiz.pass_mark);
+        setMaxAttempts(quiz.max_attempts);
         setTimeLimitSeconds((quiz.time_limit_minutes ?? 0) * 60);
         setQuestions(
           (quiz.questions ?? []).map((q) => ({
@@ -459,6 +461,8 @@ export default function QuizScreen() {
   const passed = result.passed;
   const scoreDisplay = `${Number.parseFloat(result.percentage)}%`;
   const correctCount = result.answers.filter((a) => a.is_correct).length;
+  const wrongAnswers = result.wrong_answers ?? [];
+  const remainingAttempts = Math.max(maxAttempts - result.attempt_number, 0);
   const hasNextAttempt = !passed && result.next_attempt_at;
 
   return (
@@ -582,6 +586,47 @@ export default function QuizScreen() {
         </View>
       </View>
 
+      {/* Missed questions review */}
+      {wrongAnswers.length > 0 && (
+        <View style={styles.reviewCard}>
+          <View style={styles.reviewHeader}>
+            <Ionicons name="alert-circle" size={18} color="#DC2626" />
+            <Text style={styles.reviewTitle}>{t("quiz.reviewTitle")}</Text>
+          </View>
+          {wrongAnswers.map((item, idx) => (
+            <View
+              key={`${item.question_id}-${idx}`}
+              style={[
+                styles.reviewItem,
+                idx < wrongAnswers.length - 1 && styles.reviewItemDivider,
+              ]}
+            >
+              <Text style={styles.reviewQuestion}>
+                {idx + 1}. {item.question}
+              </Text>
+              <View style={styles.reviewAnswerRow}>
+                <Ionicons name="close-circle" size={14} color="#DC2626" />
+                <Text style={styles.reviewAnswerLabel}>
+                  {t("quiz.yourAnswer")}:{" "}
+                </Text>
+                <Text style={styles.reviewAnswerWrong}>
+                  {item.your_answer.join(", ")}
+                </Text>
+              </View>
+              <View style={styles.reviewAnswerRow}>
+                <Ionicons name="checkmark-circle" size={14} color="#059669" />
+                <Text style={styles.reviewAnswerLabel}>
+                  {t("quiz.correctAnswer")}:{" "}
+                </Text>
+                <Text style={styles.reviewAnswerCorrect}>
+                  {item.correct_answer.join(", ")}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* Buttons */}
       {!passed && (
         <TouchableOpacity
@@ -590,7 +635,14 @@ export default function QuizScreen() {
           onPress={handleRetake}
         >
           <Ionicons name="refresh" size={18} color={Colors.white} />
-          <Text style={styles.retakeButtonText}>{t("quiz.retake")}</Text>
+          <View style={styles.retakeButtonLabels}>
+            <Text style={styles.retakeButtonText}>{t("quiz.retake")}</Text>
+            {remainingAttempts > 0 && (
+              <Text style={styles.retakeButtonSubText}>
+                {t("quiz.attemptsRemaining", { count: remainingAttempts })}
+              </Text>
+            )}
+          </View>
         </TouchableOpacity>
       )}
 
@@ -974,6 +1026,64 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111827",
   },
+
+  // Missed questions review
+  reviewCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+  },
+  reviewTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#991B1B",
+  },
+  reviewItem: {
+    paddingVertical: 12,
+  },
+  reviewItemDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#FEE2E2",
+  },
+  reviewQuestion: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  reviewAnswerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 4,
+    marginBottom: 4,
+  },
+  reviewAnswerLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  reviewAnswerWrong: {
+    flex: 1,
+    fontSize: 13,
+    color: "#DC2626",
+    lineHeight: 18,
+  },
+  reviewAnswerCorrect: {
+    flex: 1,
+    fontSize: 13,
+    color: "#059669",
+    lineHeight: 18,
+  },
   retakeButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -988,6 +1098,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.white,
+  },
+  retakeButtonLabels: {
+    alignItems: "center",
+  },
+  retakeButtonSubText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.white,
+    opacity: 0.9,
+    marginTop: 2,
   },
   backToLessonsButton: {
     flexDirection: "row",

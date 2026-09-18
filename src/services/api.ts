@@ -38,7 +38,7 @@ interface LoginOtpResponse {
 
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiResponse<T>> {
   const token = await getToken();
 
@@ -105,7 +105,7 @@ function formatApiError(json: Record<string, unknown>, status: number): string {
 
 export async function login(
   contact: string,
-  password: string
+  password: string,
 ): Promise<ApiResponse<LoginResponse>> {
   const isEmail = contact.includes("@");
   return request<LoginResponse>("/login", {
@@ -120,7 +120,7 @@ export async function login(
 
 export async function loginOtp(
   otp: string,
-  uuid: string
+  uuid: string,
 ): Promise<ApiResponse<LoginOtpResponse>> {
   return request<LoginOtpResponse>("/login_otp", {
     method: "POST",
@@ -134,7 +134,7 @@ interface VerifyEmailResponse {
 }
 
 export async function verifyPhone(
-  contact: string
+  contact: string,
 ): Promise<ApiResponse<VerifyEmailResponse>> {
   return request<VerifyEmailResponse>("/verify-email", {
     method: "POST",
@@ -146,7 +146,7 @@ export async function verifyPhone(
 }
 
 export async function verifyEmail(
-  contact: string
+  contact: string,
 ): Promise<ApiResponse<VerifyEmailResponse>> {
   return request<VerifyEmailResponse>("/verify-email", {
     method: "POST",
@@ -164,7 +164,7 @@ interface VerifyCreateAccountOtpResponse {
 
 export async function verifyCreateAccountOtp(
   email: string,
-  otp: string
+  otp: string,
 ): Promise<ApiResponse<VerifyCreateAccountOtpResponse>> {
   return request<VerifyCreateAccountOtpResponse>("/verify-email-otp", {
     method: "POST",
@@ -179,7 +179,7 @@ export interface PasswordResetInitiateResponse {
 
 export async function passwordResetInitiate(
   type: string,
-  contact: string
+  contact: string,
 ): Promise<ApiResponse<PasswordResetInitiateResponse>> {
   return request<PasswordResetInitiateResponse>("/password_reset_initiate", {
     method: "POST",
@@ -200,7 +200,7 @@ export interface ResetPasswordPayload {
 const PASSWORD_RESET_KEY = "I1tEF2rYdgctgRge8SFm";
 
 export async function resetPassword(
-  payload: ResetPasswordPayload
+  payload: ResetPasswordPayload,
 ): Promise<ApiResponse<unknown>> {
   return request("/password_reset", {
     method: "POST",
@@ -256,13 +256,15 @@ export interface EligibilityQuestion {
   updated_at: string;
 }
 
-export async function getEligibilityQuestions(): Promise<ApiResponse<EligibilityQuestion[]>> {
+export async function getEligibilityQuestions(): Promise<
+  ApiResponse<EligibilityQuestion[]>
+> {
   return request<EligibilityQuestion[]>("/onboarding/eligibility_questions");
 }
 
 export async function submitEligibilityAnswers(
   uuid: string,
-  answers: Record<string, string | string[]>
+  answers: Record<string, string | string[]>,
 ): Promise<ApiResponse<unknown>> {
   return request("/onboarding/eligibility_answers", {
     method: "POST",
@@ -289,7 +291,7 @@ interface RegisterResponse {
 }
 
 export async function registerUser(
-  data: RegisterRequest
+  data: RegisterRequest,
 ): Promise<ApiResponse<RegisterResponse>> {
   return request<RegisterResponse>("/register_request", {
     method: "POST",
@@ -363,7 +365,7 @@ export interface CourseRecommendations {
 }
 
 export async function getCourseRecommendations(
-  uuid: string
+  uuid: string,
 ): Promise<ApiResponse<CourseRecommendations>> {
   return request<CourseRecommendations>("/course/user_recommendations", {
     method: "POST",
@@ -398,11 +400,15 @@ export interface CatalogueCourse {
   lessons: CatalogueLesson[];
 }
 
-export async function getCourseCatalogue(): Promise<ApiResponse<CatalogueCourse[]>> {
+export async function getCourseCatalogue(): Promise<
+  ApiResponse<CatalogueCourse[]>
+> {
   return request<CatalogueCourse[]>("/course/catalogue");
 }
 
-export async function getEnrolledCourses(): Promise<ApiResponse<CatalogueCourse[]>> {
+export async function getEnrolledCourses(): Promise<
+  ApiResponse<CatalogueCourse[]>
+> {
   return request<CatalogueCourse[]>("/course/enrolled_courses");
 }
 
@@ -446,7 +452,9 @@ export interface CourseDetail {
   lessons: CourseDetailLesson[];
 }
 
-export async function getCourse(slug: string): Promise<ApiResponse<CourseDetail>> {
+export async function getCourse(
+  slug: string,
+): Promise<ApiResponse<CourseDetail>> {
   return request<CourseDetail>(`/course/${encodeURIComponent(slug)}`);
 }
 
@@ -522,7 +530,9 @@ export interface LessonDetail {
 export async function getLesson(
   lessonId: string | number,
 ): Promise<ApiResponse<LessonDetail>> {
-  return request<LessonDetail>(`/lesson/${encodeURIComponent(String(lessonId))}`);
+  return request<LessonDetail>(
+    `/lesson/${encodeURIComponent(String(lessonId))}`,
+  );
 }
 
 export async function completeLesson(
@@ -578,11 +588,21 @@ export async function getExams(
   });
 }
 
+export interface ExamWrongAnswer {
+  question_id: number;
+  question: string;
+  type: string;
+  points_awarded: number;
+  points_possible: number;
+  your_answer: string[];
+  correct_answer: string[];
+}
+
 export interface ExamSubmissionAnswer {
   id: number;
   attempt_id: number;
   question_id: number;
-  selected_option_ids: string;
+  selected_option_ids: number[];
   text_answer: string | null;
   is_correct: boolean;
   points_awarded: number;
@@ -605,7 +625,9 @@ export interface ExamSubmissionResult {
   next_attempt_at: string | null;
   created_at: string;
   updated_at: string;
+  auto_passed?: boolean;
   answers: ExamSubmissionAnswer[];
+  wrong_answers?: ExamWrongAnswer[];
 }
 
 export async function submitExam(
@@ -640,7 +662,7 @@ export async function startExamAttempt(
 
 export async function enrollCourse(
   course_id: string,
-  uuid: string
+  uuid: string,
 ): Promise<ApiResponse<unknown>> {
   return request("/course/enroll", {
     method: "POST",
@@ -723,7 +745,7 @@ export async function getWebinars(): Promise<ApiResponse<Webinar[]>> {
 
 export async function rsvpWebinar(
   id: string | number,
-  uuid: string
+  uuid: string,
 ): Promise<ApiResponse<unknown>> {
   return request(`/webinars/${encodeURIComponent(String(id))}/rsvp`, {
     method: "POST",
@@ -1015,7 +1037,7 @@ interface SmsResult {
 
 export async function sendSms(
   mobile: string,
-  message: string
+  message: string,
 ): Promise<SmsResult[]> {
   const response = await fetch(SMS_BASE_URL, {
     method: "POST",

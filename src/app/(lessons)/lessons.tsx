@@ -2,13 +2,13 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { getCourse, type CourseDetail } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
@@ -94,18 +94,15 @@ export default function LessonsScreen() {
     return {
       id: lesson.id,
       title: lesson.title,
-      duration: lesson.duration_minutes
-        ? `${lesson.duration_minutes} ${t("common.min")}`
-        : "—",
+      duration: `15 ${t("common.min")}`,
       status,
       number: index + 1,
     };
   });
 
-  const completedLessons = lessons.filter((l) => l.status === "completed");
   const activeLessons = lessons.filter((l) => l.status !== "completed");
   const totalCount = lessons.length;
-  const totalCompleted = completedLessons.length;
+  const totalCompleted = lessons.filter((l) => l.status === "completed").length;
   const progressPercent =
     course.progress?.percentage ??
     (totalCount > 0 ? Math.round((totalCompleted / totalCount) * 100) : 0);
@@ -171,35 +168,6 @@ export default function LessonsScreen() {
             })}
           </Text>
         </View>
-
-        {/* Completed lessons */}
-        {completedLessons.length > 0 && (
-          <View style={styles.completedSection}>
-            <Text style={styles.completedSubtitle}>
-              {t("lessons.completedLessons")}
-            </Text>
-            <View style={styles.completedBadgesRow}>
-              {completedLessons.map((lesson) => (
-                <TouchableOpacity
-                  key={lesson.id}
-                  style={styles.completedBadge}
-                  activeOpacity={0.7}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(lesson)/lesson",
-                      params: { id: String(lesson.id) },
-                    })
-                  }
-                >
-                  <Ionicons name="checkmark-circle" size={12} color="#059669" />
-                  <Text style={styles.completedBadgeText} numberOfLines={1}>
-                    {lesson.title}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Course Completion Alert */}
@@ -225,9 +193,10 @@ export default function LessonsScreen() {
       {/* Lessons Section */}
       <Text style={styles.sectionTitle}>{t("lessons.lessons")}</Text>
 
-      {activeLessons.map((lesson) => {
+      {lessons.map((lesson) => {
         const isLocked = lesson.status === "upcoming";
         const isCurrent = lesson.status === "current";
+        const isCompleted = lesson.status === "completed";
 
         return (
           <View key={lesson.id} style={styles.lessonCard}>
@@ -235,9 +204,15 @@ export default function LessonsScreen() {
             <View style={styles.lessonHeader}>
               <View style={styles.lessonTitleRow}>
                 <Ionicons
-                  name="play-circle"
+                  name={isCompleted ? "checkmark-circle" : "play-circle"}
                   size={22}
-                  color={isLocked ? "#9CA3AF" : Colors.brand}
+                  color={
+                    isCompleted
+                      ? "#059669"
+                      : isLocked
+                        ? "#9CA3AF"
+                        : Colors.brand
+                  }
                 />
                 <Text style={styles.lessonLabel}>
                   {t("lessons.lesson", { number: lesson.number })}
@@ -251,9 +226,11 @@ export default function LessonsScreen() {
               <View
                 style={[
                   styles.statusBadge,
-                  isCurrent
-                    ? styles.statusBadgeCurrent
-                    : styles.statusBadgeUpcoming,
+                  isCompleted
+                    ? styles.statusBadgeCompleted
+                    : isCurrent
+                      ? styles.statusBadgeCurrent
+                      : styles.statusBadgeUpcoming,
                 ]}
               >
                 {isLocked && (
@@ -262,12 +239,18 @@ export default function LessonsScreen() {
                 <Text
                   style={[
                     styles.statusBadgeText,
-                    isCurrent
-                      ? styles.statusBadgeTextCurrent
-                      : styles.statusBadgeTextUpcoming,
+                    isCompleted
+                      ? styles.statusBadgeTextCompleted
+                      : isCurrent
+                        ? styles.statusBadgeTextCurrent
+                        : styles.statusBadgeTextUpcoming,
                   ]}
                 >
-                  {isCurrent ? t("lessons.current") : t("lessons.upcoming")}
+                  {isCompleted
+                    ? t("lessons.completed")
+                    : isCurrent
+                      ? t("lessons.current")
+                      : t("lessons.upcoming")}
                 </Text>
               </View>
             </View>
@@ -283,6 +266,7 @@ export default function LessonsScreen() {
               style={[
                 styles.startButton,
                 isLocked && styles.startButtonDisabled,
+                isCompleted && styles.startButtonCompleted,
               ]}
               disabled={isLocked}
               activeOpacity={0.7}
@@ -296,17 +280,30 @@ export default function LessonsScreen() {
               }}
             >
               <Ionicons
-                name={isLocked ? "lock-closed" : "play-circle"}
+                name={
+                  isLocked
+                    ? "lock-closed"
+                    : isCompleted
+                      ? "checkmark-circle"
+                      : "play-circle"
+                }
                 size={18}
-                color={isLocked ? "#9CA3AF" : Colors.white}
+                color={
+                  isLocked ? "#9CA3AF" : isCompleted ? "#059669" : Colors.white
+                }
               />
               <Text
                 style={[
                   styles.startButtonText,
                   isLocked && styles.startButtonTextDisabled,
+                  isCompleted && styles.startButtonTextCompleted,
                 ]}
               >
-                {isLocked ? t("lessons.locked") : t("lessons.startLesson")}
+                {isLocked
+                  ? t("lessons.locked")
+                  : isCompleted
+                    ? t("lessons.reviewLesson")
+                    : t("lessons.startLesson")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -486,6 +483,9 @@ const styles = StyleSheet.create({
   statusBadgeUpcoming: {
     backgroundColor: "#F3F4F6",
   },
+  statusBadgeCompleted: {
+    backgroundColor: "#ECFDF5",
+  },
   statusBadgeText: {
     fontSize: 11,
     fontWeight: "600",
@@ -495,6 +495,9 @@ const styles = StyleSheet.create({
   },
   statusBadgeTextUpcoming: {
     color: "#9CA3AF",
+  },
+  statusBadgeTextCompleted: {
+    color: "#059669",
   },
 
   // Duration
@@ -532,41 +535,13 @@ const styles = StyleSheet.create({
   startButtonTextDisabled: {
     color: "#9CA3AF",
   },
-
-  // Completed lessons section
-  completedSection: {
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
-    paddingTop: 10,
-  },
-  completedSubtitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9CA3AF",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  completedBadgesRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  completedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  startButtonCompleted: {
     backgroundColor: "#ECFDF5",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
   },
-  completedBadgeText: {
-    fontSize: 11,
-    fontWeight: "500",
+  startButtonTextCompleted: {
     color: "#059669",
-    maxWidth: 140,
   },
 
   // Completion alert
