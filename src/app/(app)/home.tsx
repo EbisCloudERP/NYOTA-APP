@@ -384,7 +384,10 @@ export default function HomeScreen() {
       {announcements.map((item) => (
         <View key={item.id} style={styles.announcementCard}>
           <Text style={styles.announceTitle}>{item.title}</Text>
-          <Text style={styles.announceSub}>{item.description}</Text>
+          <View style={styles.announceBody}>
+            <Ionicons name="megaphone-outline" size={16} color="#059669" />
+            <Text style={styles.announceSub}>{item.description}</Text>
+          </View>
           <View style={styles.announceFooter}>
             <Ionicons name="time-outline" size={14} color="#9CA3AF" />
             <Text style={styles.announceTime}>
@@ -821,24 +824,33 @@ const styles = StyleSheet.create({
   },
   // Announcements
   announcementCard: {
-    backgroundColor: "#FFFBEB",
-    borderRadius: 14,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderColor: "#E5E7EB",
     padding: 16,
     marginBottom: 12,
   },
   announceTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
-    color: "#92400E",
-    marginBottom: 6,
+    color: "#059669",
+    marginBottom: 10,
+  },
+  announceBody: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#ECFDF5",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
   announceSub: {
-    fontSize: 13,
-    color: "#A16207",
-    lineHeight: 19,
-    marginBottom: 10,
+    flex: 1,
+    fontSize: 14,
+    color: "#374151",
+    lineHeight: 20,
   },
   announceFooter: {
     flexDirection: "row",
