@@ -1,8 +1,6 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
     ScrollView,
     StyleSheet,
     Text,
@@ -11,67 +9,30 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
-import { login, sendEmailOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
-import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 const NYOTA_IMAGE = require("../../../assets/images/nyotapic_teens.jpeg");
 
+const LOCAL_NUMBER_PATTERN = /^[71]\d{8}$/;
+
+const normalizeLocalNumber = (value: string): string =>
+  value.replace(/\D/g, "").replace(/^0+/, "");
+
 export default function LoginScreen() {
-  const [contact, setContact] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [phone, setPhone] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const { showToast } = useFeedback();
   const { t } = useLanguage();
 
-  const isFormValid = contact.trim().length > 0 && password.trim().length > 0;
-  const isLoginDisabled = showForm && !isFormValid;
-
-  const handleLoginPress = async () => {
-    if (!showForm) {
-      setShowForm(true);
+  const handleLoginPress = () => {
+    if (!LOCAL_NUMBER_PATTERN.test(normalizeLocalNumber(phone))) {
+      showToast(t("auth.login.phoneInfo"), "error");
       return;
     }
 
-    const trimmedContact = contact.trim();
-    const trimmedPassword = password.trim();
-
-    if (!trimmedContact || !trimmedPassword) {
-      showToast(t("auth.login.enterCredentials"), "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await login(trimmedContact, trimmedPassword);
-      const otp = response.data.otp;
-      const email = response.data.email ?? trimmedContact;
-      const phone = response.data.phone;
-
-      if (response.data.uuid) {
-        await setUuid(response.data.uuid);
-      }
-
-      router.push("/otp-login");
-
-      sendEmailOtp(email, otp).catch(() => {});
-      if (phone) {
-        const mobile = `254${phone.replace(/^\+|^0+/, "")}`;
-        sendSms(mobile, `Your NYOTA verification code is: ${otp}`).catch(
-          () => {},
-        );
-      }
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : t("auth.login.failed");
-      showToast(message, "error");
-    } finally {
-      setLoading(false);
-    }
+    // TODO: request the login OTP once the passwordless endpoint is confirmed.
   };
 
   return (
@@ -85,14 +46,7 @@ export default function LoginScreen() {
       />
 
       {/* Bottom card — slides up over the image */}
-      <View
-        style={[
-          styles.bottomCard,
-          isFocused
-            ? styles.bottomCardFocused
-            : showForm && styles.bottomCardExpanded,
-        ]}
-      >
+      <View style={[styles.bottomCard, isFocused && styles.bottomCardFocused]}>
         <ScrollView
           contentContainerStyle={styles.bottomScrollContent}
           keyboardShouldPersistTaps="handled"
@@ -103,71 +57,36 @@ export default function LoginScreen() {
 
           <Text style={styles.subtitle}>{t("auth.login.subtitle")}</Text>
 
-          {/* Hidden fields — revealed on first Login tap */}
-          {showForm && (
-            <View style={styles.form}>
-              <Text style={styles.label}>{t("auth.login.email")}</Text>
+          <View style={styles.form}>
+            <Text style={styles.label}>{t("auth.login.phone")}</Text>
+            <View style={styles.phoneRow}>
+              <View style={styles.prefixContainer}>
+                <Text style={styles.prefix}>+254</Text>
+              </View>
               <TextInput
-                style={styles.input}
-                placeholder={t("auth.login.emailPlaceholder")}
+                style={styles.phoneInput}
+                placeholder={t("auth.login.phonePlaceholder")}
                 placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={contact}
-                onChangeText={setContact}
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={phone}
+                onChangeText={(value) =>
+                  setPhone(value.replace(/\D/g, "").replace(/^254/, ""))
+                }
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
               />
-
-              <Text style={styles.label}>{t("auth.login.password")}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder={t("auth.login.passwordPlaceholder")}
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-              />
-
-              <TouchableOpacity
-                style={styles.forgotPasswordContainer}
-                onPress={() => router.push("/forgot-password")}
-              >
-                <Text style={styles.forgotPassword}>
-                  {t("auth.login.forgotPassword")}
-                </Text>
-              </TouchableOpacity>
             </View>
-          )}
+            <Text style={styles.infoText}>{t("auth.login.phoneInfo")}</Text>
+          </View>
 
           {/* Login Button */}
           <TouchableOpacity
-            style={[
-              styles.loginButton,
-              isLoginDisabled && styles.loginButtonDisabled,
-            ]}
+            style={styles.loginButton}
             onPress={handleLoginPress}
-            disabled={isLoginDisabled || loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.loginButtonText}>
-                {t("auth.login.login")}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Sign Up Button (outline) */}
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={() => router.push("/create-account")}
-          >
-            <Text style={styles.signUpButtonText}>
-              {t("auth.login.signUp")}
+            <Text style={styles.loginButtonText}>
+              {t("auth.login.login")}
             </Text>
           </TouchableOpacity>
 
@@ -200,13 +119,12 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 160,
   },
-  // ── Bottom: Card (overlaps image) ──
+  // ── Bottom: Card (overlaps image, hugs its content) ──
   bottomCard: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    top: "60%",
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -216,16 +134,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
-  bottomCardExpanded: {
-    top: "30%",
-  },
   bottomCardFocused: {
-    top: "20%",
+    top: "18%",
   },
   bottomScrollContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 40,
+    paddingBottom: 24,
     alignItems: "center",
   },
   // ── Text ──
@@ -256,26 +171,45 @@ const styles = StyleSheet.create({
     marginTop: 16,
     alignSelf: "flex-start",
   },
-  input: {
-    width: "100%",
+  phoneRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  prefixContainer: {
+    height: 50,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    borderRightWidth: 0,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+  },
+  prefix: {
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  phoneInput: {
+    flex: 1,
     height: 50,
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 12,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#1F2937",
     backgroundColor: "#F9FAFB",
   },
-  forgotPasswordContainer: {
-    alignSelf: "flex-end",
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  forgotPassword: {
-    fontSize: 14,
-    color: Colors.brand,
-    fontWeight: "500",
+  infoText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 6,
+    marginBottom: 12,
   },
   // ── Buttons ──
   loginButton: {
@@ -285,31 +219,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
-  },
-  loginButtonDisabled: {
-    opacity: 0.5,
+    marginBottom: 32,
   },
   loginButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  signUpButton: {
-    width: "100%",
-    height: 50,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: Colors.brand,
-    backgroundColor: "transparent",
-    marginBottom: 32,
-  },
-  signUpButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.brand,
   },
   // ── Bottom extras ──
   onboardTestContainer: {

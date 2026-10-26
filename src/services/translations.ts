@@ -50,12 +50,13 @@ const en = {
   "auth.login.subtitle": "Log into your account",
   "auth.login.email": "Email",
   "auth.login.emailPlaceholder": "Enter your email",
+  "auth.login.phone": "Phone Number",
+  "auth.login.phonePlaceholder": "712345678",
+  "auth.login.phoneInfo":
+    "Enter your number starting with 7 or 1, e.g. 712345678, 0112345678",
   "auth.login.password": "Password",
-  "auth.login.passwordPlaceholder": "Enter your password",
-  "auth.login.forgotPassword": "Forgot Password?",
   "auth.login.login": "Login",
-  "auth.login.signUp": "Sign Up",
-  "auth.login.enterCredentials": "Please enter your email and password",
+  "auth.login.enterCredentials": "Please enter your phone number",
   "auth.login.failed": "Login failed. Please try again.",
 
   // ── Create account ──
@@ -908,12 +909,13 @@ const sw: Record<TranslationKey, string> = {
   "auth.login.subtitle": "Ingia kwenye akaunti yako",
   "auth.login.email": "Barua pepe",
   "auth.login.emailPlaceholder": "Weka barua pepe yako",
+  "auth.login.phone": "Namba ya Simu",
+  "auth.login.phonePlaceholder": "712345678",
+  "auth.login.phoneInfo":
+    "Weka namba yako kuanzia na 7 au 1, mf. 712345678, 0112345678",
   "auth.login.password": "Nenosiri",
-  "auth.login.passwordPlaceholder": "Weka nenosiri lako",
-  "auth.login.forgotPassword": "Umesahau nenosiri?",
   "auth.login.login": "Ingia",
-  "auth.login.signUp": "Jisajili",
-  "auth.login.enterCredentials": "Tafadhali weka barua pepe na nenosiri",
+  "auth.login.enterCredentials": "Tafadhali weka namba yako ya simu",
   "auth.login.failed": "Kuingia kumeshindikana. Tafadhali jaribu tena.",
 
   // ── Create account ──
