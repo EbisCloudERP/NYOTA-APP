@@ -47,7 +47,8 @@ const en = {
 
   // ── Login ──
   "auth.login.welcome": "Welcome back!",
-  "auth.login.subtitle": "Log into your account",
+  "auth.login.subtitle":
+    "Enter your phone number to receive a verification code",
   "auth.login.email": "Email",
   "auth.login.emailPlaceholder": "Enter your email",
   "auth.login.phone": "Phone Number",
@@ -58,6 +59,9 @@ const en = {
   "auth.login.login": "Login",
   "auth.login.enterCredentials": "Please enter your phone number",
   "auth.login.failed": "Login failed. Please try again.",
+  "auth.login.noAccount": "No account found with this phone number.",
+  "auth.login.smsFailed":
+    "Could not send the verification code. Please try resending.",
 
   // ── Create account ──
   "auth.create.title": "Create your account",
@@ -153,6 +157,7 @@ const en = {
   "otp.expiresIn": "Code expire in: {time}",
   "otp.waitResend": "Didn't receive the code? Wait: {time} to resend",
   "otp.resend": "Resend code",
+  "otp.resent": "A new verification code has been sent.",
   "otp.wrongDetails": "Wrong details? Go back",
   "otp.incorrectCode":
     "The verification code you entered is incorrect. Please try again.",
@@ -906,7 +911,8 @@ const sw: Record<TranslationKey, string> = {
 
   // ── Login ──
   "auth.login.welcome": "Karibu tena!",
-  "auth.login.subtitle": "Ingia kwenye akaunti yako",
+  "auth.login.subtitle":
+    "Weka namba yako ya simu kupokea nambari ya uthibitisho",
   "auth.login.email": "Barua pepe",
   "auth.login.emailPlaceholder": "Weka barua pepe yako",
   "auth.login.phone": "Namba ya Simu",
@@ -917,6 +923,9 @@ const sw: Record<TranslationKey, string> = {
   "auth.login.login": "Ingia",
   "auth.login.enterCredentials": "Tafadhali weka namba yako ya simu",
   "auth.login.failed": "Kuingia kumeshindikana. Tafadhali jaribu tena.",
+  "auth.login.noAccount": "Hakuna akaunti iliyopatikana na namba hii ya simu.",
+  "auth.login.smsFailed":
+    "Imeshindwa kutuma nambari ya uthibitisho. Tafadhali jaribu kutuma tena.",
 
   // ── Create account ──
   "auth.create.title": "Unda akaunti yako",
@@ -1022,6 +1031,7 @@ const sw: Record<TranslationKey, string> = {
   "otp.expiresIn": "Nambari inaisha baada ya: {time}",
   "otp.waitResend": "Hukupokea nambari? Subiri: {time} ili utume tena",
   "otp.resend": "Tuma nambari tena",
+  "otp.resent": "Nambari mpya ya uthibitisho imetumwa.",
   "otp.wrongDetails": "Maelezo si sahihi? Rudi nyuma",
   "otp.incorrectCode":
     "Nambari ya uthibitisho uliyoweka si sahihi. Tafadhali jaribu tena.",

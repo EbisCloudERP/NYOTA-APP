@@ -122,15 +122,30 @@ export async function loginOtp(
   otp: string,
   uuid: string,
 ): Promise<ApiResponse<LoginOtpResponse>> {
-  return request<LoginOtpResponse>("/login_otp", {
+  return request<LoginOtpResponse>("/login_v2_otp", {
     method: "POST",
     body: JSON.stringify({ otp, uuid }),
+  });
+}
+
+export interface LoginV2Response {
+  otp: string;
+  uuid: string;
+}
+
+export async function requestLoginOtp(
+  contact: string,
+): Promise<ApiResponse<LoginV2Response>> {
+  return request<LoginV2Response>("/login_v2", {
+    method: "POST",
+    body: JSON.stringify({ contact }),
   });
 }
 
 interface VerifyEmailResponse {
   exists: boolean;
   otp?: string;
+  uuid?: string;
 }
 
 export async function verifyPhone(
@@ -139,7 +154,7 @@ export async function verifyPhone(
   return request<VerifyEmailResponse>("/verify-email", {
     method: "POST",
     body: JSON.stringify({
-      type: "mobile",
+      type: "phone",
       contact,
     }),
   });

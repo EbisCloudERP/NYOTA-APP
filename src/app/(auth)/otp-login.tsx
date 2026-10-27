@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -11,9 +11,12 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { requestLoginOtp, sendSms } from "../../services/api";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
+import { toKenyanMsisdn } from "../../services/phone";
+import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 const CODE_LENGTH = 6;
@@ -31,10 +34,16 @@ export default function OtpLoginScreen() {
   const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [verified, setVerified] = useState(false);
   const { signInWithOtp } = useAuth();
   const { showToast } = useFeedback();
   const { t } = useLanguage();
+  const { contact, uuid: routeUuid } = useLocalSearchParams<{
+    contact?: string;
+    uuid?: string;
+  }>();
+  const [uuid, setUuidState] = useState(routeUuid ?? "");
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -45,6 +54,8 @@ export default function OtpLoginScreen() {
   }, [timeLeft]);
 
   const handleKeypadPress = (key: string) => {
+    if (loading || verified) return;
+
     if (key === "⌫") {
       // Find the last filled digit and clear it
       const lastFilled = code.findLastIndex((d) => d !== "");
@@ -79,17 +90,49 @@ export default function OtpLoginScreen() {
     if (verified || loading) return;
     setLoading(true);
     try {
-      await signInWithOtp(fullCode);
+      await signInWithOtp(fullCode, uuid || undefined);
       setVerified(true);
-    } catch {
-      showToast("Wrong OTP. Please try again.", "error");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : t("auth.login.failed");
+      showToast(message, "error");
+      setCode(Array(CODE_LENGTH).fill(""));
+      setFocusedIndex(0);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = () => {
-    setTimeLeft(RESEND_COOLDOWN);
+  const handleResend = async () => {
+    if (!contact || resending) {
+      setTimeLeft(RESEND_COOLDOWN);
+      return;
+    }
+
+    setResending(true);
+    try {
+      const mobile = toKenyanMsisdn(contact);
+      const response = await requestLoginOtp(mobile);
+      const { otp, uuid: nextUuid } = response.data;
+
+      await setUuid(nextUuid);
+      setUuidState(nextUuid);
+
+      await sendSms(mobile, `Your NYOTA verification code is: ${otp}`);
+      setTimeLeft(RESEND_COOLDOWN);
+      showToast(t("otp.resent"), "success");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : t("auth.login.failed");
+      showToast(
+        /credentials are incorrect/i.test(message)
+          ? t("auth.login.noAccount")
+          : message,
+        "error",
+      );
+    } finally {
+      setResending(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -109,7 +152,7 @@ export default function OtpLoginScreen() {
       >
         <LanguageSelector />
         <Text style={styles.title}>{t("otp.title")}</Text>
-        <Text style={styles.subtitle}>{t("otp.subtitleEmailPhone")}</Text>
+        <Text style={styles.subtitle}>{t("otp.subtitlePhone")}</Text>
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
@@ -141,8 +184,16 @@ export default function OtpLoginScreen() {
             {t("otp.waitResend", { time: formatTime(timeLeft) })}
           </Text>
         ) : (
-          <TouchableOpacity onPress={handleResend} disabled={loading}>
-            <Text style={[styles.resendLink, loading && { opacity: 0.5 }]}>
+          <TouchableOpacity
+            onPress={handleResend}
+            disabled={loading || resending}
+          >
+            <Text
+              style={[
+                styles.resendLink,
+                (loading || resending) && { opacity: 0.5 },
+              ]}
+            >
               {t("otp.resend")}
             </Text>
           </TouchableOpacity>

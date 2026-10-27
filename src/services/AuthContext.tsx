@@ -11,6 +11,7 @@ import { loginOtp } from "./api";
 import {
   setToken,
   setUser,
+  setUuid,
   getToken,
   getUser,
   getUuid,
@@ -39,7 +40,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   signIn: (token: string, user: UserData) => Promise<void>;
-  signInWithOtp: (otp: string) => Promise<void>;
+  signInWithOtp: (otp: string, uuid?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -74,13 +75,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (newToken: string, newUser: UserData) => {
     setTokenState(newToken);
     setUserState(newUser);
-    await Promise.all([setToken(newToken), setUser(newUser)]);
+    await Promise.all([
+      setToken(newToken),
+      setUser(newUser),
+      // Keep the onboarding/auth UUID in sync so UUID-based endpoints keep
+      // working after a fresh login.
+      newUser.uuid ? setUuid(newUser.uuid) : Promise.resolve(),
+    ]);
   }, []);
 
   const signInWithOtp = useCallback(
-    async (otp: string) => {
-      const uuid = (await getUuid()) ?? "";
-      const response = await loginOtp(otp, uuid);
+    async (otp: string, uuid?: string) => {
+      const effectiveUuid = uuid || (await getUuid()) || "";
+      const response = await loginOtp(otp, effectiveUuid);
       await signIn(response.data.token, response.data.user as UserData);
       router.replace("/home");
     },

@@ -1,6 +1,8 @@
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     ScrollView,
     StyleSheet,
     Text,
@@ -9,8 +11,11 @@ import {
     View,
 } from "react-native";
 import LanguageSelector from "../../components/LanguageSelector";
+import { requestLoginOtp, sendSms } from "../../services/api";
 import { useFeedback } from "../../services/FeedbackContext";
 import { useLanguage } from "../../services/LanguageContext";
+import { toKenyanMsisdn } from "../../services/phone";
+import { setUuid } from "../../services/storage";
 import { Colors } from "../../theme/colors";
 
 const NYOTA_IMAGE = require("../../../assets/images/nyotapic_teens.jpeg");
@@ -23,16 +28,48 @@ const normalizeLocalNumber = (value: string): string =>
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { showToast } = useFeedback();
   const { t } = useLanguage();
 
-  const handleLoginPress = () => {
-    if (!LOCAL_NUMBER_PATTERN.test(normalizeLocalNumber(phone))) {
+  const handleLoginPress = async () => {
+    const contact = normalizeLocalNumber(phone);
+
+    if (!LOCAL_NUMBER_PATTERN.test(contact)) {
       showToast(t("auth.login.phoneInfo"), "error");
       return;
     }
 
-    // TODO: request the login OTP once the passwordless endpoint is confirmed.
+    setLoading(true);
+    try {
+      const mobile = toKenyanMsisdn(contact);
+      const response = await requestLoginOtp(mobile);
+      const { otp, uuid } = response.data;
+
+      await setUuid(uuid);
+
+      try {
+        await sendSms(mobile, `Your NYOTA verification code is: ${otp}`);
+      } catch {
+        showToast(t("auth.login.smsFailed"), "error");
+      }
+
+      router.push({
+        pathname: "/otp-login",
+        params: { contact: mobile, uuid },
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : t("auth.login.failed");
+      showToast(
+        /credentials are incorrect/i.test(message)
+          ? t("auth.login.noAccount")
+          : message,
+        "error",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,12 +119,21 @@ export default function LoginScreen() {
 
           {/* Login Button */}
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[
+              styles.loginButton,
+              loading && styles.loginButtonDisabled,
+            ]}
             onPress={handleLoginPress}
+            disabled={loading}
+            activeOpacity={0.7}
           >
-            <Text style={styles.loginButtonText}>
-              {t("auth.login.login")}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>
+                {t("auth.login.login")}
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* <TouchableOpacity
@@ -220,6 +266,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 32,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     fontSize: 16,

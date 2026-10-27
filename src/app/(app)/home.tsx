@@ -232,24 +232,14 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
 
       {/* Badges */}
-      <View style={styles.badges}>
-        <View style={styles.badge}>
-          <Ionicons
-            name={isOnboarded ? "checkmark-circle" : "alert-circle"}
-            size={16}
-            color={isOnboarded ? "#10B981" : "#F59E0B"}
-          />
-          <Text style={styles.badgeText}>
-            {isOnboarded ? t("home.onboarded") : t("home.profileIncomplete")}
-          </Text>
-        </View>
-        {county ? (
+      {county ? (
+        <View style={styles.badges}>
           <View style={styles.badge}>
             <Ionicons name="location-outline" size={16} color={Colors.brand} />
             <Text style={styles.badgeText}>{county}</Text>
           </View>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
 
       {/* Quick Access */}
       <Text style={styles.sectionTitle}>{t("home.quickAccess")}</Text>
