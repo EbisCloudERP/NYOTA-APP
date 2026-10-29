@@ -288,7 +288,7 @@ export default function HomeScreen() {
         <View style={styles.courseCard}>
           {/* Header */}
           <View style={styles.courseHeader}>
-            <View>
+            <View style={styles.courseHeaderInfo}>
               <Text style={styles.courseTitle}>{activeCourse.title}</Text>
               <Text style={styles.courseSubtitle}>
                 {t("home.lessonsCompleted", {
@@ -724,12 +724,15 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 12,
   },
+  courseHeaderInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
   courseTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#1F2937",
-    flex: 1,
-    marginRight: 12,
+    flexShrink: 1,
   },
   courseSubtitle: {
     fontSize: 13,
@@ -741,6 +744,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    flexShrink: 0,
   },
   progressBadgeText: {
     fontSize: 13,
