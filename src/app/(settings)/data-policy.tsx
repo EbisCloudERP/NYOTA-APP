@@ -58,7 +58,7 @@ export default function DataPolicyScreen() {
       <Text style={styles.sectionTitle}>{t("dataPolicy.s6Title")}</Text>
       <Text style={styles.paragraph}>{t("dataPolicy.s6Text")}</Text>
       <Text style={styles.contactInfo}>📧 privacy@nyota.go.ke</Text>
-      <Text style={styles.contactInfo}>📞 +254 700 000 000</Text>
+      <Text style={styles.contactInfo}>📞 +254 116 112 728</Text>
 
       <View style={styles.bottomSpacer} />
     </ScrollView>

@@ -187,9 +187,9 @@ export default function SupportScreen() {
     });
   }, [tickets, search, categoryFilter, statusFilter, priorityFilter]);
 
-  const handleCall = () => openExternalUrl("tel:+254700000000");
-  const handleEmail = () => openExternalUrl("mailto:support@nyota.com");
-  const handleWhatsApp = () => openExternalUrl("https://wa.me/254700000000");
+  const handleCall = () => openExternalUrl("tel:+254116112728");
+  const handleEmail = () => openExternalUrl("mailto:agpo@msme.co.ke");
+  const handleWhatsApp = () => openExternalUrl("https://wa.me/254116112728");
 
   const handleCreateTicket = async (ticket: {
     subject: string;
