@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, Tabs } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ChatbotFab from "../../components/ChatbotFab";
 import LanguageSelector from "../../components/LanguageSelector";
 import { useAuth } from "../../services/AuthContext";
 import { useFeedback } from "../../services/FeedbackContext";
@@ -67,74 +68,84 @@ export default function AppLayout() {
   const { t } = useLanguage();
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: true,
-        headerTitle: "",
-        headerLeft: () => <HeaderLeft />,
-        headerRight: () => <HeaderRight />,
-        tabBarActiveTintColor: Colors.brand,
-        tabBarInactiveTintColor: "#9CA3AF",
-        tabBarStyle: {
-          borderTopColor: "#F3F4F6",
-          backgroundColor: "#FFFFFF",
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: t("tab.home"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size - 2} color={color} />
-          ),
+    <View style={styles.root}>
+      <Tabs
+        screenOptions={{
+          headerShown: true,
+          headerTitle: "",
+          headerLeft: () => <HeaderLeft />,
+          headerRight: () => <HeaderRight />,
+          tabBarActiveTintColor: Colors.brand,
+          tabBarInactiveTintColor: "#9CA3AF",
+          tabBarStyle: {
+            borderTopColor: "#F3F4F6",
+            backgroundColor: "#FFFFFF",
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: "600",
+          },
         }}
-      />
-      <Tabs.Screen
-        name="my-learning"
-        options={{
-          title: t("tab.myLearning"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="book-outline" size={size - 2} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="opportunities"
-        options={{
-          title: t("tab.opportunities"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="briefcase-outline" size={size - 2} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="webinars"
-        options={{
-          title: t("tab.webinars"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="tv-outline" size={size - 2} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: t("tab.settings"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size - 2} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: t("tab.home"),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home-outline" size={size - 2} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="my-learning"
+          options={{
+            title: t("tab.myLearning"),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="book-outline" size={size - 2} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="opportunities"
+          options={{
+            title: t("tab.opportunities"),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="briefcase-outline"
+                size={size - 2}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="webinars"
+          options={{
+            title: t("tab.webinars"),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="tv-outline" size={size - 2} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: t("tab.settings"),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="settings-outline" size={size - 2} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+      <ChatbotFab />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",

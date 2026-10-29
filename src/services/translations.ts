@@ -834,6 +834,35 @@ const en = {
     "If you have any questions, concerns, or feedback regarding these Terms and Conditions, please contact us through the support channels provided on our platform. We are committed to addressing your inquiries in a timely manner.",
   "terms.footer":
     "By continuing to use our services, you acknowledge that you have read, understood, and agreed to be bound by these Terms and Conditions. If you do not agree, please discontinue use of the platform immediately.",
+
+  // ── Chatbot ──
+  "chatbot.fabHint": "Need help?",
+  "chatbot.headerTitle": "AGPO Assistant",
+  "chatbot.title": "Welcome to AGPO Training Assistant",
+  "chatbot.subtitle":
+    "This bot works 24/7, so you can get instant answers about courses, financing, certificates, and support — any time, any day.",
+  "chatbot.online": "Online now",
+  "chatbot.canHelp": "What I can help you with",
+  "chatbot.featureAlwaysTitle": "Always available",
+  "chatbot.featureAlwaysBody":
+    "No queues or office hours. Get help whenever it suits you.",
+  "chatbot.featureFastTitle": "Instant answers",
+  "chatbot.featureFastBody":
+    "Ask about courses, certificates, financing, or your account.",
+  "chatbot.featureSafeTitle": "Private and secure",
+  "chatbot.featureSafeBody":
+    "Your conversation stays between you and the assistant.",
+  "chatbot.start": "Start Chatting",
+  "chatbot.startHint": "Free to use • No appointment needed",
+  "chatbot.botMessage1": "Hi! I'm here to help you get ready for government tenders. 👋",
+  "chatbot.botMessage2":
+    "I can take you from getting AGPO-ready right through to delivering and financing contracts.",
+  "chatbot.botMessage3": "What would you like to get into?",
+  "chatbot.chooseOption": "Choose an option to get started",
+  "chatbot.optionGetReady": "Getting AGPO-ready",
+  "chatbot.optionTenders": "Bidding for tenders",
+  "chatbot.optionFinancing": "Financing a contract",
+  "chatbot.send": "Send",
 };
 
 export type TranslationKey = keyof typeof en;
@@ -1682,6 +1711,36 @@ const sw: Record<TranslationKey, string> = {
     "Kama una maswali yoyote, wasiwasi, au maoni kuhusu Sheria na Masharti haya, tafadhali wasiliana nasi kupitia njia za msaada zilizotolewa kwenye mfumo wetu. Tumejitolea kushughulikia maswali yako kwa wakati unaofaa.",
   "terms.footer":
     "Kwa kuendelea kutumia huduma zetu, unathibitisha kuwa umesoma, umeelewa, na umekubali kufungwa na Sheria na Masharti haya. Kama hukubaliani, tafadhali acha kutumia mfumo mara moja.",
+
+  // ── Chatbot ──
+  "chatbot.fabHint": "Unahitaji msaada?",
+  "chatbot.headerTitle": "Msaidizi wa AGPO",
+  "chatbot.title": "Karibu kwenye Msaidizi wa Mafunzo ya AGPO",
+  "chatbot.subtitle":
+    "Boti hii inafanya kazi saa 24, kwa hivyo unapata majibu ya haraka kuhusu kozi, ufadhili, vyeti, na msaada — wakati wowote.",
+  "chatbot.online": "Yupo mtandaoni",
+  "chatbot.canHelp": "Ninachoweza kukusaidia",
+  "chatbot.featureAlwaysTitle": "Inapatikana kila wakati",
+  "chatbot.featureAlwaysBody":
+    "Hakuna foleni wala saa za ofisi. Pata msaada wakati wowote.",
+  "chatbot.featureFastTitle": "Majibu ya haraka",
+  "chatbot.featureFastBody":
+    "Uliza kuhusu kozi, vyeti, ufadhili, au akaunti yako.",
+  "chatbot.featureSafeTitle": "Faragha na usalama",
+  "chatbot.featureSafeBody":
+    "Mazungumzo yako yanabaki kati yako na msaidizi.",
+  "chatbot.start": "Anza Mazungumzo",
+  "chatbot.startHint": "Bure kutumia • Hakuna miadi inayohitajika",
+  "chatbot.botMessage1":
+    "Habari! Nipo hapa kukusaidia ujiandae kwa zabuni za serikali. 👋",
+  "chatbot.botMessage2":
+    "Ninaweza kukupitisha kutoka kujiandaa na AGPO hadi kutekeleza na kufadhili mikataba.",
+  "chatbot.botMessage3": "Ungependa kuanzia wapi?",
+  "chatbot.chooseOption": "Chagua chaguo ili uanze",
+  "chatbot.optionGetReady": "Kujiandaa na AGPO",
+  "chatbot.optionTenders": "Kuomba zabuni",
+  "chatbot.optionFinancing": "Kufadhili mkataba",
+  "chatbot.send": "Tuma",
 };
 
 export const translations = { en, sw } as const;
