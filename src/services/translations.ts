@@ -211,7 +211,7 @@ const en = {
   "home.profileIncomplete": "Profile incomplete",
   "home.quickAccess": "Quick Access",
   "home.certificates": "Certificates",
-  "home.digitalTools": "Digital Tools",
+  "home.faqLabel": "FAQ",
   "home.profile": "Profile",
   "home.support": "Support",
   "home.continueLearning": "Continue Learning",
@@ -410,39 +410,14 @@ const en = {
   "certificates.browseLessons": "Browse lessons",
   "certificates.goHome": "Go to home",
 
-  // ── Digital tools ──
-  "digitalTools.subtitle":
-    "Explore and onboard to essential business tools and solutions to improve productivity, streamline workflows and access to market.",
-  "digitalTools.bulkSms": "Bulk SMS",
-  "digitalTools.bookKeeping": "Book Keeping",
-  "digitalTools.ecommerce": "E-commerce",
-  "digitalTools.website": "Website Builder",
-  "digitalTools.bulkSmsText":
-    "Send thousands of personalized SMS messages to your customers at once. Perfect for promotions, alerts, reminders, and notifications.",
-  "digitalTools.bookKeepingText":
-    "Simplify your financial record-keeping. Track every transaction, manage invoices, and generate professional financial reports effortlessly.",
-  "digitalTools.ecommerceText":
-    "Launch and manage your online store with ease. We set up a Shopify-style storefront with product catalogs, payment gateways including M-Pesa, inventory management, and order tracking — all tailored to your brand.",
-  "digitalTools.websiteText":
-    "Build your complete online presence. Get a stunning website, a professional domain name, and business email — all in one seamless package.",
-  "digitalTools.whatsIncluded": "What's included",
-  "digitalTools.onboard": "Onboard",
-  "digitalTools.notAvailable":
-    "This feature is not available in the app at the moment. Please visit our main website on your browser to get started.",
-  "digitalTools.checklist.instantDelivery": "Instant delivery to all networks",
-  "digitalTools.checklist.personalized": "Personalized messaging at scale",
-  "digitalTools.checklist.deliveryReports":
-    "Detailed delivery reports & analytics",
-  "digitalTools.checklist.trackTransactions":
-    "Track every transaction effortlessly",
-  "digitalTools.checklist.invoices": "Manage invoices & payments",
-  "digitalTools.checklist.reports": "Generate professional financial reports",
-  "digitalTools.checklist.shopify": "Shopify-style storefront setup",
-  "digitalTools.checklist.mpesa": "M-Pesa & card payment gateways",
-  "digitalTools.checklist.inventory": "Inventory & order tracking",
-  "digitalTools.checklist.responsive": "Stunning, responsive website",
-  "digitalTools.checklist.domain": "Professional domain name",
-  "digitalTools.checklist.email": "Business email included",
+  // ── FAQ ──
+  "faq.intro":
+    "Answers to common questions about AGPO, government procurement and growing your business.",
+  "faq.searchPlaceholder": "Search questions...",
+  "faq.clearSearch": "Clear search",
+  "faq.allModules": "All",
+  "faq.resultCount": "{count} of {total} questions",
+  "faq.noResults": "No questions match your search.",
 
   // ── Financing (shared) ──
   "financing.companyInfo": "Company Information",
@@ -1084,7 +1059,7 @@ const sw: Record<TranslationKey, string> = {
   "home.profileIncomplete": "Wasifu haujakamilika",
   "home.quickAccess": "Ufikiaji wa Haraka",
   "home.certificates": "Vyeti",
-  "home.digitalTools": "Zana za Kidijitali",
+  "home.faqLabel": "Maswali",
   "home.profile": "Wasifu",
   "home.support": "Msaada",
   "home.continueLearning": "Endelea Kujifunza",
@@ -1281,40 +1256,14 @@ const sw: Record<TranslationKey, string> = {
   "certificates.browseLessons": "Vinjari masomo",
   "certificates.goHome": "Nenda nyumbani",
 
-  // ── Digital tools ──
-  "digitalTools.subtitle":
-    "Chunguza na ujiandikishe kwenye zana na suluhisho muhimu za biashara ili kuboresha tija, kurahisisha michakato na ufikiaji wa soko.",
-  "digitalTools.bulkSms": "SMS kwa Wingi",
-  "digitalTools.bookKeeping": "Uwekaji wa Hesabu",
-  "digitalTools.ecommerce": "E-commerce",
-  "digitalTools.website": "Kijenzi cha Tovuti",
-  "digitalTools.bulkSmsText":
-    "Tuma maelfu ya ujumbe wa SMS maalum kwa wateja wako kwa wakati mmoja. Inafaa kwa matangazo, arifa, vikumbusho, na taarifa.",
-  "digitalTools.bookKeepingText":
-    "Rahisisha uwekaji wa rekodi zako za kifedha. Fuatilia kila muamala, simamia ankara, na zalisha ripoti za kitaalamu za kifedha bila shida.",
-  "digitalTools.ecommerceText":
-    "Anzisha na simamia duka lako la mtandaoni kwa urahisi. Tunaunda duka la mtindo wa Shopify lenye katalogi za bidhaa, milango ya malipo ikiwemo M-Pesa, usimamizi wa orodha, na ufuatiliaji wa maagizo — yote yakibinafsishwa kwa chapa yako.",
-  "digitalTools.websiteText":
-    "Jenga uwepo wako kamili mtandaoni. Pata tovuti nzuri, jina la kitaalamu la kikoa, na barua pepe ya biashara — yote kwenye kifurushi kimoja.",
-  "digitalTools.whatsIncluded": "Kinachojumuishwa",
-  "digitalTools.onboard": "Jiandikishe",
-  "digitalTools.notAvailable":
-    "Kipengele hiki hakipatikani kwenye programu kwa sasa. Tafadhali tembelea tovuti yetu kuu kwenye kivinjari chako ili kuanza.",
-  "digitalTools.checklist.instantDelivery":
-    "Uwasilishaji wa papo hapo kwa mitandao yote",
-  "digitalTools.checklist.personalized": "Ujumbe maalum kwa kiwango kikubwa",
-  "digitalTools.checklist.deliveryReports":
-    "Ripoti za kina za uwasilishaji na uchambuzi",
-  "digitalTools.checklist.trackTransactions":
-    "Fuatilia kila muamala kwa urahisi",
-  "digitalTools.checklist.invoices": "Simamia ankara na malipo",
-  "digitalTools.checklist.reports": "Zalisha ripoti za kitaalamu za kifedha",
-  "digitalTools.checklist.shopify": "Uundaji wa duka la mtindo wa Shopify",
-  "digitalTools.checklist.mpesa": "Milango ya malipo ya M-Pesa na kadi",
-  "digitalTools.checklist.inventory": "Ufuatiliaji wa orodha na maagizo",
-  "digitalTools.checklist.responsive": "Tovuti nzuri na shirikishi",
-  "digitalTools.checklist.domain": "Jina la kitaalamu la kikoa",
-  "digitalTools.checklist.email": "Barua pepe ya biashara imejumuishwa",
+  // ── FAQ ──
+  "faq.intro":
+    "Majibu ya maswali ya kawaida kuhusu AGPO, ununuzi wa serikali na kukuza biashara yako.",
+  "faq.searchPlaceholder": "Tafuta maswali...",
+  "faq.clearSearch": "Futa utafutaji",
+  "faq.allModules": "Zote",
+  "faq.resultCount": "{count} kati ya {total} maswali",
+  "faq.noResults": "Hakuna maswali yanayolingana na utafutaji wako.",
 
   // ── Financing (shared) ──
   "financing.companyInfo": "Taarifa za Kampuni",

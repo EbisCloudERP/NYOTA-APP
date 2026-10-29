@@ -1,14 +1,13 @@
 import { Stack } from "expo-router";
 
-export default function DigitalToolsGroupLayout() {
+export default function FaqGroupLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="digital-tools"
+        name="faq"
         options={{
           headerShown: true,
-          headerTitle: "Digital Tools",
-          headerBackTitle: "Back",
+          headerTitle: "FAQ",
           headerTintColor: "#4D2A7C",
           headerTitleStyle: {
             fontWeight: "700",

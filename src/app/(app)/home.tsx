@@ -199,10 +199,9 @@ export default function HomeScreen() {
       route: "/(certificates)/certificates",
     },
     {
-      label: t("home.digitalTools"),
-      icon: "hardware-chip-outline",
-      route: "/(digital_tools)/digital-tools",
-      locked: true,
+      label: t("home.faqLabel"),
+      icon: "help-circle-outline",
+      route: "/(faq)/faq",
     },
     {
       label: t("home.profile"),
